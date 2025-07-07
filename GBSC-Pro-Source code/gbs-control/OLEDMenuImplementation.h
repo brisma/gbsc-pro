@@ -28,18 +28,34 @@
 #define Pal_CNw 0xd4
 #define SECAM 0xe4
 
-#define Auto          0x04
-#define Pal           0x84
-#define Ntsc_M        0x54
-#define Pal_60        0x64
-#define Ntsc443       0x74
-#define Ntsc_J        0x44
-#define Pal_N_wp      0x94
-#define Pal_M_wop     0xA4
-#define Pal_M         0xB4
-#define Pal_Cmb_N     0xC4
-#define Pal_Cmb_N_wp  0xD4
-#define Secam         0xE4
+
+    // 模式映射表
+const uint8_t modes[12] = {
+        0x04,  // 0: Auto
+        0x84,  // 1: Pal
+        0x54,  // 2: Ntsc_M
+        0x64,  // 3: Pal_60
+        0x74,  // 4: Ntsc443
+        0x44,  // 5: Ntsc_J
+        0x94,  // 6: Pal_N_wp
+        0xA4,  // 7: Pal_M_wop
+        0xB4,  // 8: Pal_M
+        0xC4,  // 9: Pal_Cmb_N
+        0xD4,  // 10: Pal_Cmb_N_wp
+        0xE4   // 11: Secam
+    };
+// #define Auto          0x04
+// #define Pal           0x84
+// #define Ntsc_M        0x54
+// #define Pal_60        0x64
+// #define Ntsc443       0x74
+// #define Ntsc_J        0x44
+// #define Pal_N_wp      0x94
+// #define Pal_M_wop     0xA4
+// #define Pal_M         0xB4
+// #define Pal_Cmb_N     0xC4
+// #define Pal_Cmb_N_wp  0xD4
+// #define Secam         0xE4
 
 
 

@@ -491,20 +491,40 @@ void signal_turn(void)
             else if (dma_au8RxBuf[2] == 'N' && \
                     (dma_au8RxBuf[3] == 0x0a ||\
                      dma_au8RxBuf[3] == 0x08 ||\
-                     dma_au8RxBuf[3] == 0xe3
+                     dma_au8RxBuf[3] == 0xe3 ||\
+                     dma_au8RxBuf[3] == 'D'                    //default
                     )) // BCSH
             {
-
-                (void)I2C_Master_Transmit(DEVICE_ADDR, &dma_au8RxBuf[3], 2, TIMEOUT);
-                c_state = 1;
-                printf("bcsh: 0x%02x \n",dma_au8RxBuf[4]);
-                if(dma_au8RxBuf[3] == 0x0a)
-                    Bright = dma_au8RxBuf[4];
-                else if(dma_au8RxBuf[3] == 0x08)
-                    Contrast = dma_au8RxBuf[4];
-                else if(dma_au8RxBuf[3] == 0xe3)
-                    Saturation = dma_au8RxBuf[4];
+                 
+                if(dma_au8RxBuf[3] == 'D' && dma_au8RxBuf[4] == 'E')
+                {   
+                    uint8_t I2C_DEFAULT_BCSH[] =
+                    {
+                        0x42, 0x0E, 0x00, // Re-enter map
+                        0x42, 0x0a, 0x00, // new 亮度   00(00)  7F(+30)  80(-30)    e0
+                        0x42, 0x08, 0x80, // new 对比度 00(00)  80(01)   FF(02)     58
+                        0x42, 0xe3, 0x80, // new 饱和度 00(00)  80(01)   FF(02)     80
+                    };
+                    Bright = 0x00;
+                    Contrast = 0x80;
+                    Saturation = 0x80;
+                    
+                    (void)ADV_7280_Send_Buff(I2C_DEFAULT_BCSH, sizeof(I2C_DEFAULT_BCSH) / 3, TIMEOUT); 
+                    printf("bcsh: default \n");
+                }
+                else
+                {
+                    (void)I2C_Master_Transmit(DEVICE_ADDR, &dma_au8RxBuf[3], 2, TIMEOUT);
+                    printf("bcsh: 0x%02x \n",dma_au8RxBuf[4]);
+                    if(dma_au8RxBuf[3] == 0x0a)
+                        Bright = dma_au8RxBuf[4];
+                    else if(dma_au8RxBuf[3] == 0x08)
+                        Contrast = dma_au8RxBuf[4];
+                    else if(dma_au8RxBuf[3] == 0xe3)
+                        Saturation = dma_au8RxBuf[4];
+                }
                 mem_settings();
+                c_state = 1;
             }
             else if (dma_au8RxBuf[2] == 'S') // Sw
             {

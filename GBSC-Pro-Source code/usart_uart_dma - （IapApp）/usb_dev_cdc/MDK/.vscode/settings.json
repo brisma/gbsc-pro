@@ -1,8 +1,12 @@
 {
     "files.associations": {
+        "*.pio": "cpp",
+        "*.ino": "cpp",
         "ev_hc32f460_lqfp100_v2.h": "c",
         "main.h": "c",
         "111.C": "cpp",
-        "222.C": "cpp"
+        "222.C": "cpp",
+        "videoprocess.h": "c",
+        "i2c.h": "c"
     }
 }

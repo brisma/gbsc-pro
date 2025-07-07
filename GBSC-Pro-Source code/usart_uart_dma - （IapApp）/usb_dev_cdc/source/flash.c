@@ -232,12 +232,12 @@ void Video_ReadNot2(uint8_t state )
         else
             adv_input  =    u8_buf[1];
         
-//        if(u8_buf[2] >= 2)
-//            adv_double = false;
-//        else
-//            adv_double =    u8_buf[2];
+        if(u8_buf[2] >= 2)
+            adv_double = false;
+        else
+            adv_double =    u8_buf[2];
         
-        adv_double = true;
+//        adv_double = true;
         
         if(u8_buf[3] >= 2)
             adv_smooth = false;

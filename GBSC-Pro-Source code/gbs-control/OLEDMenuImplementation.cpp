@@ -12,7 +12,7 @@
 
 #include "ntsc_1920x1080.h"
 
-#define ACE
+// #define ACE
 
 #define RGB1 0x01
 #define YUV0 0x00
@@ -904,105 +904,13 @@ switch (item->tag) {
 
     uopt->TVMODE_presetPreference = preset;
     // 更新后的条件处理逻辑
-if (preset == TVMODE_PresetPreference::MT_MODE_AUTO) {  
+// if (preset == TVMODE_PresetPreference::MT_MODE_AUTO) {  
     if (Info == InfoAV) ChangeAvModeOption(0);
     else if (Info == InfoSV) ChangeSvModeOption(0);
     if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Auto;  // 0x04
+        TvMode[3] = modes[preset];  // 0x04
         sender.send(TvMode);
     }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PAL) {
-    if (Info == InfoAV) ChangeAvModeOption(1);
-    else if (Info == InfoSV) ChangeSvModeOption(1);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal;  // 0x84
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_NTSCM) {
-    if (Info == InfoAV) ChangeAvModeOption(2);
-    else if (Info == InfoSV) ChangeSvModeOption(2);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Ntsc_M;  // 0x54
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PAL60) {
-    if (Info == InfoAV) ChangeAvModeOption(3);
-    else if (Info == InfoSV) ChangeSvModeOption(3);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_60;  // 0x64
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_NTSC443) {
-    if (Info == InfoAV) ChangeAvModeOption(4);
-    else if (Info == InfoSV) ChangeSvModeOption(4);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Ntsc443;  // 0x74
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_NTSCJ) {
-    if (Info == InfoAV) ChangeAvModeOption(5);
-    else if (Info == InfoSV) ChangeSvModeOption(5);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Ntsc_J;  // 0x44
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PALNwp) {
-    if (Info == InfoAV) ChangeAvModeOption(6);
-    else if (Info == InfoSV) ChangeSvModeOption(6);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_N_wp;  // 0x94
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PALMwop) {
-    if (Info == InfoAV) ChangeAvModeOption(7);
-    else if (Info == InfoSV) ChangeSvModeOption(7);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_M_wop;  // 0xA4
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PALM) {
-    if (Info == InfoAV) ChangeAvModeOption(8);
-    else if (Info == InfoSV) ChangeSvModeOption(8);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_M;  // 0xB4
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PALCmbN) {
-    if (Info == InfoAV) ChangeAvModeOption(9);
-    else if (Info == InfoSV) ChangeSvModeOption(9);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_Cmb_N;  // 0xC4
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_PALCmbNwp) {
-    if (Info == InfoAV) ChangeAvModeOption(10);
-    else if (Info == InfoSV) ChangeSvModeOption(10);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Pal_Cmb_N_wp;  // 0xD4
-        sender.send(TvMode);
-    }
-}
-else if (preset == TVMODE_PresetPreference::MT_MODE_SECAM) {
-    if (Info == InfoAV) ChangeAvModeOption(11);
-    else if (Info == InfoSV) ChangeSvModeOption(11);
-    if (Info == InfoSV || Info == InfoAV) {
-        TvMode[3] = Secam;  // 0xE4
-        sender.send(TvMode);
-    }
-}
-
-// 注意：原代码中的MT_MODE_SECAM525已被移除
-
     // saveUserPrefs();
     manager->freeze();
     return false;
@@ -1096,13 +1004,6 @@ bool InputSwHandler(OLEDMenuManager *manager, OLEDMenuItem *item, OLEDMenuNav, b
 
 bool SettingHandler(OLEDMenuManager *manager, OLEDMenuItem *item, OLEDMenuNav, bool isFirstTime)
 {
-
-    // unsigned char Adv_SM_ON[7] = {0x41, 0x44, 'S', 0x90};
-    // unsigned char Adv_SM_OFF[7] = {0x41, 0x44, 'S', 0x91};
-
-    // unsigned char Adv_2X[7] = {0x41, 0x44, 'S', 0x30};
-    // unsigned char Adv_1X[7] = {0x41, 0x44, 'S', 0x31};
-
     unsigned char Adv_ACE_ON[7] = {0x41, 0x44, 'S', 0x80};
     unsigned char Adv_ACE_OFF[7] = {0x41, 0x44, 'S', 0x81};
 

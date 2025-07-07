@@ -119,6 +119,11 @@ extern uint8_t Contrast   ;
 extern uint8_t Saturation ;
 
 
+extern uint8_t btn_flag;
+
+
+
+
 extern uint8_t dma_au8RxBuf[APP_FRAME_LEN_MAX];
 
 

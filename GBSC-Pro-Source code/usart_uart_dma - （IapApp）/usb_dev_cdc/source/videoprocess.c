@@ -2,6 +2,9 @@
 #include "ev_hc32f460_lqfp100_v2_bsp.h"
 #include "main.h"
 
+uint8_t btn_flag;
+
+
 static uint8_t status = 0;
 uint8_t Adv_7391_sw = 0;
 uint8_t adv_input;
@@ -89,44 +92,23 @@ uint8_t I2C_COMMANDS_BCSH[] =
 uint8_t I2C_COMMANDS_YC_INPUT[] =
     {
         /* =============== ADV7280 YC分量输入配置 =============== */
-        // [寄存器页控制（手册6.2.15节）]
-        0x42, 0x0E, 0x00, // [0x0E] 选择主寄存器页
-        // [视频输入选择（手册表15）]
-        0x42, 0x00, 0x09, // [0x00] YC输入模式:
-                          // Y信号-AIN3, C信号-AIN4
-        // [视频处理控制（手册6.2.56-57节）]
-        0x42, 0x38, 0x24, // [0x38] NTSC处理:
-                          // BIT5=0 禁用色度梳状滤波
-                          // BIT2=1 启用亮度路径直通
-        0x42, 0x39, 0x24, // [0x39] PAL处理:
-                          // 相同位域配置兼容PAL
-        // [滤波器控制（手册6.2.23节）]
-        0x42, 0x17, 0x49, // [0x17]
-                          // BIT6=1 启用SH1滤波器
-                          // BIT[3:0]=1001: SVHS模式8（增强锐度）
+        0x42, 0x0E, 0x00,
+        0x42, 0x00, 0x09,
+        0x42, 0x38, 0x24,
+        0x42, 0x39, 0x24,
+        0x42, 0x17, 0x49,
 };
 
 uint8_t I2C_COMMANDS_CVBS_INPUT[] =
     {
         /* =============== ADV7280 CVBS输入配置 =============== */
-        // [寄存器页控制（手册6.2.15节）]
-        0x42, 0x0E, 0x00, // [0x0E] 选择主寄存器页
-        // [视频输入选择（手册表15）]
-        0x42, 0x00, 0x00, // [0x00] CVBS输入模式:
-                          // AIN1输入复合视频信号
-        // [视频处理控制（手册6.2.56-57节）]
-        0x42, 0x38, 0x24, // [0x38] NTSC处理:
-                          // BIT5=0 禁用色度梳状滤波
-                          // BIT2=1 亮度路径直通模式
-        0x42, 0x39, 0x24, // [0x39] PAL处理:
-                          // 相同配置保持制式兼容性
-        // [滤波器控制（手册6.2.23节）]
+        0x42, 0x0E, 0x00,
+        0x42, 0x00, 0x00,
+        0x42, 0x38, 0x80,
+        0x42, 0x39, 0x24,
         0x42, 0x17, 0x47, // [0x17]
-                          // BIT6=1 启用SH1滤波器
-                          // BIT[3:0]=0111: 标准CVBS模式7
 };
-// RetroScaler_I2C_AUTO_COMMANDS
-// I2C_AUTO_COMMANDS
+
 void SoftwareReset_ADV7280A()
 {
     uint8_t buff[2];
@@ -140,84 +122,11 @@ void SoftwareReset_ADV7280A()
     (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // 复位 ADV7280 的所有寄存器
     DDL_DelayMS(10);
 }
-
-uint8_t RetroScaler_I2C_AUTO_COMMANDS[] =
-    {
-        // /*7280*/
-        // 0x42, 0x0F, 0x80, // 复位 ADV7280 的所有寄存器
-        // 0x42, 0x0F, 0x00, // 退出复位模式，恢复正常工作
-
-        0x42, 0x00, 0x00, // CVBS in on AIN1
-        0x42, 0x0E, 0x80, // ADI Required Write
-        0x42, 0x9C, 0x00, // ADI Required Write
-        0x42, 0x9C, 0xFF, // ADI Required Write
-
-        0x42, 0x0E, 0x00, // Re-enter map
-        0x42, 0x03, 0x0C, // 所有线路均已过滤和缩放 | 输出驱动器已启用
-        0x42, 0x04, 0x37, // 扩展输出控制  0x04
-        0x42, 0x13, 0x00, // Enable INTRQ output driver
-        0x42, 0x1D, 0x40, // LLC 引脚激活
-        0x42, 0x54, 0xC0, // ADI Required Write
-        0x42, 0x80, 0x51, // ADI Required Write
-        0x42, 0x81, 0x51, // ADI Required Write
-        0x42, 0x82, 0x68, // ADI Required Write
-
-        0x42, 0x14, 0x15, // 电流夹钳启用 |设置 Free-run 模式，输出 100% 彩条测试信号
-        0x42, 0x02, 0x04, // 选择视频输入格式（VID_SEL = 0x04，自动检测 PAL/NTSC/SECAM）
-        0x42, 0x07, 0xFF, // new  auto tvmode
-
-#if RES_CHANGED == false
-        0x42, 0x0a, 0xe0, // new 亮度   00(00)  7F(+30)  80(-30)    e0
-        0x42, 0x08, 0x58, // new 对比度 00(00)  80(01)   FF(02)     58
-        0x42, 0xe3, 0x58, // new 饱和度 00(00)  80(01)   FF(02)     80
-                          // 0x42, 0x0B, 0xff, // new 色调   80(00)  00(-312) ff(+312)
-#endif
-        // 0x42, 0x6B, 0x11, // VS/Field/SFL Pin Output Data Enable   官方脚本没有
-
-        0x42, 0xFD, 0x84, // Set the VPP register address to 0x84
-        0x84, 0xA3, 0x00, // ADI Required Write
-        0x84, 0x5B, 0x00, // 启用高级计时模式  必须启用高级定时模式，I2P 转换器才能正常工作
-
-        /*User Sub Map 2*/
-        0x42, 0x0E, 0x40, // 访问 User Sub Map 2
-        // 0x42, 0xD9, 0x44, // Selects the minimum threshold for the input Luma video signal.
-        0x42, 0xE0, 0x01, // Enable fast lock mode
-        0x42, 0x0E, 0x00, // Re-enter map
-        /*End User Sub Map 2*/
-
-        /*7391*/
-        0x56, 0x17, 0x02, // 7391Software reset
-        0x56, 0x00, 0x1C, // Open DAC[1:3]
-        0x56, 0x01, 0x70, // ED (at 54 MHz) input.
-        0x56, 0x30, 0x04, //  嵌入式 EAV/SAV 代码 | SMPTE 293M, ITU-BT.1358
-        0x56, 0x31, 0x01, //  Pixel Data Valid [Encoder Writes finished]
-
-        // 0x42 ,0x0F ,0x00, // Exit Power Down Mode [ADV7280 writes begin]
-        // 0x42 ,0x00 ,0x00, // CVBS in on AIN1
-        // // 0x42 ,0x0E ,0x80, // ADI Required Write
-        // // 0x42 ,0x9C ,0x00, // ADI Required Write
-        // // 0x42 ,0x9C ,0xFF, // ADI Required Write
-        // 0x42 ,0x0E ,0x00, // Enter User Sub Map
-        // 0x42 ,0x03 ,0x0C, // Enable Pixel & Sync output drivers
-        // 0x42 ,0x04 ,0x07, // Power-up INTRQ, HS & VS pads
-        // 0x42 ,0x13 ,0x00, // Enable INTRQ output driver
-        // 0x42 ,0x17 ,0x41, // Enable SH1
-        // 0x42 ,0x1D ,0x40, // Enable LLC output driver
-        // // 0x42 ,0x52 ,0xCD, // ADI Required Write
-        // // 0x42 ,0x80 ,0x51, // ADI Required Write
-        // // 0x42 ,0x81 ,0x51, // ADI Required Write
-        // // 0x42 ,0x82 ,0x68, // ADI Required Write
-        // 0x42 ,0xFD ,0x84, // Set VPP Map
-        // 0x84 ,0xA3 ,0x00, // ADI Required Write [ADV7280 VPP writes begin]
-        // 0x84 ,0x5B ,0x00, // Enable Advanced Timing Mode
-        // 0x84 ,0x55 ,0x80, // Enable the Deinterlacer for I2P [All ADV7280 writes finished]
-        // 0x56 ,0x17 ,0x02, // Software Reset [Encoder writes begin]
-        // 0x56 ,0x00 ,0x9C, // Power up DAC's and PLL
-        // 0x56 ,0x01 ,0x70, // ED at 54MHz input
-        // 0x56 ,0x30 ,0x04, // 525p at 59.94 Hz with Embedded Timing
-        // 0x56 ,0x31 ,0x01, // Pixel Data Valid [Encoder Writes finished]
-
-};
+// RetroScaler_I2C_AUTO_COMMANDS
+// I2C_AUTO_COMMANDS
+//uint8_t RetroScaler_I2C_AUTO_COMMANDS[] =
+//    {
+//    };
 // RetroScaler_I2C_AUTO_COMMANDS
 // I2C_AUTO_COMMANDS
 uint8_t I2C_AUTO_COMMANDS[] =
@@ -229,6 +138,7 @@ uint8_t I2C_AUTO_COMMANDS[] =
        0x42,0x05,0x00,
        0x42,0x02,0x04, // 制式  0000 0100   th17
        0x42,0x07,0xff, // new  tvmode
+
        0x42,0x14,0x15, // set free-run pattern to 100% color bar     (  0x11  )
        0x42,0x00,0x00,
        0x42,0x0E,0x80,
@@ -243,7 +153,7 @@ uint8_t I2C_AUTO_COMMANDS[] =
        0x42,0x52,0xCD,
        0x42,0x80,0x51,
        0x42,0x81,0x51,
-       0x42,0x82,0x68,
+       0x42,0x82,0x00,  //68
        0x42,0x0E,0x80,
        0x42,0xD9,0x44,
        0x42,0x0E,0x00,
@@ -270,7 +180,8 @@ uint8_t Ace_Code_ON[] =
     {
         0x42, 0x0E, 0x40,
         0x42, 0x80, 0x80,
-        0x42, 0x0E, 0x00};
+        0x42, 0x0E, 0x00
+    };
 
 uint8_t Ace_Code_OFF[] =
     {
@@ -279,43 +190,6 @@ uint8_t Ace_Code_OFF[] =
         0x42, 0x0E, 0x00
     };
 
-// void info(void)
-// {
-//     uint8_t count = 0;
-//     uint8_t buff[2] = {0xe0, 0x00};
-
-//     GPIO_SetPins(POWER_DOWN_PORT, GPIO_PIN_POWER_DOWN); // POWER_DOWN_N
-//     DDL_DelayMS(5);
-//     GPIO_SetPins(INPUT_RESET_PORT, GPIO_PIN_INPUT_RESET); // INPUT_RESET_N
-//     DDL_DelayMS(10);
-//     GPIO_SetPins(OUTPUT_PORT, GPIO_PIN_OUTPUT_EN); // OUTPUT_EN
-//     DDL_DelayMS(10);
-
-//     (void)Chip_Receive(DEVICE_ADDR, buff, NULL, 1, TIMEOUT);
-//     DDL_DelayMS(15);
-//     buff[0] = 0x0f;
-//     buff[1] = 0x80;
-//     (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT);
-//     DDL_DelayMS(10);
-
-//     buff[0] = 0x0f;
-//     buff[1] = 0x00;
-//     (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT);
-//     DDL_DelayMS(15);
-//     SoftwareReset_ADV7280A();
-//     (void)ADV_7280_Send_Buff(I2C_AUTO_COMMANDS, sizeof(I2C_AUTO_COMMANDS) / 3, TIMEOUT); // AUTO_REGS
-
-//     buff[0] = VID_SEL_REG;
-//     buff[1] = adv_tv;
-//     (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // mode
-
-//     set_input(1); // read button
-//     set_smooth(0);
-//     set_double_line(0); // GPIO_ReadInputPins(GPIO_PORT_B,GPIO_PIN_05)
-//     Adv_7391_sw = 1;
-//     printf("ModuleOn\n");
-//     //    led_state &= ~0x01;
-// }
 void video_init(void)
 {
     uint8_t count = 0;
@@ -478,6 +352,68 @@ void Read_Video_key_change(void)
     key_state_line_last = key_line_state;
 }
 
+void detect_video_format(uint8_t btn_flag)
+{   
+    if(!btn_flag)
+        return;
+    
+    uint8_t reg13 = 0, reg12 = 0, reg10 = 0;
+    uint8_t buff[2];
+
+    buff[0] = 0x13;
+    Chip_Receive(DEVICE_ADDR, &buff[0], &reg13, 1, TIMEOUT);
+
+    buff[0] = 0x12;
+    Chip_Receive(DEVICE_ADDR, &buff[0], &reg12, 1, TIMEOUT);
+
+    buff[0] = 0x10;
+    Chip_Receive(DEVICE_ADDR, &buff[0], &reg10, 1, TIMEOUT);
+
+    uint8_t interlaced = (reg13 & 0x40) >> 6;
+    uint8_t in_lock    = (reg13 & 0x01);
+    uint8_t ll_nstd    = (reg12 & 0x10) >> 4;
+    uint8_t ad_result  =  reg10 & 0x70; // bits 6~4
+
+    if (!in_lock) {
+        printf("No signal lock.\n");
+        return;
+    }
+
+    if (!interlaced)
+    {
+      if (ad_result == 0x40)
+      {
+        printf("288p (PAL progressive)\n");
+      }
+      else if (ad_result == 0x00 || ad_result == 0x20)
+      {
+        // NTSC 模式下逐行信号
+        printf("240p (NTSC progressive)\n");
+      }
+      else
+      {
+        printf("Unknown\n");
+      }
+    }
+    else
+    {
+      // interlaced = 1
+      if (ad_result == 0x40)
+      {
+        printf("576i (PAL interlaced)\n");
+      }
+      else if (ad_result == 0x00 || ad_result == 0x20)
+      {
+        printf("480i (NTSC interlaced)\n");
+      }
+      else
+      {
+        printf("Unknown\n");
+      }
+    }
+}
+
+
 void detect_loop(void)
 {
     if (Adv_7391_sw == 1)
@@ -499,30 +435,30 @@ void detect_loop(void)
         buff[1] = 0x10;
         Chip_Receive(DEVICE_ADDR, &buff[0], &detect_result, 1, TIMEOUT);
         Chip_Receive(DEVICE_ADDR, &buff[1], &ad_result, 1, TIMEOUT);
-        //        printf("detect_result: 0x%02x\n",detect_result);
-        //        printf("ad_result: 0x%02x\n",ad_result);
-        if ((uint8_t)(detect_result & 0x81) == 0x80 && (err_flag))
-        {
-            if (adv_input == AV_INPUT)
-            {
-                //                video_init();
-                set_input(SV_INPUT);
-                set_input(AV_INPUT);
-                err_flag = 0;
-            }
-            else if (adv_input == SV_INPUT)
-            {
-                //                video_init();
-                set_input(AV_INPUT);
-                set_input(SV_INPUT);
-                err_flag = 0;
-            }
+        
+        detect_video_format(btn_flag);
+//        if ((uint8_t)(detect_result & 0x81) == 0x80 && (err_flag))
+//        {
+//            if (adv_input == AV_INPUT)
+//            {
+//                //                video_init();
+//                set_input(SV_INPUT);
+//                set_input(AV_INPUT);
+//                err_flag = 0;
+//            }
+//            else if (adv_input == SV_INPUT)
+//            {
+//                //                video_init();
+//                set_input(AV_INPUT);
+//                set_input(SV_INPUT);
+//                err_flag = 0;
+//            }
 
-            led_sw = 0x01 | LED_ERR_RED;
-            //          led_state |= LED_RED;
-            printf("err\n");
-            err_flag = 0;
-        }
+//            led_sw = 0x01 | LED_ERR_RED;
+//            //          led_state |= LED_RED;
+//            printf("err\n");
+//            err_flag = 0;
+//        }
         if (((uint8_t)(ad_result & 0x02) == 0x02) && !status && (err_flag))
         {
             status = 1;

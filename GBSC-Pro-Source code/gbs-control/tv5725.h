@@ -93,10 +93,20 @@ public:
     typedef UReg<0x00, 0x07, 0, 8> REG_S0_07;
     typedef UReg<0x00, 0x08, 0, 8> REG_S0_08;
 
-    typedef UReg<0x00, 0x06, 0, 8> H_TOTAL_BIT7_0;
-    typedef UReg<0x00, 0x07, 0, 1> H_TOTAL_BIT8;
-    typedef UReg<0x00, 0x07, 1, 7> V_TOTAL_BIT6_0;
-    typedef UReg<0x00, 0x08, 0, 8> V_TOTAL_BIT10_7;
+
+
+    typedef UReg<0x00, 0x04, 6, 2> INTERLACE_PROGRESSIVE_RECOGNIZE;
+    typedef UReg<0x00, 0x05, 0, 1> USER_DEFINE;
+    typedef UReg<0x00, 0x06, 0, 8> H_TOTAL_LOW;
+    typedef UReg<0x00, 0x07, 0, 1> H_TOTAL_HIGH;
+    typedef UReg<0x00, 0x07, 1, 7> V_TOTAL_LOW;
+    typedef UReg<0x00, 0x08, 0, 4> V_TOTAL_HIGH;
+
+
+    typedef UReg<0x04, 0x2B, 4, 1> PB_DB_FIELD_EN;
+
+
+    
 
 /* new_E*/
 
