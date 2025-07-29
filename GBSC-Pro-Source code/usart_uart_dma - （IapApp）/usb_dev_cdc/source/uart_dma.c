@@ -504,6 +504,7 @@ void signal_turn(void)
                         0x42, 0x0a, 0x00, // new 亮度   00(00)  7F(+30)  80(-30)    e0
                         0x42, 0x08, 0x80, // new 对比度 00(00)  80(01)   FF(02)     58
                         0x42, 0xe3, 0x80, // new 饱和度 00(00)  80(01)   FF(02)     80
+                        0x42, 0x0b, 0x00, // new 色度
                     };
                     Bright = 0x00;
                     Contrast = 0x80;

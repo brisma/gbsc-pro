@@ -107,11 +107,22 @@ void PR_rgb(void)
   printf("VAL:R %d G %d B %d \n", R_VAL, G_VAL, B_VAL);
 #endif
 }
+int round_up_if_above(double value) {
+    int integer_part = (int)value;
+    double decimal_part = value - integer_part;
+
+    if (decimal_part > 0.5) {
+        return integer_part + 1;
+    } else {
+        return integer_part;
+    }
+}
 void Color_Conversion(void)
 {
-    GBS::VDS_Y_OFST::write((signed char)((float)(0.299 * (signed char)(R_VAL - 128)) + (float)(0.587 * (signed char)(G_VAL - 128)) + (float)(0.114 * (signed char)(B_VAL - 128))));
-    GBS::VDS_U_OFST::write((signed char)((float)(-0.169 * (signed char)(R_VAL - 128)) - (float)(0.331 * (signed char)(G_VAL - 128)) + (float)(0.500 * (signed char)(B_VAL - 128)))); //
-    GBS::VDS_V_OFST::write((signed char)((float)(0.500 * (signed char)(R_VAL - 128)) - (float)(0.419 * (signed char)(G_VAL - 128)) - (float)(0.081 * (signed char)(B_VAL - 128))));
+    GBS::VDS_Y_OFST::write((signed char)((float)(0.299f * (R_VAL - 128)) + (float)(0.587f * (G_VAL - 128)) + (float)(0.114f * (B_VAL - 128))));
+    GBS::VDS_U_OFST::write((signed char)((float)(-0.169f * (R_VAL - 128)) - (float)(0.331f * (G_VAL - 128)) + (float)(0.500f * (B_VAL - 128)))); //
+    GBS::VDS_V_OFST::write((signed char)((float)(0.500f * (R_VAL - 128)) - (float)(0.419f * (G_VAL - 128)) - (float)(0.081f * (B_VAL - 128))));
+    // printf(" RGB: 0x%02x,0x%02x,0x%02x \n",GBS::VDS_Y_OFST::read(),GBS::VDS_U_OFST::read(),GBS::VDS_V_OFST::read());
 }
 
 /*
@@ -1396,6 +1407,7 @@ void applyComponentColorMixing()
     GBS::VDS_Y_GAIN::write(0x64);
     GBS::VDS_UCOS_GAIN::write(0x19);
     GBS::VDS_VCOS_GAIN::write(0x19);
+
     GBS::VDS_Y_OFST::write(0xfe);
     GBS::VDS_U_OFST::write(0x01);
 }
@@ -1425,53 +1437,42 @@ void toggleIfAutoOffset()
 void applyYuvPatches()
 {
     GBS::ADC_RYSEL_R::write(1);
-    GBS::ADC_RYSEL_B::write(1);
     GBS::ADC_RYSEL_G::write(0);
-    GBS::DEC_MATRIX_BYPS::write(1); 
-    GBS::IF_MATRIX_BYPS::write(1);
+    GBS::ADC_RYSEL_B::write(1);
+    GBS::DEC_MATRIX_BYPS::write(1);   //YUV 转RGB
+    GBS::IF_MATRIX_BYPS::write(1);   // 1 旁路 0执行 rgb2yuv
 
     if (GBS::GBS_PRESET_CUSTOM::read() == 0) {
 
-        GBS::VDS_Y_GAIN::write(0x80);
-        GBS::VDS_UCOS_GAIN::write(0x1c);
-        GBS::VDS_VCOS_GAIN::write(0x29);
-        if (BriorCon == 1) {
-            GBS::VDS_Y_OFST::write(0x0E);
+        GBS::VDS_Y_GAIN::write(128);
+        GBS::VDS_UCOS_GAIN::write(28);
+        GBS::VDS_VCOS_GAIN::write(41);
+        
+        GBS::ADC_RGCTRL::write(0x33);
+        GBS::ADC_GGCTRL::write(0x33);
+        GBS::ADC_BGCTRL::write(0x33);
 
-            GBS::ADC_RGCTRL::write(0x33);
-            GBS::ADC_GGCTRL::write(0x33);
-            GBS::ADC_BGCTRL::write(0x33);
-        } else if (BriorCon == 2) {
-            // GBS::VDS_Y_OFST::write(-0x22);
-            // GBS::ADC_RGCTRL::write(0x56);
-            // GBS::ADC_GGCTRL::write(0x56);
-            // GBS::ADC_BGCTRL::write(0x56);
+        GBS::VDS_Y_OFST::write(0x0E);//0x0a
+        GBS::VDS_U_OFST::write(0x03);//0x05
+        GBS::VDS_V_OFST::write(0x04);//0x06
 
-            GBS::VDS_Y_OFST::write(0x0E);
-            GBS::ADC_RGCTRL::write(0x33);
-            GBS::ADC_GGCTRL::write(0x33);
-            GBS::ADC_BGCTRL::write(0x33);
-        }
-        GBS::VDS_U_OFST::write(0x03);
-        GBS::VDS_V_OFST::write(0x03);
-        if (rto->videoStandardInput >= 5 && rto->videoStandardInput <= 7) {
-        }
     }
-    if (uopt->wantOutputComponent) {
+    if (uopt->wantOutputComponent) 
+    {
         applyComponentColorMixing();
     }
 
-    R_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.402 * (signed char)((signed char)GBS::VDS_V_OFST::read())))) + 128;
-    G_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) - (float)(0.344136 * (signed char)((signed char)GBS::VDS_U_OFST::read())) - 0.714136 * (signed char)((signed char)GBS::VDS_V_OFST::read()))) + 128;
-    B_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.772 * (signed char)((signed char)GBS::VDS_U_OFST::read())))) + 128;
+    R_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.402 * (GBS::VDS_V_OFST::read())))) + 128;
+    G_VAL = ((GBS::VDS_Y_OFST::read() - (float)(0.344136  * (GBS::VDS_U_OFST::read())) - 0.714136 * GBS::VDS_V_OFST::read())) + 128;
+    B_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.772 * (GBS::VDS_U_OFST::read())))) + 128;
 }
 
 void applyRGBPatches()
 {
     GBS::ADC_RYSEL_R::write(0);
-    GBS::ADC_RYSEL_B::write(0);
     GBS::ADC_RYSEL_G::write(0);
-    GBS::DEC_MATRIX_BYPS::write(0);
+    GBS::ADC_RYSEL_B::write(0);
+    GBS::DEC_MATRIX_BYPS::write(0);   //0: 跳过 CSC，信号直接通过
     GBS::IF_MATRIX_BYPS::write(1);
 
     if (GBS::GBS_PRESET_CUSTOM::read() == 0) {
@@ -1487,9 +1488,9 @@ void applyRGBPatches()
         applyComponentColorMixing();
     }
 
-    R_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.402 * (signed char)((signed char)GBS::VDS_V_OFST::read())))) + 128;
-    G_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) - (float)(0.344136 * (signed char)((signed char)GBS::VDS_U_OFST::read())) - 0.714136 * (signed char)((signed char)GBS::VDS_V_OFST::read()))) + 128;
-    B_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.772 * (signed char)((signed char)GBS::VDS_U_OFST::read())))) + 128;
+    R_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.402 * (GBS::VDS_V_OFST::read())))) + 128;
+    G_VAL = ((GBS::VDS_Y_OFST::read() - (float)(0.344136  * (GBS::VDS_U_OFST::read())) - 0.714136 * GBS::VDS_V_OFST::read())) + 128;
+    B_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.772 * (GBS::VDS_U_OFST::read())))) + 128;
 }
 
 void setAdcGain(uint8_t gain)
@@ -9429,7 +9430,8 @@ void handleType2Command(char argument)
             break;
         case 'U': // Default
             // Сброс
-            if (GBS::ADC_INPUT_SEL::read() == 1) {
+            if (GBS::ADC_INPUT_SEL::read() == 1)     //（RGB）RGB1 channel
+            {
                 GBS::VDS_Y_GAIN::write(128);
                 GBS::VDS_UCOS_GAIN::write(28);
                 GBS::VDS_VCOS_GAIN::write(41);
@@ -9442,34 +9444,26 @@ void handleType2Command(char argument)
                 GBS::ADC_GOFCTRL::write(adco->g_off);
                 GBS::ADC_BOFCTRL::write(adco->b_off);
                 ; // SerialMprintln("RGB:defauit");
-            } else {
-                GBS::VDS_Y_GAIN::write(128);
-                GBS::VDS_UCOS_GAIN::write(28);
-                GBS::VDS_VCOS_GAIN::write(41);
-                // GBS::VDS_Y_OFST::write(254);
-                GBS::VDS_U_OFST::write(3); //+16
-                GBS::VDS_V_OFST::write(3);
+            } 
+            else //（YUV）RGB0 channel
+            {   
+
+                GBS::VDS_Y_GAIN::write(0x80);
+                GBS::VDS_UCOS_GAIN::write(0x1c);//0x1c
+                GBS::VDS_VCOS_GAIN::write(0x29);//0x29
+
+                GBS::VDS_Y_OFST::write(0x0E); 
+                GBS::VDS_U_OFST::write(0x03); 
+                GBS::VDS_V_OFST::write(0x04);
+
                 GBS::ADC_ROFCTRL::write(adco->r_off);
                 GBS::ADC_GOFCTRL::write(adco->g_off);
                 GBS::ADC_BOFCTRL::write(adco->b_off);
 
-                if (BriorCon == 1) // RGB
-                {
-                    GBS::VDS_Y_OFST::write(0x0E);
-                } else if (BriorCon == 2) // YUV
-                {
-                    // GBS::VDS_Y_OFST::write(-0x22);
-                    GBS::VDS_Y_OFST::write(0x0E);
-                };
-
-                // (signed char)GBS::VDS_Y_OFST::read()  = (signed char)GBS::VDS_Y_OFST::read();
-                // (signed char)GBS::VDS_U_OFST::read()  = (signed char)GBS::VDS_U_OFST::read();
-                // (signed char)GBS::VDS_V_OFST::read()  = (signed char)GBS::VDS_V_OFST::read();
-
-                R_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.402 * (signed char)((signed char)GBS::VDS_V_OFST::read())))) + 128;
-                G_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) - (float)(0.344136 * (signed char)((signed char)GBS::VDS_U_OFST::read())) - 0.714136 * (signed char)((signed char)GBS::VDS_V_OFST::read()))) + 128;
-                B_VAL = (((signed char)((signed char)GBS::VDS_Y_OFST::read()) + (float)(1.772 * (signed char)((signed char)GBS::VDS_U_OFST::read())))) + 128;
             }
+            R_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.402 * (GBS::VDS_V_OFST::read())))) + 128;
+            G_VAL = ((GBS::VDS_Y_OFST::read() - (float)(0.344136  * (GBS::VDS_U_OFST::read())) - 0.714136 * GBS::VDS_V_OFST::read())) + 128;
+            B_VAL = ((GBS::VDS_Y_OFST::read() + (float)(1.772 * (GBS::VDS_U_OFST::read())))) + 128;   
             break;
         case 'I':
             if (IR == 0) {

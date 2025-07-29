@@ -84,9 +84,10 @@ uint8_t I2C_COMMANDS_SMOOTH_ON[] =
 uint8_t I2C_COMMANDS_BCSH[] =
     {
         0x42, 0x0E, 0x00, // Re-enter map
-        0x42, 0x0a, 0xe0, // new 亮度   00(00)  7F(+30)  80(-30)    e0
-        0x42, 0x08, 0x58, // new 对比度 00(00)  80(01)   FF(02)     58
-        0x42, 0xe3, 0x58, // new 饱和度 00(00)  80(01)   FF(02)     80
+        0x42, 0x0a, 0x00, // new 亮度   00(00)  7F(+30)  80(-30)    e0
+        0x42, 0x08, 0x00, // new 对比度 00(00)  80(01)   FF(02)     58
+        0x42, 0xe3, 0x00, // new 饱和度 00(00)  80(01)   FF(02)     80
+        0x42, 0x0b, 0x00, // new 色度
 };
 
 uint8_t I2C_COMMANDS_YC_INPUT[] =

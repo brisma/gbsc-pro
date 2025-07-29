@@ -2151,20 +2151,20 @@ Image Symbol Table
     i.set_input                              0x000181a8   Section        0  videoprocess.o(i.set_input)
     i.set_smooth                             0x000181f8   Section        0  videoprocess.o(i.set_smooth)
     i.signal_turn                            0x00018248   Section        0  uart_dma.o(i.signal_turn)
-    i.statck_del_fpu_regs                    0x00018960   Section        0  cm_backtrace.o(i.statck_del_fpu_regs)
-    statck_del_fpu_regs                      0x00018961   Thumb Code    30  cm_backtrace.o(i.statck_del_fpu_regs)
-    i.uart_dma_init                          0x00018984   Section        0  uart_dma.o(i.uart_dma_init)
-    i.vd_Button_Init                         0x00018a98   Section        0  main.o(i.vd_Button_Init)
-    vd_Button_Init                           0x00018a99   Thumb Code   290  main.o(i.vd_Button_Init)
-    i.video_Deinit                           0x00018bc4   Section        0  videoprocess.o(i.video_Deinit)
-    i.video_init                             0x00018bfc   Section        0  videoprocess.o(i.video_init)
-    .constdata                               0x00018d1c   Section       16  hc32_ll_usart.o(.constdata)
-    .constdata                               0x00018d2c   Section       15  videoprocess.o(.constdata)
-    .constdata                               0x00018d3c   Section      224  cm_backtrace.o(.constdata)
-    print_info                               0x00018d3c   Data         152  cm_backtrace.o(.constdata)
-    __FUNCTION__                             0x00018dd4   Data          20  cm_backtrace.o(.constdata)
-    __FUNCTION__                             0x00018de8   Data          19  cm_backtrace.o(.constdata)
-    .conststring                             0x00018e1c   Section     1638  cm_backtrace.o(.conststring)
+    i.statck_del_fpu_regs                    0x00018968   Section        0  cm_backtrace.o(i.statck_del_fpu_regs)
+    statck_del_fpu_regs                      0x00018969   Thumb Code    30  cm_backtrace.o(i.statck_del_fpu_regs)
+    i.uart_dma_init                          0x0001898c   Section        0  uart_dma.o(i.uart_dma_init)
+    i.vd_Button_Init                         0x00018aa0   Section        0  main.o(i.vd_Button_Init)
+    vd_Button_Init                           0x00018aa1   Thumb Code   290  main.o(i.vd_Button_Init)
+    i.video_Deinit                           0x00018bcc   Section        0  videoprocess.o(i.video_Deinit)
+    i.video_init                             0x00018c04   Section        0  videoprocess.o(i.video_init)
+    .constdata                               0x00018d24   Section       16  hc32_ll_usart.o(.constdata)
+    .constdata                               0x00018d34   Section       15  videoprocess.o(.constdata)
+    .constdata                               0x00018d44   Section      224  cm_backtrace.o(.constdata)
+    print_info                               0x00018d44   Data         152  cm_backtrace.o(.constdata)
+    __FUNCTION__                             0x00018ddc   Data          20  cm_backtrace.o(.constdata)
+    __FUNCTION__                             0x00018df0   Data          19  cm_backtrace.o(.constdata)
+    .conststring                             0x00018e24   Section     1638  cm_backtrace.o(.conststring)
     .data                                    0x1fff8000   Section       16  hc32_ll_utility.o(.data)
     m_u32TickStep                            0x1fff8000   Data           4  hc32_ll_utility.o(.data)
     m_u32TickCount                           0x1fff8004   Data           4  hc32_ll_utility.o(.data)
@@ -2189,38 +2189,38 @@ Image Symbol Table
     .data                                    0x1fff803c   Section        4  uart_dma.o(.data)
     m_enRxFrameEnd                           0x1fff803c   Data           1  uart_dma.o(.data)
     m_u16RxLen                               0x1fff803e   Data           2  uart_dma.o(.data)
-    .data                                    0x1fff8040   Section      286  videoprocess.o(.data)
+    .data                                    0x1fff8040   Section      289  videoprocess.o(.data)
     m_enRxFrameEnd                           0x1fff8040   Data           1  videoprocess.o(.data)
     m_u16RxLen                               0x1fff8042   Data           2  videoprocess.o(.data)
     status                                   0x1fff8045   Data           1  videoprocess.o(.data)
-    key_state                                0x1fff815a   Data           1  videoprocess.o(.data)
-    key_state_last                           0x1fff815b   Data           1  videoprocess.o(.data)
-    key_line_state                           0x1fff815c   Data           1  videoprocess.o(.data)
-    key_state_line_last                      0x1fff815d   Data           1  videoprocess.o(.data)
-    .data                                    0x1fff8160   Section        8  system_hc32f460.o(.data)
-    .data                                    0x1fff8168   Section       21  cm_backtrace.o(.data)
-    main_stack_start_addr                    0x1fff8168   Data           4  cm_backtrace.o(.data)
-    main_stack_size                          0x1fff816c   Data           4  cm_backtrace.o(.data)
-    code_start_addr                          0x1fff8170   Data           4  cm_backtrace.o(.data)
-    code_size                                0x1fff8174   Data           4  cm_backtrace.o(.data)
-    init_ok                                  0x1fff8178   Data           1  cm_backtrace.o(.data)
-    on_fault                                 0x1fff8179   Data           1  cm_backtrace.o(.data)
-    stack_is_overflow                        0x1fff817a   Data           1  cm_backtrace.o(.data)
-    statck_has_fpu_regs                      0x1fff817b   Data           1  cm_backtrace.o(.data)
-    on_thread_before_fault                   0x1fff817c   Data           1  cm_backtrace.o(.data)
-    .data                                    0x1fff8180   Section        4  stdout.o(.data)
-    .bss                                     0x1fff8184   Section      512  hc32_ll_interrupts.o(.bss)
-    m_apfnIrqHandler                         0x1fff8184   Data         512  hc32_ll_interrupts.o(.bss)
-    .bss                                     0x1fff8384   Section      256  flash.o(.bss)
-    .bss                                     0x1fff8484   Section      532  uart_dma.o(.bss)
-    stcLlpDesc                               0x1fff8678   Data          32  uart_dma.o(.bss)
-    .bss                                     0x1fff8698   Section      456  cm_backtrace.o(.bss)
-    fw_name                                  0x1fff8698   Data          33  cm_backtrace.o(.bss)
-    hw_ver                                   0x1fff86b9   Data          33  cm_backtrace.o(.bss)
-    sw_ver                                   0x1fff86da   Data          33  cm_backtrace.o(.bss)
-    call_stack_info                          0x1fff86fb   Data         288  cm_backtrace.o(.bss)
-    regs                                     0x1fff881c   Data          68  cm_backtrace.o(.bss)
-    STACK                                    0x1fff8860   Section     3072  startup_hc32f460.o(STACK)
+    key_state                                0x1fff815d   Data           1  videoprocess.o(.data)
+    key_state_last                           0x1fff815e   Data           1  videoprocess.o(.data)
+    key_line_state                           0x1fff815f   Data           1  videoprocess.o(.data)
+    key_state_line_last                      0x1fff8160   Data           1  videoprocess.o(.data)
+    .data                                    0x1fff8164   Section        8  system_hc32f460.o(.data)
+    .data                                    0x1fff816c   Section       21  cm_backtrace.o(.data)
+    main_stack_start_addr                    0x1fff816c   Data           4  cm_backtrace.o(.data)
+    main_stack_size                          0x1fff8170   Data           4  cm_backtrace.o(.data)
+    code_start_addr                          0x1fff8174   Data           4  cm_backtrace.o(.data)
+    code_size                                0x1fff8178   Data           4  cm_backtrace.o(.data)
+    init_ok                                  0x1fff817c   Data           1  cm_backtrace.o(.data)
+    on_fault                                 0x1fff817d   Data           1  cm_backtrace.o(.data)
+    stack_is_overflow                        0x1fff817e   Data           1  cm_backtrace.o(.data)
+    statck_has_fpu_regs                      0x1fff817f   Data           1  cm_backtrace.o(.data)
+    on_thread_before_fault                   0x1fff8180   Data           1  cm_backtrace.o(.data)
+    .data                                    0x1fff8184   Section        4  stdout.o(.data)
+    .bss                                     0x1fff8188   Section      512  hc32_ll_interrupts.o(.bss)
+    m_apfnIrqHandler                         0x1fff8188   Data         512  hc32_ll_interrupts.o(.bss)
+    .bss                                     0x1fff8388   Section      256  flash.o(.bss)
+    .bss                                     0x1fff8488   Section      532  uart_dma.o(.bss)
+    stcLlpDesc                               0x1fff867c   Data          32  uart_dma.o(.bss)
+    .bss                                     0x1fff869c   Section      456  cm_backtrace.o(.bss)
+    fw_name                                  0x1fff869c   Data          33  cm_backtrace.o(.bss)
+    hw_ver                                   0x1fff86bd   Data          33  cm_backtrace.o(.bss)
+    sw_ver                                   0x1fff86de   Data          33  cm_backtrace.o(.bss)
+    call_stack_info                          0x1fff86ff   Data         288  cm_backtrace.o(.bss)
+    regs                                     0x1fff8820   Data          68  cm_backtrace.o(.bss)
+    STACK                                    0x1fff8868   Section     3072  startup_hc32f460.o(STACK)
 
     Global Symbols
 
@@ -2614,14 +2614,14 @@ Image Symbol Table
     set_double_line                          0x00018161   Thumb Code    46  videoprocess.o(i.set_double_line)
     set_input                                0x000181a9   Thumb Code    46  videoprocess.o(i.set_input)
     set_smooth                               0x000181f9   Thumb Code    46  videoprocess.o(i.set_smooth)
-    signal_turn                              0x00018249   Thumb Code  1704  uart_dma.o(i.signal_turn)
-    uart_dma_init                            0x00018985   Thumb Code   258  uart_dma.o(i.uart_dma_init)
-    video_Deinit                             0x00018bc5   Thumb Code    40  videoprocess.o(i.video_Deinit)
-    video_init                               0x00018bfd   Thumb Code   222  videoprocess.o(i.video_init)
-    I2C_COMMANDS_I2P_OFF_p                   0x00018d2c   Data          15  videoprocess.o(.constdata)
-    Region$$Table$$Base                      0x00019484   Number         0  anon$$obj.o(Region$$Table)
-    Image$$ER_IROM1$$Limit                   0x000194a4   Number         0  anon$$obj.o ABSOLUTE
-    Region$$Table$$Limit                     0x000194a4   Number         0  anon$$obj.o(Region$$Table)
+    signal_turn                              0x00018249   Thumb Code  1712  uart_dma.o(i.signal_turn)
+    uart_dma_init                            0x0001898d   Thumb Code   258  uart_dma.o(i.uart_dma_init)
+    video_Deinit                             0x00018bcd   Thumb Code    40  videoprocess.o(i.video_Deinit)
+    video_init                               0x00018c05   Thumb Code   222  videoprocess.o(i.video_init)
+    I2C_COMMANDS_I2P_OFF_p                   0x00018d34   Data          15  videoprocess.o(.constdata)
+    Region$$Table$$Base                      0x0001948c   Number         0  anon$$obj.o(Region$$Table)
+    Image$$ER_IROM1$$Limit                   0x000194ac   Number         0  anon$$obj.o ABSOLUTE
+    Region$$Table$$Limit                     0x000194ac   Number         0  anon$$obj.o(Region$$Table)
     g_u16_sys_timer                          0x1fff8018   Data           2  ev_hc32f460_lqfp100_v2.o(.data)
     g_u16_key_timer                          0x1fff801a   Data           2  ev_hc32f460_lqfp100_v2.o(.data)
     g_u16_mis_timer                          0x1fff801c   Data           2  ev_hc32f460_lqfp100_v2.o(.data)
@@ -2654,20 +2654,20 @@ Image Symbol Table
     I2C_COMMANDS_I2P_OFF_576i                0x1fff8067   Data          42  videoprocess.o(.data)
     I2C_COMMANDS_SMOOTH_OFF                  0x1fff8091   Data           9  videoprocess.o(.data)
     I2C_COMMANDS_SMOOTH_ON                   0x1fff809a   Data           9  videoprocess.o(.data)
-    I2C_COMMANDS_BCSH                        0x1fff80a3   Data          12  videoprocess.o(.data)
-    I2C_COMMANDS_YC_INPUT                    0x1fff80af   Data          15  videoprocess.o(.data)
-    I2C_COMMANDS_CVBS_INPUT                  0x1fff80be   Data          15  videoprocess.o(.data)
-    I2C_AUTO_COMMANDS                        0x1fff80cd   Data         123  videoprocess.o(.data)
-    Ace_Code_ON                              0x1fff8148   Data           9  videoprocess.o(.data)
-    Ace_Code_OFF                             0x1fff8151   Data           9  videoprocess.o(.data)
-    SystemCoreClock                          0x1fff8160   Data           4  system_hc32f460.o(.data)
-    HRC_VALUE                                0x1fff8164   Data           4  system_hc32f460.o(.data)
-    __stdout                                 0x1fff8180   Data           4  stdout.o(.data)
-    u8_buf                                   0x1fff8384   Data         256  flash.o(.bss)
-    dma_au8RxBuf                             0x1fff8484   Data         500  uart_dma.o(.bss)
-    STACK$$Base                              0x1fff8860   Number         0  startup_hc32f460.o(STACK)
-    STACK$$Limit                             0x1fff9460   Number         0  startup_hc32f460.o(STACK)
-    __initial_sp                             0x1fff9460   Data           0  startup_hc32f460.o(STACK)
+    I2C_COMMANDS_BCSH                        0x1fff80a3   Data          15  videoprocess.o(.data)
+    I2C_COMMANDS_YC_INPUT                    0x1fff80b2   Data          15  videoprocess.o(.data)
+    I2C_COMMANDS_CVBS_INPUT                  0x1fff80c1   Data          15  videoprocess.o(.data)
+    I2C_AUTO_COMMANDS                        0x1fff80d0   Data         123  videoprocess.o(.data)
+    Ace_Code_ON                              0x1fff814b   Data           9  videoprocess.o(.data)
+    Ace_Code_OFF                             0x1fff8154   Data           9  videoprocess.o(.data)
+    SystemCoreClock                          0x1fff8164   Data           4  system_hc32f460.o(.data)
+    HRC_VALUE                                0x1fff8168   Data           4  system_hc32f460.o(.data)
+    __stdout                                 0x1fff8184   Data           4  stdout.o(.data)
+    u8_buf                                   0x1fff8388   Data         256  flash.o(.bss)
+    dma_au8RxBuf                             0x1fff8488   Data         500  uart_dma.o(.bss)
+    STACK$$Base                              0x1fff8868   Number         0  startup_hc32f460.o(STACK)
+    STACK$$Limit                             0x1fff9468   Number         0  startup_hc32f460.o(STACK)
+    __initial_sp                             0x1fff9468   Data           0  startup_hc32f460.o(STACK)
 
 
 
@@ -2677,9 +2677,9 @@ Memory Map of the image
 
   Image Entry point : 0x00010281
 
-  Load Region LR_IROM1 (Base: 0x00010000, Size: 0x00009628, Max: 0x00060000, ABSOLUTE, COMPRESSED[0x00009578])
+  Load Region LR_IROM1 (Base: 0x00010000, Size: 0x00009634, Max: 0x00060000, ABSOLUTE, COMPRESSED[0x00009580])
 
-    Execution Region ER_IROM1 (Exec base: 0x00010000, Load base: 0x00010000, Size: 0x000094a4, Max: 0x00060000, ABSOLUTE)
+    Execution Region ER_IROM1 (Exec base: 0x00010000, Load base: 0x00010000, Size: 0x000094ac, Max: 0x00060000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -3014,22 +3014,22 @@ Memory Map of the image
     0x00018160   0x00018160   0x00000048   Code   RO         3826    i.set_double_line   videoprocess.o
     0x000181a8   0x000181a8   0x00000050   Code   RO         3827    i.set_input         videoprocess.o
     0x000181f8   0x000181f8   0x00000050   Code   RO         3828    i.set_smooth        videoprocess.o
-    0x00018248   0x00018248   0x00000718   Code   RO         3714    i.signal_turn       uart_dma.o
-    0x00018960   0x00018960   0x00000024   Code   RO         4000    i.statck_del_fpu_regs  cm_backtrace.o
-    0x00018984   0x00018984   0x00000114   Code   RO         3715    i.uart_dma_init     uart_dma.o
-    0x00018a98   0x00018a98   0x0000012c   Code   RO         3506    i.vd_Button_Init    main.o
-    0x00018bc4   0x00018bc4   0x00000038   Code   RO         3829    i.video_Deinit      videoprocess.o
-    0x00018bfc   0x00018bfc   0x00000120   Code   RO         3830    i.video_init        videoprocess.o
-    0x00018d1c   0x00018d1c   0x00000010   Data   RO         2087    .constdata          hc32_ll_usart.o
-    0x00018d2c   0x00018d2c   0x0000000f   Data   RO         3832    .constdata          videoprocess.o
-    0x00018d3b   0x00018d3b   0x00000001   PAD
-    0x00018d3c   0x00018d3c   0x000000e0   Data   RO         4002    .constdata          cm_backtrace.o
-    0x00018e1c   0x00018e1c   0x00000666   Data   RO         4003    .conststring        cm_backtrace.o
-    0x00019482   0x00019482   0x00000002   PAD
-    0x00019484   0x00019484   0x00000020   Data   RO         4411    Region$$Table       anon$$obj.o
+    0x00018248   0x00018248   0x00000720   Code   RO         3714    i.signal_turn       uart_dma.o
+    0x00018968   0x00018968   0x00000024   Code   RO         4000    i.statck_del_fpu_regs  cm_backtrace.o
+    0x0001898c   0x0001898c   0x00000114   Code   RO         3715    i.uart_dma_init     uart_dma.o
+    0x00018aa0   0x00018aa0   0x0000012c   Code   RO         3506    i.vd_Button_Init    main.o
+    0x00018bcc   0x00018bcc   0x00000038   Code   RO         3829    i.video_Deinit      videoprocess.o
+    0x00018c04   0x00018c04   0x00000120   Code   RO         3830    i.video_init        videoprocess.o
+    0x00018d24   0x00018d24   0x00000010   Data   RO         2087    .constdata          hc32_ll_usart.o
+    0x00018d34   0x00018d34   0x0000000f   Data   RO         3832    .constdata          videoprocess.o
+    0x00018d43   0x00018d43   0x00000001   PAD
+    0x00018d44   0x00018d44   0x000000e0   Data   RO         4002    .constdata          cm_backtrace.o
+    0x00018e24   0x00018e24   0x00000666   Data   RO         4003    .conststring        cm_backtrace.o
+    0x0001948a   0x0001948a   0x00000002   PAD
+    0x0001948c   0x0001948c   0x00000020   Data   RO         4411    Region$$Table       anon$$obj.o
 
 
-    Execution Region RW_IRAM1 (Exec base: 0x1fff8000, Load base: 0x000194a4, Size: 0x00001460, Max: 0x0002f000, ABSOLUTE, COMPRESSED[0x000000d4])
+    Execution Region RW_IRAM1 (Exec base: 0x1fff8000, Load base: 0x000194ac, Size: 0x00001468, Max: 0x0002f000, ABSOLUTE, COMPRESSED[0x000000d4])
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -3039,17 +3039,18 @@ Memory Map of the image
     0x1fff8014   COMPRESSED   0x0000001c   Data   RW         3296    .data               ev_hc32f460_lqfp100_v2.o
     0x1fff8030   COMPRESSED   0x0000000c   Data   RW         3508    .data               main.o
     0x1fff803c   COMPRESSED   0x00000004   Data   RW         3718    .data               uart_dma.o
-    0x1fff8040   COMPRESSED   0x0000011e   Data   RW         3833    .data               videoprocess.o
-    0x1fff815e   COMPRESSED   0x00000002   PAD
-    0x1fff8160   COMPRESSED   0x00000008   Data   RW         3946    .data               system_hc32f460.o
-    0x1fff8168   COMPRESSED   0x00000015   Data   RW         4004    .data               cm_backtrace.o
-    0x1fff817d   COMPRESSED   0x00000003   PAD
-    0x1fff8180   COMPRESSED   0x00000004   Data   RW         4094    .data               mc_w.l(stdout.o)
-    0x1fff8184        -       0x00000200   Zero   RW          895    .bss                hc32_ll_interrupts.o
-    0x1fff8384        -       0x00000100   Zero   RW         3585    .bss                flash.o
-    0x1fff8484        -       0x00000214   Zero   RW         3717    .bss                uart_dma.o
-    0x1fff8698        -       0x000001c8   Zero   RW         4001    .bss                cm_backtrace.o
-    0x1fff8860        -       0x00000c00   Zero   RW         3982    STACK               startup_hc32f460.o
+    0x1fff8040   COMPRESSED   0x00000121   Data   RW         3833    .data               videoprocess.o
+    0x1fff8161   COMPRESSED   0x00000003   PAD
+    0x1fff8164   COMPRESSED   0x00000008   Data   RW         3946    .data               system_hc32f460.o
+    0x1fff816c   COMPRESSED   0x00000015   Data   RW         4004    .data               cm_backtrace.o
+    0x1fff8181   COMPRESSED   0x00000003   PAD
+    0x1fff8184   COMPRESSED   0x00000004   Data   RW         4094    .data               mc_w.l(stdout.o)
+    0x1fff8188        -       0x00000200   Zero   RW          895    .bss                hc32_ll_interrupts.o
+    0x1fff8388        -       0x00000100   Zero   RW         3585    .bss                flash.o
+    0x1fff8488        -       0x00000214   Zero   RW         3717    .bss                uart_dma.o
+    0x1fff869c        -       0x000001c8   Zero   RW         4001    .bss                cm_backtrace.o
+    0x1fff8864   COMPRESSED   0x00000004   PAD
+    0x1fff8868        -       0x00000c00   Zero   RW         3982    STACK               startup_hc32f460.o
 
 
 ==============================================================================
@@ -3081,13 +3082,13 @@ Image component sizes
        720         66          0         12          0       6232   main.o
         88         20        640          0       3072        864   startup_hc32f460.o
        254         42          0          8          0       2434   system_hc32f460.o
-      3866        602          0          4        532      41948   uart_dma.o
-      2116        530         15        286          0      12895   videoprocess.o
+      3874        606          0          4        532      42000   uart_dma.o
+      2116        530         15        289          0      12895   videoprocess.o
 
     ----------------------------------------------------------------------
-     33250       7460       2568        384       4828     942713   Object Totals
+     33258       7464       2568        388       4832     942765   Object Totals
          0          0         32          0          0          0   (incl. Generated)
-        16          0          3          8          0          0   (incl. Padding)
+        16          0          3          9          4          0   (incl. Padding)
 
     ----------------------------------------------------------------------
 
@@ -3140,15 +3141,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     35484       7536       2568        388       4828     914825   Grand Totals
-     35484       7536       2568        212       4828     914825   ELF Image Totals (compressed)
-     35484       7536       2568        212          0          0   ROM Totals
+     35492       7540       2568        392       4832     914877   Grand Totals
+     35492       7540       2568        212       4832     914877   ELF Image Totals (compressed)
+     35492       7540       2568        212          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                38052 (  37.16kB)
-    Total RW  Size (RW Data + ZI Data)              5216 (   5.09kB)
-    Total ROM Size (Code + RO Data + RW Data)      38264 (  37.37kB)
+    Total RO  Size (Code + RO Data)                38060 (  37.17kB)
+    Total RW  Size (RW Data + ZI Data)              5224 (   5.10kB)
+    Total ROM Size (Code + RO Data + RW Data)      38272 (  37.38kB)
 
 ==============================================================================
 

@@ -236,7 +236,18 @@ int32_t main(void)
     {
 
         if (Key_Read(0))
-        {   
+        {
+//            static uint8_t i;
+//            static uint8_t art[] =
+//            {
+//                0x42, 0x0E, 0x00, // Re-enter map
+//                0x42, 0x0b, 0x00, // new É«¶È
+//            };
+//            i+=10;
+//            art[5] = i;
+//            printf(" Hue %d",art[5]);
+//            (void)ADV_7280_Send_Buff(art, sizeof(art) / 3, TIMEOUT);
+            
 //            btn_flag = ! btn_flag;
 //            c_state = 1;
         }
