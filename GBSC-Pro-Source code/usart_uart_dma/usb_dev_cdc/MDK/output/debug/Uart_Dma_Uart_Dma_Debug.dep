@@ -1,555 +1,0 @@
-Dependencies for Project 'Uart_Dma', Target 'Uart_Dma_Debug': (DO NOT MODIFY !)
-F (../../drivers/hc32_ll_driver/src/hc32_ll.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll.o --omf_browse .\output\debug\hc32_ll.crf --depend .\output\debug\hc32_ll.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_clk.c)(0x669F6CA2)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_clk.o --omf_browse .\output\debug\hc32_ll_clk.crf --depend .\output\debug\hc32_ll_clk.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_efm.c)(0x65A8E862)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_efm.o --omf_browse .\output\debug\hc32_ll_efm.crf --depend .\output\debug\hc32_ll_efm.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_gpio.c)(0x66ECDE9A)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_gpio.o --omf_browse .\output\debug\hc32_ll_gpio.crf --depend .\output\debug\hc32_ll_gpio.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_interrupts.c)(0x669F6D52)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_interrupts.o --omf_browse .\output\debug\hc32_ll_interrupts.crf --depend .\output\debug\hc32_ll_interrupts.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_pwc.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_pwc.o --omf_browse .\output\debug\hc32_ll_pwc.crf --depend .\output\debug\hc32_ll_pwc.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_sram.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_sram.o --omf_browse .\output\debug\hc32_ll_sram.crf --depend .\output\debug\hc32_ll_sram.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_usart.c)(0x669F6D61)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_usart.o --omf_browse .\output\debug\hc32_ll_usart.crf --depend .\output\debug\hc32_ll_usart.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/hc32_ll_driver/src/hc32_ll_utility.c)(0x669F6E08)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_utility.o --omf_browse .\output\debug\hc32_ll_utility.crf --depend .\output\debug\hc32_ll_utility.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_crc.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_crc.o --omf_browse .\output\debug\hc32_ll_crc.crf --depend .\output\debug\hc32_ll_crc.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_crc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_fcg.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_fcg.o --omf_browse .\output\debug\hc32_ll_fcg.crf --depend .\output\debug\hc32_ll_fcg.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_tmr0.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_tmr0.o --omf_browse .\output\debug\hc32_ll_tmr0.crf --depend .\output\debug\hc32_ll_tmr0.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_i2c.c)(0x669F6CD8)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_i2c.o --omf_browse .\output\debug\hc32_ll_i2c.crf --depend .\output\debug\hc32_ll_i2c.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_fcm.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_fcm.o --omf_browse .\output\debug\hc32_ll_fcm.crf --depend .\output\debug\hc32_ll_fcm.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_icg.c)(0x65A245FE)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_icg.o --omf_browse .\output\debug\hc32_ll_icg.crf --depend .\output\debug\hc32_ll_icg.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_icg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_aos.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_aos.o --omf_browse .\output\debug\hc32_ll_aos.crf --depend .\output\debug\hc32_ll_aos.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (..\..\drivers\hc32_ll_driver\src\hc32_ll_dma.c)(0x623D9E77)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\hc32_ll_dma.o --omf_browse .\output\debug\hc32_ll_dma.crf --depend .\output\debug\hc32_ll_dma.d)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-F (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.c)(0x67BC1970)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\ev_hc32f460_lqfp100_v2.o --omf_browse .\output\debug\ev_hc32f460_lqfp100_v2.crf --depend .\output\debug\ev_hc32f460_lqfp100_v2.d)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (../source/main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../source/flash.h)(0x6704E888)
-I (../source/uart_dma.h)(0x669F6C0E)
-I (../source/i2c.h)(0x676382C2)
-I (../source/videoprocess.h)(0x67ED0B93)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\source\main.c)(0x6886EDF6)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\main.o --omf_browse .\output\debug\main.crf --depend .\output\debug\main.d)
-I (..\source\main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (..\source\flash.h)(0x6704E888)
-I (..\source\uart_dma.h)(0x669F6C0E)
-I (..\source\i2c.h)(0x676382C2)
-I (..\source\videoprocess.h)(0x67ED0B93)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\source\flash.c)(0x682E88CE)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\flash.o --omf_browse .\output\debug\flash.crf --depend .\output\debug\flash.d)
-I (..\source\flash.h)(0x6704E888)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (..\source\main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (..\source\uart_dma.h)(0x669F6C0E)
-I (..\source\i2c.h)(0x676382C2)
-I (..\source\videoprocess.h)(0x67ED0B93)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\source\i2c.c)(0x66D801D3)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\i2c.o --omf_browse .\output\debug\i2c.crf --depend .\output\debug\i2c.d)
-I (..\source\main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (..\source\flash.h)(0x6704E888)
-I (..\source\uart_dma.h)(0x669F6C0E)
-I (..\source\i2c.h)(0x676382C2)
-I (..\source\videoprocess.h)(0x67ED0B93)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\source\uart_dma.c)(0x688306F9)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\uart_dma.o --omf_browse .\output\debug\uart_dma.crf --depend .\output\debug\uart_dma.d)
-I (..\source\uart_dma.h)(0x669F6C0E)
-I (..\source\main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (..\source\flash.h)(0x6704E888)
-I (..\source\i2c.h)(0x676382C2)
-I (..\source\videoprocess.h)(0x67ED0B93)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\source\videoprocess.c)(0x6883078C)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\videoprocess.o --omf_browse .\output\debug\videoprocess.crf --depend .\output\debug\videoprocess.d)
-I (..\source\videoprocess.h)(0x67ED0B93)
-I (..\source\i2c.h)(0x676382C2)
-I (..\source\main.h)(0x68563499)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll.h)(0x623E7492)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_aos.h)(0x669F6D3D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_clk.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_dma.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_efm.h)(0x65A8A7E8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcg.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_fcm.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_gpio.h)(0x66ECDE9A)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2c.h)(0x669F6DD1)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_interrupts.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_keyscan.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_pwc.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_sram.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_tmr0.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_usart.h)(0x669F6D80)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_utility.h)(0x669F6DA9)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2_bsp.h)(0x623D9041)
-I (../../drivers/bsp/ev_hc32f460_lqfp100_v2/ev_hc32f460_lqfp100_v2.h)(0x67BC197D)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_i2s.h)(0x623D9E77)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_spi.h)(0x623D9E77)
-I (..\source\flash.h)(0x6704E888)
-I (..\source\uart_dma.h)(0x669F6C0E)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-F (..\..\drivers\cmsis\Device\HDSC\hc32f4xx\Source\system_hc32f460.c)(0x65A11832)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\system_hc32f460.o --omf_browse .\output\debug\system_hc32f460.crf --depend .\output\debug\system_hc32f460.d)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f4xx.h)(0x623D9E77)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/hc32f460.h)(0x669F6B7A)
-I (../../drivers/cmsis/Include/core_cm4.h)(0x623D9041)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (../../drivers/cmsis/Include/cmsis_version.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_compiler.h)(0x623D9041)
-I (../../drivers/cmsis/Include/cmsis_armcc.h)(0x623D9041)
-I (../../drivers/cmsis/Include/mpu_armv7.h)(0x623D9041)
-I (../../drivers/cmsis/Device/HDSC/hc32f4xx/Include/system_hc32f460.h)(0x65A12306)
-I (../source/hc32f4xx_conf.h)(0x676D2AA8)
-I (../../drivers/hc32_ll_driver/inc/hc32_ll_def.h)(0x669F6E2C)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6625BC8C)
-F (.\startup_hc32f460.s)(0x65A8FD4D)(--cpu Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 528"--list .\output\debug\startup_hc32f460.lst --xref -o .\output\debug\startup_hc32f460.o --depend .\output\debug\startup_hc32f460.d)
-F (..\cm_backtrace\cm_backtrace.c)(0x65000889)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../source -I ../../drivers/cmsis/Device/HDSC/hc32f4xx/Include -I ../../drivers/cmsis/Include -I ../../drivers/hc32_ll_driver/inc -I ../../drivers/bsp/ev_hc32f460_lqfp100_v2 -I ../../midwares/hc32/usb -I ../../midwares/hc32/usb/usb_device_lib/device_core -I ../../midwares/hc32/usb/usb_device_lib/device_class/single_cdc -I ..\APP -I ..\cm_backtrace-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="528" -D__DEBUG -DHC32F460 -DUSE_DDL_DRIVER -D_PLATFORM_ARM_-o .\output\debug\cm_backtrace.o --omf_browse .\output\debug\cm_backtrace.crf --depend .\output\debug\cm_backtrace.d)
-I (..\cm_backtrace\cm_backtrace.h)(0x65000889)
-I (..\cm_backtrace\cmb_def.h)(0x65000889)
-I (..\cm_backtrace\cmb_cfg.h)(0x65A8FDAE)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5CEB79E2)
-I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x5CEB79DE)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6625BC8C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x6625BC8C)
-I (..\cm_backtrace\Languages/zh-CN/cmb_zh_CN.h)(0x65000889)
-F (..\cm_backtrace\fault_handler\keil\cmb_fault.S)(0x65000889)(--cpu Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_Uart_Dma_Debug-IC:\Users\Admin\AppData\Local\Arm\Packs\HDSC\HC32F46x\1.0.2\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 528"--list .\output\debug\cmb_fault.lst --xref -o .\output\debug\cmb_fault.o --depend .\output\debug\cmb_fault.d)
