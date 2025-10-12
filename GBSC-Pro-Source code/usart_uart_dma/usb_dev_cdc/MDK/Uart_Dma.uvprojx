@@ -16,7 +16,7 @@
         <TargetCommonOption>
           <Device>HC32F460JETA</Device>
           <Vendor>HDSC</Vendor>
-          <PackID>HDSC.HC32F46x.1.0.2</PackID>
+          <PackID>HDSC.HC32F460.1.0.11</PackID>
           <PackURL>https://raw.githubusercontent.com/hdscmcu/pack/master/</PackURL>
           <Cpu>IRAM(0x1FFF8000,0x2F000) IRAM2(0x200F0000,0x1000) IROM(0x00000000,0x80000) IROM2(0x03000C00,0x003C0) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -185,6 +185,8 @@
             <uocXRam>0</uocXRam>
             <RvdsVP>2</RvdsVP>
             <RvdsMve>0</RvdsMve>
+            <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>1</hadIROM2>
             <StupSel>8</StupSel>
@@ -351,7 +353,7 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
-            <uClangAs>0</uClangAs>
+            <ClangAsOpt>4</ClangAsOpt>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
@@ -551,7 +553,7 @@
         <TargetCommonOption>
           <Device>HC32F460PETB</Device>
           <Vendor>HDSC</Vendor>
-          <PackID>HDSC.HC32F46x.1.0.2</PackID>
+          <PackID>HDSC.HC32F460.1.0.11</PackID>
           <PackURL>https://raw.githubusercontent.com/hdscmcu/pack/master/</PackURL>
           <Cpu>IROM1(0x00000000,0x80000) IROM2(0x03000C00,0x3FC) IRAM1(0x1FFF8000,0x2F000) IRAM2(0x200F0000,0x1000) CPUTYPE("Cortex-M4") FPU2 CLOCK(8000000) ESEL ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -720,6 +722,8 @@
             <uocXRam>0</uocXRam>
             <RvdsVP>1</RvdsVP>
             <RvdsMve>0</RvdsMve>
+            <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>1</hadIROM2>
             <StupSel>8</StupSel>
@@ -886,7 +890,7 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
-            <uClangAs>0</uClangAs>
+            <ClangAsOpt>4</ClangAsOpt>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
