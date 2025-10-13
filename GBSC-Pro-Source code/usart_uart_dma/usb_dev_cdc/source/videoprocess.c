@@ -20,94 +20,94 @@ uint8_t Bright = 0x00;
 uint8_t Contrast = 0x80;
 uint8_t Saturation = 0x80;
 
-bool asw_01, asw_02, asw_03, asw_04; //  01 :  02 : ¼æÈÝ¿ª¹Ø  03 £º     04 £º
+bool asw_01, asw_02, asw_03, asw_04; //  01 :  02 : ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½  03 ï¿½ï¿½     04 ï¿½ï¿½
 
 bool AVsw;
 uint8_t Input_signal = 0;
 uint8_t buff_send[APP_FRAME_LEN_MAX];
 
 uint8_t I2C_COMMANDS_I2P_ON[] =
-    {
-        0x84,0x55,0x80, // Ê¹ÄÜ I2P È¥¸ôÐÐ´¦Àí
-        0x84,0x5A,0x02, // ÉèÖÃ I2P ²ÎÊý  Æ½»¬1A
-
-        0x42,0x0E,0x40, // 7280ÊäÈëÓÃ»§×ÓµØÍ¼ 2
-        0x42,0xE0,0x01, // ÆôÓÃ¿ìËÙËø¶¨Ä£Ê½
-        0x42,0x0E,0x00,
+{
+    0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE: Enable I2P Converter
+    0x84,0x5B,0x80, // ADV7280 - ADV_TIMING_MODE_EN: Disable advanced timing mode
+    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
+    0x42,0xE0,0x01, // ADV7280 - FL Control: Enables fast lock mode
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
 };
 
 //  I2C_COMMANDS_I2P_OFF_p
 //  I2C_COMMANDS_I2P_OFF_240p
 const uint8_t I2C_COMMANDS_I2P_OFF_p[] = {
-   0x42,0x0E,0x40,
-   0x42,0xE0,0x01,
-   0x42,0x0E,0x00,
-
-   0x84,0x55,0x00,
-   0x84,0x5A,0x02,
-    
+   0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
+   0x42,0xE0,0x01, // ADV7280 - FL Control: Enables fast lock mode
+   0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+   0x84,0x55,0x00, // ADV7280 - I2C_DEINT_ENABLE: Disable I2P Converter
+   0x84,0x5B,0x00, // ADV7280 - ADV_TIMING_MODE_EN: Enable advanced timing mode
+   0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
 };
 
 //  I2C_COMMANDS_I2P_OFF_p
 //  I2C_COMMANDS_I2P_OFF_576i
 uint8_t I2C_COMMANDS_I2P_OFF_576i[] =
-    {
-        0x84, 0x55, 0x00,
-        0x84, 0x5A, 0x02,
-
-        0x56, 0x17, 0x02, // 7391Software reset
-        0xFF, 0x0A, 0x00,
-        0x56, 0x00, 0x1C, // pll on  | DAC[1:3]on  |  SleepMode off
-        0x56, 0x01, 0x00, // SDInput  |
-        0x56, 0x80, 0x10, // Luma SSAF  | NTSC   | 1.3 MHz
-        0x56, 0x82, 0xC9, // ±êÇåÖ÷¶¯ÊÓÆµ±ßÔµ¿ØÖÆ  | SD ÏñËØÊý¾ÝÓÐÐ§  | ±êÇå»ù×ù
-        0x56, 0x87, 0x20, // ±êÇåÊäÈë±ê×¼×Ô¶¯¼ì²â  |
-        0x56, 0x88, 0x00, // 8-bit YCbCr input.
-        0x56, 0x30, 0x10,
-        0xFF, 0x0A, 0x00,
-
-        0x84, 0x55, 0x00,
-        0x84, 0x5A, 0x02};
+{
+    0x84,0x55,0x00, // ADV7280 - I2C_DEINT_ENABLE: Disable I2P Converter
+    0x84,0x5B,0x00, // ADV7280 - ADV_TIMING_MODE_EN: Enable advanced timing mode
+    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x56,0x17,0x02, // ADV7391 - Software reset: Software reset
+    0xFF,0x0A,0x00, // Unknown
+    0x56,0x00,0x1C, // ADV7391 - Power mode: DAC1 on - DAC2 on - DAC3 on - PLL off - Sleep off
+    0x56,0x01,0x00, // ADV7391 - Mode select: reset
+    0x56,0x80,0x10, // ADV7391 - SD Mode Register 1: reset
+    0x56,0x82,0xC9, // ADV7391 - SD Mode Register 2: SD active video edge control on, SD pixel data valid on, SD VCR FF/RW sync off, SD square pixel mode off, SD pedestal on, SD DAC Output 1 B or Pb (need to check), SD PrPb SSAF Filter on
+    0x56,0x87,0x20, // ADV7391 - SD Mode Register 6: SD RGB input enable: YCrCb, SD Input standard auto detect on, all others off
+    0x56,0x88,0x00, // ADV7391 - SD Mode Register 7: reset
+    0x56,0x30,0x10, // ADV7391 - ED/HD standard: BTA-1004, ITU-BT.1362 525p at 59.94 Hz, ED/HD input synchronization format: External HSYNC, VSYNC and field inputs, ED/HD output standard: EIA-770.2 output EIA-770.3 output
+    0xFF,0x0A,0x00, // Unknown
+    0x84,0x55,0x00, // ADV7280 - I2C_DEINT_ENABLE: Disable I2P Converter
+    0x84,0x5A,0x02  // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+};
 
 uint8_t I2C_COMMANDS_SMOOTH_OFF[] =
-    {
-        0x84, 0x55, 0x80,
-        0x84, 0x5A, 0x02, // Æ½»¬¹Ø±Õ
-        0x42, 0x0E, 0x00};
+{
+    0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE: Enable I2P Converter
+    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
+};
 
 uint8_t I2C_COMMANDS_SMOOTH_ON[] =
-    {
-        0x84, 0x55, 0x80, //
-        0x84, 0x5A, 0x1A, // Æ½»¬´ò¿ª
-        0x42, 0x0E, 0x00  //
+{
+    0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE: Enable I2P Converter
+    0x84,0x5A,0x1A, // ADV7280 - Not documented on page 99 - Smooth opening (?)
+    0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
 };
 uint8_t I2C_COMMANDS_BCSH[] =
-    {
-        0x42, 0x0E, 0x00, // Re-enter map
-        0x42, 0x0a, 0x00, // new ÁÁ¶È   00(00)  7F(+30)  80(-30)    e0
-        0x42, 0x08, 0x00, // new ¶Ô±È¶È 00(00)  80(01)   FF(02)     58
-        0x42, 0xe3, 0x00, // new ±¥ºÍ¶È 00(00)  80(01)   FF(02)     80
-        0x42, 0x0b, 0x00, // new É«¶È
+{
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0x0A,0x00, // ADV7280 - Brightness adjust: 0 IRE
+    0x42,0x08,0x00, // ADV7280 - Contrast: 0 gain [0x80 (default) for 1 gain]
+    0x42,0xE3,0x00, // ADV7280 - SD saturation Cb channel: -42dB [0x80 (default) for 0dB]
+    0x42,0x0B,0x00, // ADV7280 - Hue adjust: 0 default
 };
 
 uint8_t I2C_COMMANDS_YC_INPUT[] =
-    {
-        /* =============== ADV7280 YC·ÖÁ¿ÊäÈëÅäÖÃ =============== */
-        0x42, 0x0E, 0x00,
-        0x42, 0x00, 0x09,
-        0x42, 0x38, 0x24,
-        0x42, 0x39, 0x24,
-        0x42, 0x17, 0x49,
+{
+    /* =============== ADV7280 S-Video =============== */
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0x00,0x09, // ADV7280 - Input control: Y input on A3, C input on A4
+    0x42,0x38,0x24, // ADV7280 - NTSC comb control: Disable chroma comb, Uses low-pass/notch filter
+    0x42,0x39,0x24, // ADV7280 - PAL comb control: Disable chroma comb, Uses low-pass/notch filter
+    0x42,0x17,0x49, // ADV7280 - Shaping Filter Control 1: SH1, SVHS 8
 };
 
 uint8_t I2C_COMMANDS_CVBS_INPUT[] =
-    {
-        /* =============== ADV7280 CVBSÊäÈëÅäÖÃ =============== */
-        0x42, 0x0E, 0x00,
-        0x42, 0x00, 0x00,
-        0x42, 0x38, 0x80,
-        0x42, 0x39, 0x24,
-        0x42, 0x17, 0x47, // [0x17]
+{
+    /* =============== ADV7280 CVBS =============== */
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0x00,0x00, // ADV7280 - Input control: CVBS input on A1
+    0x42,0x38,0x80, // ADV7280 - NTSC comb control: default
+    0x42,0x39,0x24, // ADV7280 - PAL comb control: Disable chroma comb, Uses low-pass/notch filter
+    0x42,0x17,0x47, // ADV7280 - Shaping Filter Control 1: SH1, SVHS 6
 };
 
 void SoftwareReset_ADV7280A()
@@ -115,12 +115,12 @@ void SoftwareReset_ADV7280A()
     uint8_t buff[2];
     buff[0] = 0x0F;
     buff[1] = 0x80;
-    (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // ¸´Î» ADV7280 µÄËùÓÐ¼Ä´æÆ÷
+    (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // ï¿½ï¿½Î» ADV7280 ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼Ä´ï¿½ï¿½ï¿½
     DDL_DelayMS(10);
 
     buff[0] = 0x0F;
     buff[1] = 0x00;
-    (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // ¸´Î» ADV7280 µÄËùÓÐ¼Ä´æÆ÷
+    (void)I2C_Master_Transmit(DEVICE_ADDR, buff, 2, TIMEOUT); // ï¿½ï¿½Î» ADV7280 ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼Ä´ï¿½ï¿½ï¿½
     DDL_DelayMS(10);
 }
 // RetroScaler_I2C_AUTO_COMMANDS
@@ -131,65 +131,64 @@ void SoftwareReset_ADV7280A()
 // RetroScaler_I2C_AUTO_COMMANDS
 // I2C_AUTO_COMMANDS
 uint8_t I2C_AUTO_COMMANDS[] =
-    {
-       0x42,0x0F,0x80, // reset the ADV7280 regs
-       0x56,0x17,0x02, // reset the ADV7193 regs
-       0xFF,0x0A,0x00,
-       0x42,0x0F,0x00,
-       0x42,0x05,0x00,
-       0x42,0x02,0x04, // ÖÆÊ½  0000 0100   th17
-       0x42,0x07,0xff, // new  tvmode
-
-       0x42,0x14,0x15, // set free-run pattern to 100% color bar     (  0x11  )
-       0x42,0x00,0x00,
-       0x42,0x0E,0x80,
-       0x42,0x9C,0x00,
-       0x42,0x9C,0xFF,
-       0x42,0x0E,0x00,
-       0x42,0x03,0x0C,
-       0x42,0x04,0x07,
-       0x42,0x13,0x00,
-       0x42,0x17,0x40, // 41
-       0x42,0x1D,0x40, // enable LLC output
-       0x42,0x52,0xCD,
-       0x42,0x80,0x51,
-       0x42,0x81,0x51,
-       0x42,0x82,0x00,  //68
-       0x42,0x0E,0x80,
-       0x42,0xD9,0x44,
-       0x42,0x0E,0x00,
-       0x42,0x0E,0x40,  //7280ÊäÈëÓÃ»§×ÓµØÍ¼ 2
-       0x42,0xE0,0x01,
-       0x42,0x0E,0x00,
-       0x42,0xFD,0x84, // set the VPP address 0x84
-       0x84,0xA3,0x00, // vpp write begin
-       0x84,0x5B,0x00, // enable the timing mode
-       0x84,0x55,0x80, // enable the Dinterlacer I2P
-       // 0x85, 0x5A, 0x85 //read the reg 0x5A
-       0x84,0x5A,0x02,
-       0x42,0x6B,0x11, // the vs/field/sfl pin output data enable.
-       0x56,0x17,0x02,  //7391Software reset
-       0xFF,0x0A,0x00,
-       0x56,0x00,0x9C,
-       0x56,0x01,0x70,
-       0x56,0x30,0x1C,  
-       0x56,0x31,0x01,
-       0x42,0x0E,0x00,
+{
+    0x42,0x0F,0x80, // ADV7280 - Power management: Start reset sequence (a sleep of 2ms is missing)
+    0x56,0x17,0x02, // ADV7391 - Software reset: Software reset
+    0xFF,0x0A,0x00, // Unknown
+    0x42,0x0F,0x00, // ADV7280 - Power management: Normal operation
+    0x42,0x05,0x00, // ADV7280 - Not documented on page 71
+    0x42,0x02,0x04, // ADV7280 - Video Selection 2: Autodetect, set to default
+    0x42,0x07,0xff, // ADV7280 - Autodetect enable: All enabled
+    0x42,0x14,0x15, // ADV7280 - Analog clamp control: Current sources enabled, Sets to default, Boundary box
+    0x42,0x00,0x00, // ADV7280 - Input control: CVBS input on A1
+    0x42,0x0E,0x80, // ADV7280 - ADI Control 1: 0x80 is invalid, bit 7 is reserved (we are already on main register, remove?)
+    0x42,0x9C,0x00, // ADV7280 - Letterbox 2: read only register, remove?
+    0x42,0x9C,0xFF, // ADV7280 - Letterbox 2: read only register, remove?
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0x03,0x0C, // ADV7280 - Output control: All lines filtered and scaled, Output drivers enabled
+    0x42,0x04,0x07, // ADV7280 - Extended output control: 0x07 is invalid, maybe 0xB7?
+    0x42,0x13,0x00, // ADV7280 - Status 3: read only register, remove?
+    0x42,0x17,0x40, // ADV7280 - Shaping Filter Control 1: SH1, Autowide notch for poor quality sources or wideband filter with comb for good quality input
+    0x42,0x1D,0x40, // ADV7280 - ADI Control 2: LLC pin active
+    0x42,0x52,0xCD, // ADV7280 - Not documented on page 81
+    0x42,0x80,0x51, // ADV7280 - Not documented on page 82
+    0x42,0x81,0x51, // ADV7280 - Not documented on page 82
+    0x42,0x82,0x00, // ADV7280 - Not documented on page 82
+    0x42,0x0E,0x80, // ADV7280 - ADI Control 1: 0x80 is invalid, bit 7 is reserved (maybe switch to 0x40 for the next command?)
+    0x42,0xD9,0x44, // ADV7280 - Not documented, but maybe Min Max 0 on User Sub Map 2?
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
+    0x42,0xE0,0x01, // ADV7280 - Enables fast lock mode
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+    0x42,0xFD,0x84, // ADV7280 - set the VPP address to 0x84
+    0x84,0xA3,0x00, // Not documented on page 99 (vpp write begin ?)
+    0x84,0x5B,0x00, // ADV7280 - ADV_TIMING_MODE_EN: Enable advanced timing mode
+    0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE - Enable I2P Converter
+    // 0x85, 0x5A, 0x85 //read the reg 0x5A
+    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x42,0x6B,0x11, // ADV7280 - Output Sync Select 2: VSYNC
+    0x56,0x17,0x02, // ADV7391 - Software reset: Software reset
+    0xFF,0x0A,0x00, // Unknown
+    0x56,0x00,0x9C, // ADV7391 - Power mode: 0x9C is invalid, maybe 0x1C?
+    0x56,0x01,0x70, // ADV7391 - Mode select: ED (at 54MHz) input, Chrome rising, luma falling
+    0x56,0x30,0x1C, // ADV7391 - ED/HD Mode Register 1: SMPTE 296M-4, SMPTE 274M-5 720p at 30 Hz/29.97 Hz, EIA-770.2 output EIA-770.3 output
+    0x56,0x31,0x01, // ADV7391 - ED/HD Mode Register 2: Pixel data valid on
+    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
 };
 
 uint8_t Ace_Code_ON[] =
-    {
-        0x42, 0x0E, 0x40,
-        0x42, 0x80, 0x80,
-        0x42, 0x0E, 0x00
-    };
+{
+    0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
+    0x42,0x80,0x80, // ADV7280 - ACE Control 1: Enable ACE
+    0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
+};
 
 uint8_t Ace_Code_OFF[] =
-    {
-        0x42, 0x0E, 0x40,
-        0x42, 0x80, 0x00,
-        0x42, 0x0E, 0x00
-    };
+{
+    0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
+    0x42,0x80,0x00, // ADV7280 - ACE Control 1: Disable ACE
+    0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
+};
 
 void video_init(void)
 {
@@ -282,7 +281,7 @@ void set_double_line(uint8_t doubleline)
 {
     if (doubleline)
     {
-        (void)ADV_7280_Send_Buff(I2C_COMMANDS_I2P_ON, sizeof(I2C_COMMANDS_I2P_ON) / 3, TIMEOUT); // I2P¡ª¡ªON
+        (void)ADV_7280_Send_Buff(I2C_COMMANDS_I2P_ON, sizeof(I2C_COMMANDS_I2P_ON) / 3, TIMEOUT); // I2Pï¿½ï¿½ï¿½ï¿½ON
         printf("I2pOn\n");
     }
     else
@@ -388,7 +387,7 @@ void detect_video_format(uint8_t btn_flag)
       }
       else if (ad_result == 0x00 || ad_result == 0x20)
       {
-        // NTSC Ä£Ê½ÏÂÖðÐÐÐÅºÅ
+        // NTSC Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
         printf("240p (NTSC progressive)\n");
       }
       else
@@ -508,7 +507,7 @@ void detect_loop(void)
         //            buff[0] = 0x02;
         //            buff[1] = 0x64;  //PAL 60
         //        }   //                                                                             60    Bit2==0
-        //        //¼ì²âµ½°Ú¶¯Âö³å´®Bit7==1  ¼ì²âµ½±êÇå50ºÕ×ÈBit2==1  ÊµÏÖË®Æ½Ëø¶¨Bit0 ==1
+        //        //ï¿½ï¿½âµ½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½å´®Bit7==1  ï¿½ï¿½âµ½ï¿½ï¿½ï¿½ï¿½50ï¿½ï¿½ï¿½ï¿½Bit2==1  Êµï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Bit0 ==1
         //        else  if ( ((uint8_t)(ad_result & 0x15)==0x15) && ((uint8_t)(detect_result&0x85) == 0x81))   //NTSC443
         //        {
         ////            buff[0] = 0x02;
@@ -580,15 +579,15 @@ void AV_Connecte_Set(uint8_t sw)
 {
     stc_gpio_init_t stcGpioInit;
     (void)GPIO_StructInit(&stcGpioInit);
-    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // Êä³ö·½Ïò
-    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // Êý×Ö
+    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // ï¿½ï¿½ï¿½ï¿½
     stcGpioInit.u16PinDrv = PIN_HIGH_DRV;
     stcGpioInit.u16PinOutputType = PIN_OUT_TYPE_CMOS;
     if (sw)
     {
         //        AV_Connecte_On();
-        stcGpioInit.u16PullUp = PIN_PU_OFF;     // ²»ÉÏÀ­
-        stcGpioInit.u16PinState = PIN_STAT_RST; // À­µÍ
+        stcGpioInit.u16PullUp = PIN_PU_OFF;     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        stcGpioInit.u16PinState = PIN_STAT_RST; // ï¿½ï¿½ï¿½ï¿½
         printf("Connecte_on");
         //        C_LED_OK();
         c_state = 1;
@@ -596,8 +595,8 @@ void AV_Connecte_Set(uint8_t sw)
     else
     {
         //        AV_Connecte_Off();
-        stcGpioInit.u16PullUp = PIN_PU_ON;      // ÉÏÀ­
-        stcGpioInit.u16PinState = PIN_STAT_SET; // À­¸ß
+        stcGpioInit.u16PullUp = PIN_PU_ON;      // ï¿½ï¿½ï¿½ï¿½
+        stcGpioInit.u16PinState = PIN_STAT_SET; // ï¿½ï¿½ï¿½ï¿½
         printf("Connecte_off");
         //        C_LED_ERR_RED();
         c_state = 2;

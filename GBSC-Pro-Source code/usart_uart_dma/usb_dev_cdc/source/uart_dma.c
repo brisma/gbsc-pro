@@ -3,21 +3,21 @@
 
 uint8_t dma_au8RxBuf[APP_FRAME_LEN_MAX];
 
-/**        DMA ´«ÊäÍê³É IRQ »Øµ÷¹¦ÄÜ
+/**        DMA ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ IRQ ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
  * @brief  DMA transfer complete IRQ callback function.
  * @param  None
  * @retval None
  */
 static void RX_DMA_TC_IrqCallback(void)
 {
-    m_enRxFrameEnd = SET; // ½ÓÊÕÍê³É
+    m_enRxFrameEnd = SET; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_u16RxLen = APP_FRAME_LEN_MAX;
 
-    USART_FuncCmd(USART_UNIT, USART_RX_TIMEOUT, DISABLE); // ³¬Ê±¹¦ÄÜ
+    USART_FuncCmd(USART_UNIT, USART_RX_TIMEOUT, DISABLE); // ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 
     DMA_ClearTransCompleteStatus(RX_DMA_UNIT, RX_DMA_TC_FLAG);
 }
-/**        DMA ´«ÊäÍê³É IRQ »Øµ÷¹¦ÄÜ
+/**        DMA ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ IRQ ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
  * @brief  DMA transfer complete IRQ callback function.
  * @param  None
  * @retval None
@@ -172,7 +172,7 @@ void TMR0_Config(uint16_t u16TimeoutBits)
     TMR0_HWStartCondCmd(DMATMR0_UNIT, DMATMR0_CH, ENABLE);
     TMR0_HWClearCondCmd(DMATMR0_UNIT, DMATMR0_CH, ENABLE);
 }
-/**         ³¬Ê±»Øµ÷º¯Êý
+/**         ï¿½ï¿½Ê±ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
  * @brief  USART RX timeout IRQ callback.
  * @param  None
  * @retval None
@@ -500,11 +500,11 @@ void signal_turn(void)
                 {   
                     uint8_t I2C_DEFAULT_BCSH[] =
                     {
-                        0x42, 0x0E, 0x00, // Re-enter map
-                        0x42, 0x0a, 0x00, // new ÁÁ¶È   00(00)  7F(+30)  80(-30)    e0
-                        0x42, 0x08, 0x80, // new ¶Ô±È¶È 00(00)  80(01)   FF(02)     58
-                        0x42, 0xe3, 0x80, // new ±¥ºÍ¶È 00(00)  80(01)   FF(02)     80
-                        0x42, 0x0b, 0x00, // new É«¶È
+                        0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+                        0x42,0x0A,0x00, // ADV7280 - Brightness adjust: 0 IRE
+                        0x42,0x08,0x80, // ADV7280 - Contrast: 1 gain
+                        0x42,0xE3,0x80, // ADV7280 - SD saturation Cb channel: 0dB
+                        0x42,0x0B,0x00, // ADV7280 - Hue adjust: 0 default
                     };
                     Bright = 0x00;
                     Contrast = 0x80;
