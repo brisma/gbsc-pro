@@ -71,14 +71,14 @@ uint8_t I2C_COMMANDS_I2P_OFF_576i[] =
 uint8_t I2C_COMMANDS_SMOOTH_OFF[] =
 {
     0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE: Enable I2P Converter
-    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x84,0x5A,0x02, // ADV7280 - Disable I2P Smooth 1A
     0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
 };
 
 uint8_t I2C_COMMANDS_SMOOTH_ON[] =
 {
     0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE: Enable I2P Converter
-    0x84,0x5A,0x1A, // ADV7280 - Not documented on page 99 - Smooth opening (?)
+    0x84,0x5A,0x1A, // ADV7280 - Enable I2P Smooth 1A
     0x42,0x0E,0x00  // ADV7280 - ADI Control 1: main register
 };
 uint8_t I2C_COMMANDS_BCSH[] =
@@ -132,46 +132,63 @@ void SoftwareReset_ADV7280A()
 // I2C_AUTO_COMMANDS
 uint8_t I2C_AUTO_COMMANDS[] =
 {
-    0x42,0x0F,0x80, // ADV7280 - Power management: Start reset sequence (a sleep of 2ms is missing)
+    // Initial reset
+    0x42,0x0F,0x80, // ADV7280 - Power management: Start reset sequence
     0x56,0x17,0x02, // ADV7391 - Software reset: Software reset
-    0xFF,0x0A,0x00, // Unknown
+    0xFF,0x0A,0x00, // Unknown - Delay 10ms
     0x42,0x0F,0x00, // ADV7280 - Power management: Normal operation
+
+    // Configure input
     0x42,0x05,0x00, // ADV7280 - Not documented on page 71
     0x42,0x02,0x04, // ADV7280 - Video Selection 2: Autodetect, set to default
-    0x42,0x07,0xff, // ADV7280 - Autodetect enable: All enabled
+    0x42,0x07,0xFF, // ADV7280 - Autodetect enable: All enabled
     0x42,0x14,0x15, // ADV7280 - Analog clamp control: Current sources enabled, Sets to default, Boundary box
     0x42,0x00,0x00, // ADV7280 - Input control: CVBS input on A1
-    0x42,0x0E,0x80, // ADV7280 - ADI Control 1: 0x80 is invalid, bit 7 is reserved (we are already on main register, remove?)
-    0x42,0x9C,0x00, // ADV7280 - Letterbox 2: read only register, remove?
-    0x42,0x9C,0xFF, // ADV7280 - Letterbox 2: read only register, remove?
-    0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
-    0x42,0x03,0x0C, // ADV7280 - Output control: All lines filtered and scaled, Output drivers enabled
-    0x42,0x04,0x07, // ADV7280 - Extended output control: 0x07 is invalid, maybe 0xB7?
-    0x42,0x13,0x00, // ADV7280 - Status 3: read only register, remove?
+
+    // ADI Required write
+    0x42,0x0E,0x80, // ADV7280 - ADI Required Write; Reset Current Clamp Circuitry (step1)
+    0x42,0x9C,0x00, // ADV7280 - ADI Required Write; Reset Current Clamp Circuitry (step2)
+    0x42,0x9C,0xFF, // ADV7280 - ADI Required Write; Reset Current Clamp Circuitry (step3)
+    0x42,0x0E,0x00, // ADV7280 - ADI Required Write; Reset Current Clamp Circuitry (step4)
+
+    // Power Up Digital Output Pads
+    0x42,0x03,0x0C, // ADV7280 - Enable Pixel & Sync output drivers
+    0x42,0x04,0x07, // ADV7280 - Power-up INTRQ, HS & VS pads
+    0x42,0x13,0x00, // ADV7280 - Enable ADV7182 for 28_63636MHz crystal
+
+    // Configuration
     0x42,0x17,0x40, // ADV7280 - Shaping Filter Control 1: SH1, Autowide notch for poor quality sources or wideband filter with comb for good quality input
-    0x42,0x1D,0x40, // ADV7280 - ADI Control 2: LLC pin active
-    0x42,0x52,0xCD, // ADV7280 - Not documented on page 81
-    0x42,0x80,0x51, // ADV7280 - Not documented on page 82
-    0x42,0x81,0x51, // ADV7280 - Not documented on page 82
-    0x42,0x82,0x00, // ADV7280 - Not documented on page 82
-    0x42,0x0E,0x80, // ADV7280 - ADI Control 1: 0x80 is invalid, bit 7 is reserved (maybe switch to 0x40 for the next command?)
-    0x42,0xD9,0x44, // ADV7280 - Not documented, but maybe Min Max 0 on User Sub Map 2?
+    0x42,0x1D,0x40, // ADV7280 - Enable LLC output driver
+
+    // ADI Required Write for Fast Switch
+    0x42,0x52,0xCD, // ADV7280 - Single Ended CVBS - Set optimized IBIAS for the AFE
+    0x42,0x80,0x51, // ADV7280 - ADI Required Write
+    0x42,0x81,0x51, // ADV7280 - ADI Required Write
+    0x42,0x82,0x00, // 0x68 ? // ADV7280 - ADI Required Write
+    0x42,0x0E,0x80, // ADV7280 - ADI Required Write
+    0x42,0xD9,0x44, // ADV7280 - ADI Required Write
     0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
     0x42,0x0E,0x40, // ADV7280 - ADI Control 1: User Sub Map 2
-    0x42,0xE0,0x01, // ADV7280 - Enables fast lock mode
+    0x42,0xE0,0x01, // ADV7280 - FL Control: Enables fast lock mode
     0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
+
+    // Enable I2P
     0x42,0xFD,0x84, // ADV7280 - set the VPP address to 0x84
-    0x84,0xA3,0x00, // Not documented on page 99 (vpp write begin ?)
+    0x84,0xA3,0x00, // ADV7280 - ADI Required Write - VPP writes begin
     0x84,0x5B,0x00, // ADV7280 - ADV_TIMING_MODE_EN: Enable advanced timing mode
     0x84,0x55,0x80, // ADV7280 - I2C_DEINT_ENABLE - Enable I2P Converter
     // 0x85, 0x5A, 0x85 //read the reg 0x5A
-    0x84,0x5A,0x02, // ADV7280 - Not documented on page 99 - Configure I2P Parameters Smooth 1A (?)
+    0x84,0x5A,0x02, // ADV7280 - Disable I2P Smooth 1A
     0x42,0x6B,0x11, // ADV7280 - Output Sync Select 2: VSYNC
+
+    // Reset ADV7391
     0x56,0x17,0x02, // ADV7391 - Software reset: Software reset
-    0xFF,0x0A,0x00, // Unknown
-    0x56,0x00,0x9C, // ADV7391 - Power mode: 0x9C is invalid, maybe 0x1C?
+    0xFF,0x0A,0x00, // Unknown - Delay 10ms
+
+    // Encoder configuration
+    0x56,0x00,0x9C, // 0x1C ? // ADV7391 - Power up DACs and PLL [Encoder writes begin]
     0x56,0x01,0x70, // ADV7391 - Mode select: ED (at 54MHz) input, Chrome rising, luma falling
-    0x56,0x30,0x1C, // ADV7391 - ED/HD Mode Register 1: SMPTE 296M-4, SMPTE 274M-5 720p at 30 Hz/29.97 Hz, EIA-770.2 output EIA-770.3 output
+    0x56,0x30,0x1C, // 0x04 NTSC // ADV7391 - ED/HD Mode Register 1: SMPTE 296M-4, SMPTE 274M-5 720p at 30 Hz/29.97 Hz, EIA-770.2 output EIA-770.3 output
     0x56,0x31,0x01, // ADV7391 - ED/HD Mode Register 2: Pixel data valid on
     0x42,0x0E,0x00, // ADV7280 - ADI Control 1: main register
 };
