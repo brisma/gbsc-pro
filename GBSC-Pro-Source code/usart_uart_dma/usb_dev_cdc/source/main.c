@@ -55,8 +55,8 @@ extern uint16_t g_u16_osd_timer;
 
 __IO uint8_t m_u8SpeedUpd = 0U;
 
-// const uint8_t usFlashInitVal[4] __attribute__((at(0x00007FFC))) = {0x23, 0x01, 0x89, 0x67}; // ¶¨Î»ÔÚflashÖÐ
-// const uint8_t usFlashInitVal[4] __attribute__((at(IAP_BOOT_SIZE - 4))) = {0x23, 0x01, 0x89, 0x67}; // ¶¨Î»ÔÚflashÖÐ
+// const uint8_t usFlashInitVal[4] __attribute__((at(0x00007FFC))) = {0x23, 0x01, 0x89, 0x67}; // ï¿½ï¿½Î»ï¿½ï¿½flashï¿½ï¿½
+// const uint8_t usFlashInitVal[4] __attribute__((at(IAP_BOOT_SIZE - 4))) = {0x23, 0x01, 0x89, 0x67}; // ï¿½ï¿½Î»ï¿½ï¿½flashï¿½ï¿½
 
 const uint8_t bright_atr[3] = {0x00, 0x7f, 0x80};
 const uint8_t contrast_atr[3] = {0x00, 0x80, 0xff};
@@ -68,17 +68,17 @@ static uint8_t ContrastCount = 0xb0;
 
 static void vd_Button_Init(void)
 {
-    /* configuration structure initialization */ // Êä³ö¿ØÖÆ¶Ë¿Ú
+    /* configuration structure initialization */ // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶Ë¿ï¿½
     stc_gpio_init_t stcGpioInit;
     (void)GPIO_StructInit(&stcGpioInit);
-    stcGpioInit.u16PullUp = PIN_PU_ON;         // ÉÏÀ­
-    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // Êä³ö·½Ïò
-    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // Êý×Ö
-    //    stcGpioInit.u16PinOutputType = PIN_OUT_TYPE_CMOS;   //comsÇ¿Êä³ö
-    //    stcGpioInit.u16ExtInt = PIN_EXTINT_OFF;   //²»Ê¹ÓÃÍâ²¿ÖÐ¶Ï
-    //    stcGpioInit.u16PinDrv = PIN_HIGH_DRV;   //¸ßËÙ
+    stcGpioInit.u16PullUp = PIN_PU_ON;         // ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // ï¿½ï¿½ï¿½ï¿½
+    //    stcGpioInit.u16PinOutputType = PIN_OUT_TYPE_CMOS;   //comsÇ¿ï¿½ï¿½ï¿½
+    //    stcGpioInit.u16ExtInt = PIN_EXTINT_OFF;   //ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½â²¿ï¿½Ð¶ï¿½
+    //    stcGpioInit.u16PinDrv = PIN_HIGH_DRV;   //ï¿½ï¿½ï¿½ï¿½
 
-    stcGpioInit.u16PinState = PIN_STAT_RST; // À­µÍ
+    stcGpioInit.u16PinState = PIN_STAT_RST; // ï¿½ï¿½ï¿½ï¿½
 
     (void)GPIO_Init(GPIO_PORT_B, GPIO_PIN_01, &stcGpioInit); // OUTPUT_EN
     (void)GPIO_Init(GPIO_PORT_B, GPIO_PIN_00, &stcGpioInit); // POWER_DOWN_N
@@ -86,19 +86,19 @@ static void vd_Button_Init(void)
 
     //////////////////Line
     (void)GPIO_StructInit(&stcGpioInit);
-    stcGpioInit.u16PullUp = PIN_PU_ON;         // ÉÏÀ­
-    stcGpioInit.u16PinDir = PIN_DIR_IN;        // ÊäÈë·½Ïò
-    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // Êý×Ö
-    stcGpioInit.u16PinState = PIN_STAT_SET;    // À­µÍ
+    stcGpioInit.u16PullUp = PIN_PU_ON;         // ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinDir = PIN_DIR_IN;        // ï¿½ï¿½ï¿½ë·½ï¿½ï¿½
+    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinState = PIN_STAT_SET;    // ï¿½ï¿½ï¿½ï¿½
 
     (void)GPIO_Init(GPIO_PORT_B, GPIO_PIN_05, &stcGpioInit);
 
     ///////////////ASW/////////////////////
     (void)GPIO_StructInit(&stcGpioInit);
-    stcGpioInit.u16PullUp = PIN_PU_OFF;        // ÉÏÀ­
-    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // Êä³ö·½Ïò
-    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // Êý×Ö
-    stcGpioInit.u16PinState = PIN_STAT_RST;    // À­µÍ
+    stcGpioInit.u16PullUp = PIN_PU_OFF;        // ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinDir = PIN_DIR_OUT;       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinAttr = PIN_ATTR_DIGITAL; // ï¿½ï¿½ï¿½ï¿½
+    stcGpioInit.u16PinState = PIN_STAT_RST;    // ï¿½ï¿½ï¿½ï¿½
     stcGpioInit.u16PinDrv = PIN_HIGH_DRV;
     stcGpioInit.u16PinOutputType = PIN_OUT_TYPE_CMOS;
 
@@ -107,14 +107,14 @@ static void vd_Button_Init(void)
     (void)GPIO_Init(GPIO_PORT_ASW, GPIO_PIN_ASW4, &stcGpioInit); // ASW04
 
     asw_02 = Read_ASW2();
-    //    stcGpioInit.u16PullUp = PIN_PU_OFF;         // ÉÏÀ­
+    //    stcGpioInit.u16PullUp = PIN_PU_OFF;         // ï¿½ï¿½ï¿½ï¿½
     if (asw_02)
     {
-        stcGpioInit.u16PinState = PIN_STAT_SET; // À­¸ß
+        stcGpioInit.u16PinState = PIN_STAT_SET; // ï¿½ï¿½ï¿½ï¿½
     }
     else
     {
-        stcGpioInit.u16PinState = PIN_STAT_RST; // À­µÍ
+        stcGpioInit.u16PinState = PIN_STAT_RST; // ï¿½ï¿½ï¿½ï¿½
     }
     (void)GPIO_Init(GPIO_PORT_ASW, GPIO_PIN_ASW2, &stcGpioInit); // ASW02
 
@@ -123,14 +123,14 @@ static void vd_Button_Init(void)
     AVsw = Read_AVSW();
     if (AVsw)
     {
-        stcGpioInit.u16PullUp = PIN_PU_OFF;     // ²»ÉÏÀ­
-        stcGpioInit.u16PinState = PIN_STAT_RST; // À­µÍ
+        stcGpioInit.u16PullUp = PIN_PU_OFF;     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        stcGpioInit.u16PinState = PIN_STAT_RST; // ï¿½ï¿½ï¿½ï¿½
                                                 // led_state = LED_ALL;
     }
     else
     {
-        stcGpioInit.u16PullUp = PIN_PU_ON;      // ÉÏÀ­
-        stcGpioInit.u16PinState = PIN_STAT_SET; // À­¸ß
+        stcGpioInit.u16PullUp = PIN_PU_ON;      // ï¿½ï¿½ï¿½ï¿½
+        stcGpioInit.u16PinState = PIN_STAT_SET; // ï¿½ï¿½ï¿½ï¿½
                                                 // led_state = LED_RED;
     }
     (void)GPIO_Init(GPIO_PORT_A, GPIO_PIN_08, &stcGpioInit);
@@ -153,9 +153,9 @@ static void Key_Init(void)
 
 static uint8_t Key_Read(uint8_t mode)
 {
-    static uint8_t key_up = 1; // °´¼üËÉ¿ª±êÖ¾
+    static uint8_t key_up = 1; // ï¿½ï¿½ï¿½ï¿½ï¿½É¿ï¿½ï¿½ï¿½Ö¾
     if (mode == 1)
-        key_up = 1; // Ö§³ÖÁ¬°´
+        key_up = 1; // Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     if (key_up && (GPIO_ReadInputPins(GPIO_PORT_B, GPIO_PIN_06) == 0))
     {
@@ -166,23 +166,23 @@ static uint8_t Key_Read(uint8_t mode)
     }
     else if (GPIO_ReadInputPins(GPIO_PORT_B, GPIO_PIN_06) == 1)
         key_up = 1;
-    return 0; // ÎÞ°´¼ü°´ÏÂ
+    return 0; // ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
-// ÆôÓÃ×Ô¶¯¼ì²âÄ³Ð©ÖÆÊ½
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Ä³Ð©ï¿½ï¿½Ê½
 void enable_auto_detection(uint8_t enable)
 {
     static uint8_t art[2];
     if (enable)
     {
-        // ÆôÓÃPAL¡¢NTSCºÍSECAMµÄ×Ô¶¯¼ì²â
+        // ï¿½ï¿½ï¿½ï¿½PALï¿½ï¿½NTSCï¿½ï¿½SECAMï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½
         art[0] = AUTO_DETECT_REG;
         art[1] = AD_PAL_EN | AD_NTSC_EN | AD_SECAM_EN | 0x80;
         (void)I2C_Master_Transmit(DEVICE_ADDR, art, 2, TIMEOUT);
     }
     else
     {
-        // ½ûÓÃ×Ô¶¯¼ì²â
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½
         art[0] = AUTO_DETECT_REG;
         art[1] = 0x00;
         (void)I2C_Master_Transmit(DEVICE_ADDR, art, 2, TIMEOUT);
@@ -218,6 +218,11 @@ int32_t main(void)
     EFM_FWMC_Cmd(ENABLE);
     BSP_CLK_Init();
     BSP_LED_Init();
+
+    // Add support for debug UART
+    DebugUart_Init();
+    printf("\r\n[DEBUG UART] USART1 activated (PH2=TX, PC13=RX)\r\n");
+
     vd_Button_Init();
     Key_Init();
 #if (LL_TMR0_ENABLE == DDL_ON)
@@ -241,7 +246,7 @@ int32_t main(void)
 //            static uint8_t art[] =
 //            {
 //                0x42, 0x0E, 0x00, // Re-enter map
-//                0x42, 0x0b, 0x00, // new É«¶È
+//                0x42, 0x0b, 0x00, // new É«ï¿½ï¿½
 //            };
 //            i+=10;
 //            art[5] = i;

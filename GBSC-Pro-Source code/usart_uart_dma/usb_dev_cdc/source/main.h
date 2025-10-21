@@ -29,6 +29,9 @@
 #include "string.h"
 #include "stdbool.h"
 
+// Debug UART
+void DebugUart_Init(void);
+
 #define GPIO_PORT_ASW  GPIO_PORT_B
 
 #define GPIO_PIN_ASW1  GPIO_PIN_15
@@ -59,20 +62,20 @@
 #define RES_CHANGED  true//true  false
 
 
-// ¼Ä´æÆ÷µØÖ·
-#define VID_SEL_REG  0x02  // ÊÓÆµÖÆÊ½Ñ¡Ôñ¼Ä´æÆ÷
-#define AUTO_DETECT_REG 0x07  // ×Ô¶¯¼ì²â¿ØÖÆ¼Ä´æÆ÷
+// ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+#define VID_SEL_REG  0x02  // ï¿½ï¿½Æµï¿½ï¿½Ê½Ñ¡ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
+#define AUTO_DETECT_REG 0x07  // ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼Ä´ï¿½ï¿½ï¿½
 
-// ÉèÖÃÊÓÆµÖÆÊ½µÄºê
-#define VID_SEL_PAL    0x80  // PAL ÖÆÊ½
-#define VID_SEL_NTSC   0x50  // NTSC M ÖÆÊ½
-#define VID_SEL_SECAM  0xE0  // SECAM ÖÆÊ½
-#define VID_SEL_AUTO   0x00  // ×Ô¶¯¼ì²âÄ£Ê½
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½Ê½ï¿½Äºï¿½
+#define VID_SEL_PAL    0x80  // PAL ï¿½ï¿½Ê½
+#define VID_SEL_NTSC   0x50  // NTSC M ï¿½ï¿½Ê½
+#define VID_SEL_SECAM  0xE0  // SECAM ï¿½ï¿½Ê½
+#define VID_SEL_AUTO   0x00  // ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Ä£Ê½
 
-// ÉèÖÃ×Ô¶¯¼ì²âÖÆÊ½µÄºê
-#define AD_PAL_EN      0x01  // ÆôÓÃPAL¼ì²â
-#define AD_NTSC_EN     0x02  // ÆôÓÃNTSC¼ì²â
-#define AD_SECAM_EN    0x04  // ÆôÓÃSECAM¼ì²â
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Äºï¿½
+#define AD_PAL_EN      0x01  // ï¿½ï¿½ï¿½ï¿½PALï¿½ï¿½ï¿½
+#define AD_NTSC_EN     0x02  // ï¿½ï¿½ï¿½ï¿½NTSCï¿½ï¿½ï¿½
+#define AD_SECAM_EN    0x04  // ï¿½ï¿½ï¿½ï¿½SECAMï¿½ï¿½ï¿½
 
 
 #define LED_ERR_RED     0x80
@@ -95,7 +98,7 @@
 #define AV_INPUT false
 #define SV_INPUT true
 
-//È«¾Ö¶¨Òå
+//È«ï¿½Ö¶ï¿½ï¿½ï¿½
 /*LED_state*/
 extern uint8_t led_state;
 extern uint8_t led_sw;
