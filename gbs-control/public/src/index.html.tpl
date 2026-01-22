@@ -150,6 +150,16 @@
               <li>Selecting a resolution also makes it the new startup preset.</li>
             </ul>
             <div class="gbs-resolution">
+            <button
+                class="gbs-button gbs-button__resolution"
+                gbs-message="L"
+                gbs-message-type="user"
+                gbs-click="normal"
+                gbs-element-ref="button1920x1200"
+                gbs-role="preset"
+              >
+               1920 <span>x1200</span>
+              </button>
               <button
                 class="gbs-button gbs-button__resolution"
                 gbs-message="s"

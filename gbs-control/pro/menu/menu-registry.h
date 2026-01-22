@@ -85,6 +85,7 @@ typedef enum {
 
     // Output Resolution submenu
     OLED_OutputResolution_1080,
+    OLED_OutputResolution_1200,
     OLED_OutputResolution_1024,
     OLED_OutputResolution_960,
     OLED_OutputResolution_720,

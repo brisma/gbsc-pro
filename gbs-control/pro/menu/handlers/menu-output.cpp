@@ -18,6 +18,31 @@ extern void saveUserPrefs();
 
 bool IR_handleOutputResolution(void)
 {
+    if (oled_menuItem == OLED_OutputResolution_1200) {
+        showMenu("Menu->Output", "1920x1200");
+
+        if (irDecode()) {
+            switch (results.value) {
+                case IR_KEY_MENU:
+                    exitMenu();
+                    break;
+                case IR_KEY_UP:
+                    Menu_navigateTo(OLED_OutputResolution_1080);  // Wrap to last
+                    break;
+                case IR_KEY_DOWN:
+                    Menu_navigateTo(OLED_OutputResolution_480);
+                    break;
+                case IR_KEY_OK:
+                    userCommand = 'L';
+                    break;
+                case IR_KEY_EXIT:
+                    Menu_navigateTo(OLED_OutputResolution);
+                    break;
+            }
+            irResume();
+        }
+        return true;
+    }
     if (oled_menuItem == OLED_OutputResolution_1080) {
         showMenu("Menu->Output", "1920x1080");
 
