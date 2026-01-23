@@ -4,9 +4,11 @@
 
 ---
 
-Custom firmware for the GBSC-Pro video upscaler by **Brisma**.
+Custom firmware for the GBSC-Pro video upscaler by 20 percent cooler (base on brisma work that is based on op
 
-Converts retro console video signals to HDMI up to 1080p with low latency, advanced color processing, and extensive customization options.
+Converts retro console video signals to HDMI up to 1200p with low latency. 
+based on brisma work - https://github.com/brisma/gbsc-pro/
+
 
 Based on [RetroScaler/gbsc-pro](https://github.com/RetroScaler/gbsc-pro), which is a fork of [gbs-control](https://github.com/ramapcsx2/gbs-control) by ramapcsx2.
 
@@ -23,8 +25,8 @@ Based on [RetroScaler/gbsc-pro](https://github.com/RetroScaler/gbsc-pro), which 
 - **VGA** passthrough
 
 ### Video Output
-- HDMI up to **1080p**
-- Multiple output resolutions: 480p, 720p, 960p, 1024p, 1080p
+- HDMI up to **1200p**
+- Multiple output resolutions: 480p, 720p, 960p, 1024p, 1080p, 1200p.
 
 ### Image Processing
 - **I2P (Interlace to Progressive)**: Motion-adaptive deinterlacing
