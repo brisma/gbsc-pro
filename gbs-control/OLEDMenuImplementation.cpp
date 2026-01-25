@@ -266,6 +266,8 @@ bool currentSettingHandler(OLEDMenuManager *manager, OLEDMenuItem *, OLEDMenuNav
             display.drawString(0, 0, "1280x720");
         } else if (rto->presetID == 0x05 || rto->presetID == 0x15) {
             display.drawString(0, 0, "1920x1080");
+        } else if (rto->presetID == 0x07 || rto->presetID == 0x17) {
+            display.drawString(0, 0, "1920x1200");
         } else if (rto->presetID == 0x06 || rto->presetID == 0x16) {
             display.drawString(0, 0, "Downscale");
         } else if (rto->presetID == 0x04) {
