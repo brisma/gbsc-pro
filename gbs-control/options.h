@@ -10,7 +10,7 @@ enum PresetPreference : uint8_t {
     Output1080P = 5,
     OutputDownscale = 6,
     OutputBypass = 10,
-    Output1200P = 20,
+    Output1200P = 7,
 };
 
 // GBSC-PRO: Include Pro-specific enums and field definitions
