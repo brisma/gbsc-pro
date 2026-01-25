@@ -4083,7 +4083,7 @@ void doPostPresetLoadSteps()
         SerialM.print(F("1280x1024"));
     else if (rto->presetID == 0x03 || rto->presetID == 0x13)
         SerialM.print(F("1280x720"));
-    else if (rto->presetID == 0x20 || rto->presetID == 0x20)
+    else if (rto->presetID == 0x07 || rto->presetID == 0x17)
         SerialM.print(F("1920x1200"));
     else if (rto->presetID == 0x05 || rto->presetID == 0x15)
         SerialM.print(F("1920x1080"));
@@ -4584,7 +4584,9 @@ void applyPresets(uint8_t result)
 #endif
         else if (uopt->presetPreference == 5) {
             writeProgramArrayNew(ntsc_1920x1080, false);
-        } else if (uopt->presetPreference == 20) {
+        } else if (uopt->presetPreference == 6) {
+            writeProgramArrayNew(ntsc_downscale, false);
+        } else if (uopt->presetPreference == 7) {
             writeProgramArrayNew(ntsc_1920x1200, false);
         }
     } else if (result == 2 || result == 4) {
