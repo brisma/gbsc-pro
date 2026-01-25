@@ -90,7 +90,7 @@ const uint8_t ntsc_1920x1200[] PROGMEM = {
     0x3E, // s1_28
     0x0,  // s1_29
     0x0,  // s1_2A
-    0x20,  // s1_2B
+    0x07,  // s1_2B
     0x0,  // s1_2C
     0x0,  // s1_2D
     0x0,  // s1_2E
