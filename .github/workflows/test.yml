@@ -1,0 +1,86 @@
+# Every push and pull request: all suites in the development container with the quick Playwright run (Android, iPhone,
+# desktop), and natively on Windows, macOS and Linux every suite but the browsers (where portability breaks), with the
+# same tools/dev.py a contributor runs. The full Playwright run is test-full.yml (releases, by hand).
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:   # a newer push to the same branch or pull request replaces the run in progress
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  container:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Image (published tag, or built here when this commit introduces a new one)
+        run: |
+          docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
+      - name: The node_modules mount points as the runner user (Docker would create them as root on a Linux host)
+        run: mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
+      - run: docker compose run --rm -T dev check --strict
+      - run: docker compose run --rm -T dev build
+      - name: Nothing in the repository belongs to root
+        run: test -z "$(find . -user root -not -path './.git/*' -print -quit)"
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, macos-26, ubuntu-26.04]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12" }
+      - run: pip install platformio==6.2.0 pyyaml==6.0.3 fonttools==4.62.1 brotli==1.2.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: |
+            gbs-control/public/package-lock.json
+            gbsc-pro-flasher/ui/package-lock.json
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: gbsc-pro-flasher }
+      - uses: actions/cache@v6
+        with: { path: ~/.platformio, key: "pio-${{ runner.os }}-${{ hashFiles('gbs-control/platformio.ini') }}" }
+      - name: MSYS2 (make, UCRT64 gcc)
+        if: runner.os == 'Windows'
+        id: msys
+        uses: msys2/setup-msys2@v2
+        with: { msystem: UCRT64, install: make mingw-w64-ucrt-x86_64-gcc, path-type: inherit }
+      - name: MSYS2 on PATH for the host tests
+        if: runner.os == 'Windows'
+        run: |
+          echo "MSYS2_ROOT=${{ steps.msys.outputs.msys2-location }}" >> "$GITHUB_ENV"
+          echo "${{ steps.msys.outputs.msys2-location }}\\ucrt64\\bin" >> "$GITHUB_PATH"
+      - name: Arm GNU Toolchain 15.3.rel2
+        run: |
+          set -euo pipefail
+          B=https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel2
+          case "$RUNNER_OS" in
+            Linux)   f=arm-gnu-toolchain-15.3.rel2-x86_64-arm-none-eabi.tar.xz;  s=463df9665c246fa13bab2102115bbf83440661b6eb70b44f3dfd4712ca30037a ;;
+            macOS)   f=arm-gnu-toolchain-15.3.rel2-darwin-arm64-arm-none-eabi.tar.xz; s=f011e4832046155f06408dda6b252b21b139a8159c8529802227371f06656c60 ;;
+            Windows) f=arm-gnu-toolchain-15.3.rel2-mingw-w64-x86_64-arm-none-eabi.zip; s=0daff4141d4f62ad1e9794ca8bd430ef730f07fd78f6d71d2ffdffc21db8cb9e ;;
+          esac
+          curl -fsSLo "$RUNNER_TEMP/$f" "$B/$f"
+          echo "$s  $RUNNER_TEMP/$f" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/arm"
+          case "$f" in
+            *.zip) python -m zipfile -e "$RUNNER_TEMP/$f" "$RUNNER_TEMP/arm" ;;   # Git Bash has no unzip
+            *) tar -xJf "$RUNNER_TEMP/$f" -C "$RUNNER_TEMP/arm" ;;
+          esac
+          d=$(dirname "$(find "$RUNNER_TEMP/arm" -name 'arm-none-eabi-gcc*' -path '*/bin/*' | head -1)")
+          if [ "$RUNNER_OS" = Windows ]; then d=$(cygpath -w "$d"); fi
+          echo "$d" >> "$GITHUB_PATH"
+      - name: Tauri system packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libudev-dev
+      - run: python tools/dev.py doctor
+      - run: python tools/dev.py check gen esp adv flasher tools --strict

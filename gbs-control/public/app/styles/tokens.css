@@ -1,0 +1,28 @@
+/* Design tokens: dark only, yellow accent (the TV menu's black and yellow) */
+:root {
+  --b0: #121315;
+  --b1: #1b1d20;
+  --b2: #272a2e;
+  --b3: #2f3338;
+  --ln: #2e3136;
+  --t1: #ecebe8;
+  --t2: #9a978f;
+  --ac: #f6d21a;
+  --acx: #1d1200;
+  --good: #4ade80;
+  --bad: #ff5d5d;
+  color-scheme: dark;
+}
+html, body { margin: 0; height: 100%; background: var(--b0); }
+#app { height: 100%; }
+.ms { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 21px; line-height: 1;
+      letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+      -webkit-font-smoothing: antialiased; font-variation-settings: "FILL" 0; }
+.ms.fill { font-variation-settings: "FILL" 1; }
+.logo { display: block; flex: none; }
+/* Real buttons and links, not spans (keyboard and screen readers); class rules style them */
+.ui button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+.ui a { color: inherit; text-decoration: none; cursor: pointer; }
+.ui :focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; border-radius: 8px; }
+.ui h1 { margin: 0; font: inherit; }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

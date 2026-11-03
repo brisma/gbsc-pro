@@ -1,0 +1,32 @@
+# OTA beta channel.
+# Off until the repository variable OTA_ENABLED is "true". A tag vX.Y.Z-betaN on main publishes X.Y.Z-betaN (a
+# release candidate already tested, waiting for users' feedback; vX.Y.Z on the commit that only dates its CHANGELOG section promotes it to Stable);
+# a manual run with rollback points the channel at an already published version.
+name: OTA beta
+on:
+  push:
+    tags: ["v*-beta*"]
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Point the beta manifest at an already published version (no build); run it from a beta tag"
+        type: boolean
+        default: false
+      rollback_version:
+        description: "Version for the rollback, e.g. 3.1.0-beta2"
+        type: string
+        default: ""
+concurrency:
+  group: ota-beta
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: vars.OTA_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-beta')
+    permissions:
+      id-token: write
+      contents: write   # the Beta pre-release on GitHub (firmware, ADV Controller, flashers)
+    uses: ./.github/workflows/ota-publish.yml
+    with:
+      channel: beta
+      rollback: ${{ inputs.rollback || false }}
+      rollback_version: ${{ inputs.rollback_version || '' }}

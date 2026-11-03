@@ -1,0 +1,233 @@
+# Reusable OTA publish job, called by ota-beta.yml and ota-stable.yml (which hold the OTA_ENABLED
+# switch, the permissions and the concurrency group). Image first, manifest last; an image name is never overwritten; a channel never goes backwards
+# except through a manual rollback. Repository variables: OTA_ROLE_ARN, OTA_BUCKET, OTA_DISTRIBUTION_ID.
+# Stable and Beta also become a GitHub release with the whole package: firmware (.bin for USB, .bin.gz for WiFi), the
+# ADV Controller image, the flashers for macOS, Windows and Linux, the release zip and artifacts.json. The flashers
+# come from flashers.yml: the zips of the newest release with the same fingerprint (tools/release_assets.py), else the
+# cache of an earlier run, and only what is still missing is built.
+name: OTA publish
+on:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+        required: true
+      rollback:
+        type: boolean
+        default: false
+      rollback_version:
+        type: string
+        default: ""
+jobs:
+  # The three flasher zips: from a release with the same fingerprint, from the cache of an earlier run, or built
+  flashers:
+    if: ${{ !inputs.rollback }}
+    uses: ./.github/workflows/flashers.yml
+
+  # The full test run first (Playwright on every project, four parallel jobs)
+  full-tests:
+    if: ${{ !inputs.rollback }}
+    uses: ./.github/workflows/test-full.yml
+
+  publish:
+    needs: [flashers, full-tests]
+    # also when they were skipped (a rollback), never after one that did not succeed: a failed job, and a job
+    # GitHub cancelled because no runner came (its result is "cancelled", not "failure")
+    if: ${{ !cancelled() && contains(fromJSON('["success", "skipped"]'), needs.flashers.result) && contains(fromJSON('["success", "skipped"]'), needs.full-tests.result) }}
+    runs-on: ubuntu-26.04
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      BUCKET: ${{ vars.OTA_BUCKET }}
+      DISTRIBUTION: ${{ vars.OTA_DISTRIBUTION_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.OTA_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Rollback (manifest only, no build)
+        if: inputs.rollback
+        env:
+          RB: ${{ inputs.rollback_version }}
+        run: |
+          set -euo pipefail
+          python3 - "$RB" "$CHANNEL" <<'PY'
+          import sys
+          sys.path.insert(0, "tools/ota")
+          import version
+          if version.channel_of(sys.argv[1]) != sys.argv[2]:
+              sys.exit(f"{sys.argv[1]!r} is not a {sys.argv[2]} version")
+          PY
+          KEY="v1/fw/gbsc-pro-$RB.bin.gz"
+          META=$(aws s3api head-object --bucket "$BUCKET" --key "$KEY")
+          SHA=$(echo "$META" | jq -er '.Metadata.sha256')
+          SIZE=$(echo "$META" | jq -er '.ContentLength')
+          printf 'version=%s\nsize=%s\nsha256=%s\nfile=fw/gbsc-pro-%s.bin.gz\nnotes=https://github.com/brisma/gbsc-pro/releases/tag/v%s\n' \
+            "$RB" "$SIZE" "$SHA" "$RB" "$RB" > manifest.txt   # the notes link of a published release, as release.py writes it
+          aws s3 cp manifest.txt "s3://$BUCKET/v1/$CHANNEL/manifest.txt" --content-type text/plain --cache-control "max-age=60"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths "/v1/$CHANNEL/manifest.txt"
+
+      - uses: actions/setup-python@v7
+        if: ${{ !inputs.rollback }}
+        with:
+          python-version: "3.12"
+
+      # the release notes: a beta needs "## X.Y.Z - beta" in CHANGELOG.md, a Stable "## X.Y.Z - <date>"
+      - name: Changelog
+        if: ${{ !inputs.rollback }}
+        run: python3 tools/changelog.py check "$GITHUB_REF_NAME"
+
+      - name: Version
+        id: ver
+        if: ${{ !inputs.rollback }}
+        run: |
+          set -euo pipefail
+          BASE=$(sed -n 's/^#define GBS_FW_VERSION "\([^"]*\)".*/\1/p' gbs-control/pro/gbs-control-pro.h)
+          if [ "$CHANNEL" = stable ]; then
+            V="$BASE"
+            test "$GITHUB_REF_NAME" = "v$BASE" || { echo "tag $GITHUB_REF_NAME != v$BASE"; exit 1; }
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "the tag is not on main"; exit 1; }
+          else
+            V="${GITHUB_REF_NAME#v}"   # the tag: vX.Y.Z-betaN
+            case "$V" in "$BASE"-beta*) ;; *) echo "tag $GITHUB_REF_NAME is not v$BASE-betaN"; exit 1 ;; esac
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "the tag is not on main"; exit 1; }
+          fi
+          python3 -c "import sys; sys.path.insert(0,'tools/ota'); import version; sys.exit(0 if version.valid('$V') else 1)" \
+            || { echo "version $V does not fit 15 characters"; exit 1; }
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Newer than the live channel (and than Stable for a Beta), or a re-run of the same commit
+        id: guard
+        if: ${{ !inputs.rollback }}
+        env:
+          V: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          live() {   # the live version; "" only when the manifest does not exist (any other AWS error fails the job)
+            local out
+            if out=$(aws s3 cp "s3://$BUCKET/v1/$1/manifest.txt" - 2> live-err.txt); then
+              echo "$out" | sed -n 's/^version=//p'
+            elif grep -qE 'NoSuchKey|404|does not exist' live-err.txt; then
+              echo ""
+            else
+              cat live-err.txt >&2; return 1
+            fi
+          }
+          LIVE=$(live "$CHANNEL"); STABLE=$(live stable); LIVE_COMMIT=""
+          if [ -n "$LIVE" ]; then
+            LIVE_COMMIT=$(aws s3api head-object --bucket "$BUCKET" --key "v1/fw/gbsc-pro-$LIVE.bin.gz" 2>/dev/null |
+              jq -r '.Metadata.commit // ""' || true)
+          fi
+          MODE=$(python3 tools/ota/guard.py --version "$V" --channel "$CHANNEL" --live "$LIVE" --stable "$STABLE" \
+            --live-commit "$LIVE_COMMIT" --commit "$GITHUB_SHA")
+          echo "$MODE (live $CHANNEL: ${LIVE:-none})"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+
+      # Tests and the build run in the development image (compose.yaml), the same toolchains anyone builds with
+      - name: Native tests
+        if: ${{ !inputs.rollback }}
+        run: |
+          docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
+          mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
+          docker compose run --rm -T dev check esp adv tools --strict
+
+      - name: Flashers (Stable and Beta)
+        if: ${{ !inputs.rollback }}
+        uses: actions/download-artifact@v8
+        with:
+          pattern: flasher-*
+          path: flasher-assets
+          merge-multiple: true
+
+      - name: The three flashers are here (before anything is uploaded)
+        if: ${{ !inputs.rollback }}
+        run: |
+          for z in GBSC-PRO-Flasher-macOS.zip GBSC-PRO-Flasher-Windows.zip GBSC-PRO-Flasher-Linux.zip; do
+            test -s "flasher-assets/$z" || { echo "::error::$z is missing: no release without the three flashers"; exit 1; }
+          done
+
+      - name: Build and lay out
+        if: ${{ !inputs.rollback }}
+        env:
+          V: ${{ steps.ver.outputs.version }}
+        run: docker compose run --rm -T dev python3 tools/release.py --channel "$CHANNEL" --version "$V" --out out
+
+      - name: Upload the image (never over other bytes)
+        if: ${{ !inputs.rollback }}
+        env:
+          V: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          KEY="v1/fw/gbsc-pro-$V.bin.gz"
+          if META=$(aws s3api head-object --bucket "$BUCKET" --key "$KEY" 2>err.txt); then
+            if [ "$(echo "$META" | jq -r '.Metadata.commit')" != "$GITHUB_SHA" ]; then
+              echo "$KEY exists from another commit: an image name is never reused"; exit 1
+            fi
+            # a re-run of this commit: keep the uploaded image and describe it, not the new build
+            SHA=$(echo "$META" | jq -r '.Metadata.sha256'); SIZE=$(echo "$META" | jq -r '.ContentLength')
+            sed -i "s/^sha256=.*/sha256=$SHA/; s/^size=.*/size=$SIZE/" "out/v1/$CHANNEL/manifest.txt"
+          elif grep -qE '404|Not Found' err.txt; then
+            aws s3 cp "out/$KEY" "s3://$BUCKET/$KEY" --content-type application/octet-stream \
+              --cache-control "public, max-age=31536000, immutable" \
+              --metadata "sha256=$(cat "out/$KEY.sha256"),commit=$GITHUB_SHA"
+          else
+            cat err.txt; exit 1
+          fi
+
+      - name: Upload the manifest
+        if: ${{ !inputs.rollback }}
+        run: |
+          set -euo pipefail
+          aws s3 cp "out/v1/$CHANNEL/manifest.txt" "s3://$BUCKET/v1/$CHANNEL/manifest.txt" \
+            --content-type text/plain --cache-control "max-age=60"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths "/v1/$CHANNEL/manifest.txt"
+
+      - name: Prune old images
+        if: ${{ !inputs.rollback }}
+        run: |
+          set -euo pipefail
+          aws s3api list-objects-v2 --bucket "$BUCKET" --prefix v1/fw/ > listing.json
+          for ch in stable beta; do aws s3 cp "s3://$BUCKET/v1/$ch/manifest.txt" "live-$ch.txt" 2>/dev/null || true; done
+          python3 tools/ota/prune.py --listing listing.json --manifest stable=live-stable.txt \
+            --manifest beta=live-beta.txt --keep 3 |
+            while read -r k; do aws s3 rm "s3://$BUCKET/$k"; done
+
+      - name: GitHub release (Stable and Beta; idempotent, from the published image)
+        if: ${{ !inputs.rollback }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.ver.outputs.version }}
+          FP: ${{ needs.flashers.outputs.fingerprint }}
+          REUSE: ${{ needs.flashers.outputs.reuse }}
+        run: |
+          set -euo pipefail
+          TAG="$GITHUB_REF_NAME"; if [ "$CHANNEL" = stable ]; then PRE=""; else PRE="--prerelease"; fi
+          NAMES=$(gh release view "$TAG" --json assets,isDraft -q 'select(.isDraft | not) | .assets[].name' 2>/dev/null || true)
+          if printf '%s\n' "$NAMES" | grep -x artifacts.json > /dev/null; then
+            echo "$TAG is published with its assets (artifacts.json is uploaded last): nothing to do"; exit 0
+          fi
+          # the package is laid out from the image the OTA server holds (a re-run builds other bytes: kBuildId)
+          aws s3 cp "s3://$BUCKET/v1/fw/gbsc-pro-$V.bin.gz" published.bin.gz
+          python3 tools/release_assets.py unpack --assets flasher-assets --flasher flasher-out
+          python3 tools/release.py --channel "$CHANNEL" --version "$V" --from-image published.bin.gz --out rel --flasher flasher-out
+          python3 tools/release_assets.py manifest --version "$V" --channel "$CHANNEL" --commit "$GITHUB_SHA" \
+            --fingerprint "$FP" --source "${REUSE:-built}" --out rel/artifacts.json
+          mkdir -p rel/assets
+          unzip -p "rel/gbsc-pro-$V.zip" "gbsc-pro-$V/gbsc-pro-$V.bin" > "rel/assets/gbsc-pro-$V.bin"
+          cp published.bin.gz "rel/assets/gbsc-pro-$V.bin.gz"
+          cp "rel/gbsc-pro-$V.zip" rel/gbsc-pro-adv-controller-*.bin flasher-assets/GBSC-PRO-Flasher-*.zip rel/assets/
+          FILES="Everything in gbsc-pro-$V.zip: GBS-Control (.bin for USB, .bin.gz for WiFi), the ADV Controller image"
+          FILES="$FILES and the GBSC PRO Flasher for macOS, Windows and Linux (also one zip per system)."
+          NOTES="$(python3 tools/changelog.py section "${V%%-*}")"$'\n\n---\n\n'"$FILES"
+          # a draft until every file is there: never an incomplete release on the page, and it works with
+          # immutable releases (no asset may be added once a release is published)
+          gh release view "$TAG" > /dev/null 2>&1 ||
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "GBSC PRO $V" $PRE --notes "$NOTES"
+          gh release upload "$TAG" rel/assets/* --clobber
+          gh release upload "$TAG" rel/artifacts.json --clobber   # last: it marks the release complete
+          if [ "$CHANNEL" = stable ]; then LATEST="--latest"; else LATEST=""; fi   # a Stable is the release users see first
+          gh release edit "$TAG" --draft=false $LATEST

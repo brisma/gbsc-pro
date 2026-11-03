@@ -1,0 +1,16 @@
+# GBSC PRO Flasher zips by hand: the same jobs a release runs (flashers.yml), without a release. It publishes nothing:
+# the per-system zips are the run's artifacts. Run on main before a tag, it leaves the release nothing to build.
+name: flasher
+on:
+  workflow_dispatch:
+    inputs:
+      macos:
+        description: "macOS runner image (when one has no free runner; the zip is the same universal app)"
+        type: choice
+        default: macos-26
+        options: [macos-26, macos-15, macos-26-intel, macos-15-intel]
+jobs:
+  flashers:
+    uses: ./.github/workflows/flashers.yml
+    with:
+      macos: ${{ inputs.macos }}

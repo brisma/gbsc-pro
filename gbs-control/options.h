@@ -1,4 +1,5 @@
 #ifndef _USER_H_
+#include <stdint.h>   // self-contained: libstdc++ (Linux) does not bring it in through <map>/<string>
 using Ascii8 = uint8_t;
 /// Output resolution requested by user, *given to* applyPresets().
 enum PresetPreference : uint8_t {
@@ -9,6 +10,7 @@ enum PresetPreference : uint8_t {
     Output1024P = 4,
     Output1080P = 5,
     OutputDownscale = 6,
+    Output1200P = 7,       // issue #35: ntsc_1920x1200 / pal_1920x1200 (experimental)
     OutputBypass = 10,
 };
 
@@ -21,7 +23,6 @@ struct userOptions
     // 0 - normal, 1 - x480/x576, 2 - customized, 3 - 1280x720, 4 - 1280x1024, 5 - 1920x1080,
     // 6 - downscale, 10 - bypass
     PresetPreference presetPreference;
-    Ascii8 presetSlot;
     uint8_t enableFrameTimeLock;
     uint8_t frameTimeLockMethod;
     uint8_t enableAutoGain;
@@ -29,8 +30,6 @@ struct userOptions
     uint8_t wantOutputComponent;
     uint8_t deintMode;
     uint8_t wantVdsLineFilter;
-    uint8_t wantPeaking;
-    uint8_t wantTap6;
     uint8_t preferScalingRgbhv;
     uint8_t PalForce60;
     uint8_t disableExternalClockGenerator;
@@ -49,7 +48,6 @@ struct runTimeOptions
 {
     uint32_t freqExtClockGen;
     uint16_t noSyncCounter; // is always at least 1 when checking value in syncwatcher
-    uint8_t presetVlineShift;
     uint8_t videoStandardInput; // 0 - unknown, 1 - NTSC like, 2 - PAL like, 3 480p NTSC, 4 576p PAL
     uint8_t phaseSP;
     uint8_t phaseADC;

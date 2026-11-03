@@ -138,7 +138,7 @@ class WebSocketsServerCore : protected WebSockets {
      */
     virtual void handleNonWebsocketConnection(WSclient_t * client) {
         DEBUG_WEBSOCKETS("[WS-Server][%d][handleHeader] no Websocket connection close.\n", client->num);
-        client->tcp->write(
+        static const char kReply[] PROGMEM =
             "HTTP/1.1 400 Bad Request\r\n"
             "Server: arduino-WebSocket-Server\r\n"
             "Content-Type: text/plain\r\n"
@@ -146,7 +146,9 @@ class WebSocketsServerCore : protected WebSockets {
             "Connection: close\r\n"
             "Sec-WebSocket-Version: 13\r\n"
             "\r\n"
-            "This is a Websocket server only!");
+            "This is a Websocket server only!";
+        String reply(FPSTR(kReply));                            // GBSC: reply text in flash, copied on this rare path
+        client->tcp->write(reply);
         clientDisconnect(client);
     }
 
@@ -156,7 +158,7 @@ class WebSocketsServerCore : protected WebSockets {
      * @param client WSclient_t *  ptr to the client struct
      */
     virtual void handleAuthorizationFailed(WSclient_t * client) {
-        client->tcp->write(
+        static const char kReply[] PROGMEM =
             "HTTP/1.1 401 Unauthorized\r\n"
             "Server: arduino-WebSocket-Server\r\n"
             "Content-Type: text/plain\r\n"
@@ -165,7 +167,9 @@ class WebSocketsServerCore : protected WebSockets {
             "Sec-WebSocket-Version: 13\r\n"
             "WWW-Authenticate: Basic realm=\"WebSocket Server\""
             "\r\n"
-            "This Websocket server requires Authorization!");
+            "This Websocket server requires Authorization!";
+        String reply(FPSTR(kReply));                            // GBSC: reply text in flash, copied on this rare path
+        client->tcp->write(reply);
         clientDisconnect(client);
     }
 

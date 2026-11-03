@@ -1,0 +1,4 @@
+# i2c batch
+w 42 0A 10
+w 56 01 70
+# end c_state 2 led 6 input 6 adv 1

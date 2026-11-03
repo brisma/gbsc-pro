@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "types": [],
+    "paths": { "preact": ["./node_modules/preact"], "preact/*": ["./node_modules/preact/*"] }
+  },
+  "include": ["src", "../../gbs-control/public/app/types.d.ts"]
+}

@@ -2,15 +2,36 @@
   "name": "gbscontrol-webui",
   "version": "1.0.0",
   "description": "gbscontrol-webui",
+  "type": "module",
   "scripts": {
-    "start": "tsc --watch ./src/index.ts",
-    "build": "tsc ./src/index.ts --target ES6 && cd scripts && node ./build.js && ./html2h.sh",
-    "dev": "node dev-server.js"
+    "build": "node tools/build-app.mjs",
+    "gen": "node tools/gen.mjs",
+    "gen:check": "node tools/gen-check.mjs",
+    "sim": "node sim/main.ts",
+    "build:app": "node tools/build-app.mjs",
+    "size": "node tools/size.mjs",
+    "test:unit": "node --test --test-timeout=20000 test/unit/",
+    "test:e2e": "playwright test",
+    "parity": "node tools/parity.mjs",
+    "check:static": "npm run -s gen:check && tsc -p tsconfig.json && npm run -s test:unit && npm run -s build:app && npm run -s parity",
+    "check": "npm run -s check:static && npm run -s test:e2e"
   },
   "author": "",
-  "license": "GNU",
+  "license": "GPL-3.0-only",
   "devDependencies": {
-    "typescript": "^4.1.3",
-    "ws": "^8.18.0"
+    "@axe-core/playwright": "^4.14.0",
+    "@fontsource/archivo": "^5.3.0",
+    "@playwright/test": "^1.64.1",
+    "@preact/signals": "^2.11.3",
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "esbuild": "^0.28.2",
+    "material-symbols": "^0.48.0",
+    "preact": "^10.29.8",
+    "typescript": "~5.9",
+    "ws": "^8.22.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

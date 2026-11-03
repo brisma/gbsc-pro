@@ -1,0 +1,23 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255
+S 105
+R 1D2 - | ⑪ Picture               1/15 |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | Filter              ⑪Normal⑫⑯|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 24E - | Scanlines                Off⑯|
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 28C - | Brightness    ⑦⑦⑦⑦⑦⑨⑨⑨⑨⑨  50⑯|
+        |CCCCCCCCCCCCCCCDDDDDDDDDDCCCCC|
+R 2CA - | Contrast      ⑦⑦⑦⑦⑦⑨⑨⑨⑨⑨  50⑮|
+        |CCCCCCCCCCCCCCCDDDDDDDDDDCCCCC|
+R 308 - | Saturation    ⑦⑦⑦⑦⑦⑨⑨⑨⑨⑨  50⑮|
+        |CCCCCCCCCCCCCCCDDDDDDDDDDCCCCC|
+R 346 - | Deinterlace         Adaptive⑮|
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 384 - | Reset picture             OK⑮|
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 3C2 - | How pixels look when scaled. |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+S 255x2
+attrs A=70 B=60 C=07 D=06

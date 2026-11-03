@@ -1,0 +1,92 @@
+# The development image (docker/Dockerfile) for linux/amd64 and linux/arm64, each built on its own runner, published
+# as ghcr.io/brisma/gbsc-pro-dev:<tag in compose.yaml>. A tag is published once and never moved: the image carries the
+# hash of its inputs (label gbsc.dev.inputs), so a push that brings the same inputs (dev merged into beta or main) is
+# fine, and changed inputs under a published tag fail until the tag in compose.yaml is bumped.
+name: dev image
+on:
+  push:
+    branches: [main]
+    paths: ["docker/**", ".dockerignore", "compose.yaml", "gbs-control/platformio.ini", ".github/workflows/dev-image.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+env:
+  IMAGE: ghcr.io/brisma/gbsc-pro-dev
+jobs:
+  tag:
+    runs-on: ubuntu-26.04
+    outputs:
+      tag: ${{ steps.t.outputs.tag }}
+      exists: ${{ steps.t.outputs.exists }}
+      inputs: ${{ steps.t.outputs.inputs }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v4   # a private package reads as missing without it, and would be overwritten
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - id: t
+        run: |
+          set -euo pipefail
+          TAG=$(sed -n 's#^ *image: ghcr.io/brisma/gbsc-pro-dev:\(.*\)$#\1#p' compose.yaml)
+          test -n "$TAG"
+          # platformio.ini counts only for what the image installs from it (platforms, packages, frameworks): its
+          # source filters change often and need no new image
+          INPUTS=$( (cat docker/Dockerfile docker/entrypoint.sh .dockerignore; \
+                     grep -E '^\s*(platform|platform_packages|framework)\s*=' gbs-control/platformio.ini) | sha256sum | cut -c1-64)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "inputs=$INPUTS" >> "$GITHUB_OUTPUT"
+          if ! OUT=$(docker buildx imagetools inspect "$IMAGE:$TAG" --format '{{json .Image}}' 2>&1); then
+            if echo "$OUT" | grep -qiE "not found|manifest unknown"; then exit 0; fi   # a new tag: build it
+            echo "$OUT"; echo "::error::cannot tell whether $IMAGE:$TAG exists"; exit 1   # never overwrite on doubt
+          fi
+          echo "exists=1" >> "$GITHUB_OUTPUT"
+          PUBLISHED=$(echo "$OUT" | jq -r '[.. | objects | .config?.Labels?["gbsc.dev.inputs"]? // empty] | first // ""')
+          if [ "$PUBLISHED" != "$INPUTS" ]; then
+            echo "::error::$IMAGE:$TAG is published from other inputs ($PUBLISHED): bump the tag in compose.yaml"; exit 1
+          fi
+          echo "::notice::$IMAGE:$TAG is already published from these inputs: nothing to do"
+  build:
+    needs: tag
+    if: needs.tag.outputs.exists != '1'
+    strategy:
+      matrix:
+        include:
+          - { platform: linux/amd64, arch: amd64, runner: ubuntu-26.04 }
+          - { platform: linux/arm64, arch: arm64, runner: ubuntu-26.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v4
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/setup-buildx-action@v4
+      - id: b
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          build-args: GBSC_DEV_INPUTS=${{ needs.tag.outputs.inputs }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=dev-${{ matrix.arch }}
+          # min: the full layer set of a ~5 GB image on two architectures would push the rust, npm and pio caches
+          # out of the repository's 10 GB
+          cache-to: type=gha,mode=min,scope=dev-${{ matrix.arch }}
+      - env: { DIGEST: "${{ steps.b.outputs.digest }}" }
+        run: mkdir -p digests && touch "digests/${DIGEST#sha256:}"   # no ':' in artifact file names
+      - uses: actions/upload-artifact@v7
+        with: { name: "digest-${{ matrix.arch }}", path: digests/*, retention-days: 1 }
+  merge:
+    needs: [tag, build]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with: { pattern: digest-*, path: digests, merge-multiple: true }
+      - uses: docker/login-action@v4
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/setup-buildx-action@v4
+      - run: |
+          set -euo pipefail
+          cd digests
+          docker buildx imagetools create -t "$IMAGE:${{ needs.tag.outputs.tag }}" \
+            --annotation "index:org.opencontainers.image.source=https://github.com/brisma/gbsc-pro" $(printf "$IMAGE@sha256:%s " *)
+          docker buildx imagetools inspect "$IMAGE:${{ needs.tag.outputs.tag }}"

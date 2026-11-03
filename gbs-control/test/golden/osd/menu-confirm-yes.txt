@@ -1,0 +1,23 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255
+S 105
+R 1D2 - | ⑪ System                7/12 |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | Signal info               OK⑯|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 24E - | Sound                      ⑫⑯|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 28C - | WiFi                       ⑫⑯|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 2CA - | Update                     ⑫⑯|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 308 - | Status pop-up     Input only⑮|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 346 - | Knob direction        Normal⑮|
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 384 - | Restart the GBSC PRO?        |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 3C2 - |          Yes    No           |
+        |AAAAAAAAACCCCCAAAAAAAAAAAAAAAA|
+S 255x2
+attrs A=70 B=07 C=60

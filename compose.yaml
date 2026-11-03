@@ -1,0 +1,31 @@
+# The GBSC PRO development container: docker compose run --rm dev check | build | doctor | bash
+# The image tag changes with docker/Dockerfile (dev-1, dev-2, ...): CI publishes each tag once and never overwrites it.
+services:
+  dev:
+    image: ghcr.io/brisma/gbsc-pro-dev:dev-1
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    init: true
+    ipc: host
+    working_dir: /work
+    environment:
+      # a directory inside the volume: PlatformIO removes its build directory when the project changes, and the
+      # volume's own mount point cannot be removed (on a Linux host every run then started from an empty one)
+      PLATFORMIO_BUILD_DIR: /cache/pio-build/build
+      CARGO_TARGET_DIR: /cache/target
+    volumes:
+      - .:/work
+      - pio-build:/cache/pio-build
+      - cargo-target:/cache/target
+      - cargo-registry:/opt/cargo/registry
+      - cargo-git:/opt/cargo/git
+      - node-web:/work/gbs-control/public/node_modules
+      - node-ui:/work/gbsc-pro-flasher/ui/node_modules
+volumes:
+  pio-build:
+  cargo-target:
+  cargo-registry:
+  cargo-git:
+  node-web:
+  node-ui:

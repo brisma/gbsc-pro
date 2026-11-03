@@ -1,0 +1,29 @@
+# The full run before a Beta or Stable release (called by ota-publish.yml) or by hand: every suite in the development
+# container, and Playwright on every project split into 4 parallel jobs (~3300 tests: one job would take ~40 minutes).
+name: test full
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  suites:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
+      - run: mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
+      - run: docker compose run --rm -T dev check gen esp adv flasher tools --strict
+  playwright:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
+      - run: mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
+      - run: docker compose run --rm -T dev check web --full --strict --shard ${{ matrix.shard }}/4

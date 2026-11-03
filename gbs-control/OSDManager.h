@@ -263,6 +263,26 @@ public:
         }
         GBS::OSD_COMMAND_FINISH::write(true);
     }
+    // ---- GBSC PRO: the TV OSD mode ("turn changes, click moves on") and the change indicator ----
+    bool isOn() const { return state != OSDState::OFF; }
+    void openOnCursor() { menuOn(); enter(); }                 // start on the current icon, ready to change it
+    void nextIcon() { menuOff(); menuOn(); next(); enter(); }  // click: the next registered icon
+    void step(bool inc) { if (state == OSDState::SUB) submit(inc); }
+    // One icon with its bar (0..128) without user navigation; rearm redraws the layout (after a preset load)
+    void showIcon(uint8_t icon, uint8_t active, bool rearm)
+    {
+        cursor = icon;
+        if (rearm || state == OSDState::OFF) menuOn();
+        GBS::OSD_COMMAND_FINISH::write(false);
+        GBS::OSD_MENU_ICON_SEL::write(iconToRegValue(cursor));
+        GBS::OSD_MENU_MOD_SEL::write(iconToRegValue(cursor));
+        GBS::OSD_BAR_LENGTH::write(128);
+        GBS::OSD_BAR_FOREGROUND_VALUE::write(active);
+        GBS::OSD_MENU_BAR_FONT_FORCOR::write(OSD_WHITE);
+        GBS::OSD_MENU_BAR_FONT_BGCOR::write(OSD_BLACk);
+        GBS::OSD_COMMAND_FINISH::write(true);
+        state = OSDState::SUB;
+    }
     void submit(bool inc)
     {
         GBS::OSD_COMMAND_FINISH::write(false);

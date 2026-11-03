@@ -1,0 +1,8 @@
+# The devcontainer runs the published image (or the one `docker compose build dev` made): no build here, the
+# devcontainers CLI rebuilds a compose service with `build` through a generated Dockerfile that Compose v5 refuses.
+# It keeps the image's entrypoint (it hands the volumes to the owner of the repository and drops to that user) and
+# only replaces the command with one that keeps the container running.
+services:
+  dev:
+    build: !reset null
+    command: ["sleep", "infinity"]

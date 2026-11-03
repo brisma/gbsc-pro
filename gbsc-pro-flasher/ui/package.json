@@ -1,0 +1,22 @@
+{
+  "name": "gbsc-pro-flasher-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.ts && tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.3",
+    "@tauri-apps/api": "^2.9.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0",
+    "preact": "^10.29.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "~5.9"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

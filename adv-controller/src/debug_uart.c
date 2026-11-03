@@ -1,18 +1,7 @@
-/**
- *******************************************************************************
- * @file  debug_uart.c
- * @brief Debug UART interface on PH2(TX) / PC13(RX)
- *        Uses CM_USART3 @ 115200 baud for printf output and CLI input
- *******************************************************************************
- */
-
 #include "debug_uart.h"
 #include "main.h"
 #include <stdio.h>
 
-/**
- * @brief  Initialize debug UART (CM_USART3)
- */
 void DebugUart_Init(void)
 {
     stc_usart_uart_init_t cfg;
@@ -31,19 +20,12 @@ void DebugUart_Init(void)
     USART_FuncCmd(DEBUG_UART, USART_TX | USART_RX, ENABLE);
 }
 
-/**
- * @brief  Clear UART error flags (overrun, frame, parity)
- */
 void DebugUart_ClearErrors(void)
 {
     USART_ClearStatus(DEBUG_UART, USART_FLAG_OVERRUN | USART_FLAG_FRAME_ERR | USART_FLAG_PARITY_ERR);
 }
 
-/**
- * @brief  Send single character (blocking)
- * @param  ch Character to send
- * @return Character sent
- */
+/* Boot printf (blocking, before the link starts) */
 int32_t DebugUart_SendChar(char ch)
 {
     while (USART_GetStatus(DEBUG_UART, USART_FLAG_TX_EMPTY) == RESET)
@@ -52,11 +34,34 @@ int32_t DebugUart_SendChar(char ch)
     return ch;
 }
 
-/**
- * @brief  Receive single character (non-blocking)
- * @param  ch Pointer to store received character
- * @return 0 if character received, -1 if no data
- */
+/* Console output: a 512 B ring drained by DebugUart_Poll(), never waits (drops when full) */
+#define TX_RING 512U
+static char sTx[TX_RING];
+static volatile uint16_t sTxHead, sTxTail;
+
+static size_t txUsed(void) { return (size_t)((sTxHead - sTxTail) & (TX_RING - 1U)); }
+
+size_t DebugUart_TxSpace(void) { return TX_RING - 1U - txUsed(); }
+
+void DebugUart_Write(const char *s, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        if (DebugUart_TxSpace() == 0U) return;
+        sTx[sTxHead] = s[i];
+        sTxHead = (uint16_t)((sTxHead + 1U) & (TX_RING - 1U));
+    }
+}
+
+void DebugUart_Poll(void)
+{
+    for (uint8_t k = 0; k < 16U && sTxTail != sTxHead; k++) {
+        if (USART_GetStatus(DEBUG_UART, USART_FLAG_TX_EMPTY) == RESET) return;
+        USART_WriteData(DEBUG_UART, (uint16_t)sTx[sTxTail]);
+        sTxTail = (uint16_t)((sTxTail + 1U) & (TX_RING - 1U));
+    }
+}
+
+/* Non-blocking: 0 when a character was read, -1 when none is waiting */
 int32_t DebugUart_ReceiveChar(char *ch)
 {
     if (USART_GetStatus(DEBUG_UART, USART_FLAG_RX_FULL) == SET)
@@ -67,9 +72,7 @@ int32_t DebugUart_ReceiveChar(char *ch)
     return -1;
 }
 
-/**
- * @brief  Printf redirect for ARM GCC
- */
+/* printf goes to the debug UART (blocking) */
 __attribute__((weak)) int fputc(int ch, FILE *f)
 {
     (void)f;

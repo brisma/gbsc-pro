@@ -1,0 +1,11 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255x3
+S 130
+R 1D2 - | POSITION                12/4 |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | ⑪⑫ horizontal  ⑬⑭ vertical   |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 24E - | Arrows  OK keep  EXIT undo   |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+S 255
+attrs A=70 B=07

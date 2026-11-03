@@ -1,0 +1,2544 @@
+devices:
+  ADV7391:
+    address: '0x56'
+    description: ADV7391 - Triple 10-Bit High Speed Video DAC for SD/ED/HD
+    register_maps:
+      main:
+        description: Main Register Map
+        map_value: '0x00'
+        use_map_switching: false
+        registers:
+          '0x00':
+            name: Power Mode Register
+            description: Power mode control
+            fields:
+            - name: SLEEP_MODE
+              bits: [0]
+              type: enum
+              description: Sleep mode
+              default: 0
+              values:
+                0: Sleep mode off
+                1: Sleep mode on
+            - name: PLL_OVERSAMPLE
+              bits: [1]
+              type: enum
+              description: PLL and oversampling control
+              default: 1
+              values:
+                0: PLL on
+                1: PLL off
+            - name: DAC3_POWER
+              bits: [2]
+              type: enum
+              description: DAC 3 power on/off
+              default: 0
+              values:
+                0: DAC 3 off
+                1: DAC 3 on
+            - name: DAC2_POWER
+              bits: [3]
+              type: enum
+              description: DAC 2 power on/off
+              default: 0
+              values:
+                0: DAC 2 off
+                1: DAC 2 on
+            - name: DAC1_POWER
+              bits: [4]
+              type: enum
+              description: DAC 1 power on/off
+              default: 1
+              values:
+                0: DAC 1 off
+                1: DAC 1 on
+            - name: Reserved
+              bits: [7, 6, 5]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x01':
+            name: Mode Select Register
+            description: Input mode selection
+            fields:
+            - name: Reserved
+              bits: [0]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: DDR_EDGE_ALIGN
+              bits: [2, 1]
+              type: enum
+              description: DDR clock edge alignment (ED2 and HD DDR modes only)
+              default: 0
+              values:
+                0: Chroma on rising, luma on falling
+                1: Reserved
+                2: Reserved
+                3: Luma on rising, chroma on falling
+            - name: Reserved
+              bits: [3]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: INPUT_MODE
+              bits: [6, 5, 4]
+              type: enum
+              description: Input mode (see 0x30 bits[7:3] for ED/HD standard)
+              default: 0
+              values:
+                0: SD input
+                1: ED/HD-SDR input (ADV7392/ADV7393 only)
+                2: ED/HD-DDR input
+                3: Reserved
+                4: Reserved
+                5: Reserved
+                6: Reserved
+                7: ED (at 54 MHz) input
+            - name: Reserved
+              bits: [7]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x02':
+            name: Mode Register 0
+            description: Mode control and output configuration
+            fields:
+            - name: ED_HD_SYNC_OUT_EN
+              bits: [7]
+              type: enum
+              description: ED/HD sync output enable
+              default: 0
+              values:
+                0: No sync output
+                1: Output ED/HD syncs on HSYNC and VSYNC pins
+            - name: SD_SYNC_OUT_EN
+              bits: [6]
+              type: enum
+              description: SD sync output enable
+              default: 0
+              values:
+                0: No sync output
+                1: Output SD syncs on HSYNC and VSYNC pins
+            - name: RGB_YPBPR_SEL
+              bits: [5]
+              type: enum
+              description: RGB/YPrPb output select
+              default: 1
+              values:
+                0: RGB component outputs
+                1: YPrPb component outputs
+            - name: SYNC_ON_RGB
+              bits: [4]
+              type: enum
+              description: Sync on RGB
+              default: 0
+              values:
+                0: No sync
+                1: Sync on all RGB outputs
+            - name: MANUAL_CSC
+              bits: [3]
+              type: enum
+              description: Manual CSC matrix adjust
+              default: 0
+              values:
+                0: Disable manual CSC matrix adjust
+                1: Enable manual CSC matrix adjust
+            - name: TEST_BLACK_BAR
+              bits: [2]
+              type: enum
+              description: Test pattern black bar
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: HD_INTERLACE_EXT
+              bits: [1]
+              type: enum
+              description: HD interlace external VSYNC and HSYNC
+              default: 0
+              values:
+                0: Default
+                1: Recommended for HD HSYNC/VSYNC interlace mode
+            - name: Reserved
+              bits: [0]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x03':
+            name: ED/HD CSC Matrix 0
+            description: Color space conversion matrix LSBs
+            fields:
+            - name: GY_LSB
+              bits: [1, 0]
+              type: int
+              description: LSBs for GY
+              range: [0, 3]
+              default: 3
+            - name: Reserved
+              bits: [7, 6, 5, 4, 3, 2]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x04':
+            name: ED/HD CSC Matrix 1
+            description: Color space conversion matrix LSBs
+            fields:
+            - name: RV_LSB
+              bits: [1, 0]
+              type: int
+              description: LSBs for RV
+              range: [0, 3]
+              default: 0
+            - name: BU_LSB
+              bits: [3, 2]
+              type: int
+              description: LSBs for BU
+              range: [0, 3]
+              default: 0
+            - name: GV_LSB
+              bits: [5, 4]
+              type: int
+              description: LSBs for GV
+              range: [0, 3]
+              default: 3
+            - name: GU_LSB
+              bits: [7, 6]
+              type: int
+              description: LSBs for GU
+              range: [0, 3]
+              default: 3
+          '0x05':
+            name: ED/HD CSC Matrix 2
+            description: GY bits[9:2]
+            fields:
+            - name: GY
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Bits[9:2] for GY
+              range: [0, 255]
+              default: 78
+          '0x06':
+            name: ED/HD CSC Matrix 3
+            description: GU bits[9:2]
+            fields:
+            - name: GU
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Bits[9:2] for GU
+              range: [0, 255]
+              default: 14
+          '0x07':
+            name: ED/HD CSC Matrix 4
+            description: GV bits[9:2]
+            fields:
+            - name: GV
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Bits[9:2] for GV
+              range: [0, 255]
+              default: 36
+          '0x08':
+            name: ED/HD CSC Matrix 5
+            description: BU bits[9:2]
+            fields:
+            - name: BU
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Bits[9:2] for BU
+              range: [0, 255]
+              default: 146
+          '0x09':
+            name: ED/HD CSC Matrix 6
+            description: RV bits[9:2]
+            fields:
+            - name: RV
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Bits[9:2] for RV
+              range: [0, 255]
+              default: 124
+          '0x0B':
+            name: DAC Output Levels
+            description: DAC 1, DAC 2, DAC 3 output levels
+            fields:
+            - name: DAC_GAIN
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Positive/negative gain to DAC output voltage (signed 8-bit)
+              range: [0, 255]
+              default: 0
+          '0x0D':
+            name: DAC Power Mode
+            description: DAC low power mode and oversample rate
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5, 4]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_ED_OVERSAMPLE
+              bits: [3]
+              type: enum
+              description: SD/ED oversample rate select
+              default: 0
+              values:
+                0: SD=16×, ED=8×
+                1: SD=8×, ED=4×
+            - name: DAC3_LOW_POWER
+              bits: [2]
+              type: enum
+              description: DAC 3 low power mode
+              default: 0
+              values:
+                0: DAC 3 low power disabled
+                1: DAC 3 low power enabled
+            - name: DAC2_LOW_POWER
+              bits: [1]
+              type: enum
+              description: DAC 2 low power mode
+              default: 0
+              values:
+                0: DAC 2 low power disabled
+                1: DAC 2 low power enabled
+            - name: DAC1_LOW_POWER
+              bits: [0]
+              type: enum
+              description: DAC 1 low power mode
+              default: 0
+              values:
+                0: DAC 1 low power disabled
+                1: DAC 1 low power enabled
+          '0x10':
+            name: Cable Detection
+            description: Cable detection and autopower-down
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: DAC_AUTOPOWERDOWN
+              bits: [4]
+              type: enum
+              description: Unconnected DAC autopower-down
+              default: 0
+              values:
+                0: DAC autopower-down disable
+                1: DAC autopower-down enable
+            - name: Reserved
+              bits: [3, 2]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: DAC2_DETECT
+              bits: [1]
+              type: enum
+              description: DAC 2 cable detect (read only)
+              default: 0
+              values:
+                0: Cable detected on DAC 2
+                1: DAC 2 unconnected
+            - name: DAC1_DETECT
+              bits: [0]
+              type: enum
+              description: DAC 1 cable detect (read only)
+              default: 0
+              values:
+                0: Cable detected on DAC 1
+                1: DAC 1 unconnected
+          '0x13':
+            name: Pixel Port Readback A
+            description: Pixel Port Readback A register
+            readonly: true
+            fields:
+            - name: PIXEL_PORT_A
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P[7:0] readback
+              range: [0, 255]
+              default: 0
+          '0x14':
+            name: Pixel Port Readback B
+            description: Pixel Port Readback B register
+            readonly: true
+            fields:
+            - name: PIXEL_PORT_B
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P[15:8] readback
+              range: [0, 255]
+              default: 0
+          '0x16':
+            name: Control port readback
+            description: Control port readback control
+            readonly: true
+            fields:
+            - name: Reserved
+              bits: [2, 1, 0]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: VSYNC_READBACK
+              bits: [3]
+              type: bool
+              description: VSYNC readback
+              default: 0
+              values:
+                0: VSYNC readback disabled
+                1: VSYNC readback enabled
+            - name: HSYNC_READBACK
+              bits: [4]
+              type: bool
+              description: HSYNC readback
+              default: 0
+              values:
+                0: HSYNC readback disabled
+                1: HSYNC readback enabled
+            - name: SFL_READBACK
+              bits: [5]
+              type: bool
+              description: SFL readback
+              default: 0
+              values:
+                0: SFL readback disabled
+                1: SFL readback enabled
+            - name: Reserved
+              bits: [7, 6]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x17':
+            name: Software Reset
+            description: Software reset control
+            fields:
+            - name: Reserved
+              bits: [0]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SW_RESET
+              bits: [1]
+              type: enum
+              description: Software reset (self-clearing)
+              default: 0
+              values:
+                0: Normal operation
+                1: Reset device
+            - name: Reserved
+              bits: [7, 6, 5, 4, 3, 2]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x30':
+            name: ED/HD Mode Register 1
+            description: ED/HD output standard, sync format, and standard selection
+            fields:
+            - name: ED_HD_STANDARD
+              bits: [7, 6, 5, 4, 3]
+              type: enum
+              description: ED/HD standard
+              default: 0
+              values:
+                0: SMPTE 293M, ITU-BT.1358 525p at 59.94 Hz
+                1: Reserved
+                2: BTA-1004, ITU-BT.1362 525p at 59.94 Hz
+                3: ITU-BT.1358 625p at 50 Hz
+                4: ITU-BT.1362 625p at 50 Hz
+                5: SMPTE 296M-1, SMPTE 274M-2 720p at 60 Hz/59.94 Hz
+                6: SMPTE 296M-3 720p at 50 Hz
+                7: SMPTE 296M-4, SMPTE 274M-5 720p at 30 Hz/29.97 Hz
+                8: SMPTE 296M-6 720p at 25 Hz
+                9: SMPTE 296M-7, SMPTE 296M-8 720p at 24 Hz/23.98 Hz
+                10: SMPTE 240M 1035i at 60 Hz/59.94 Hz
+                11: Reserved
+                12: Reserved
+                13: SMPTE 274M-4, SMPTE 274M-5 1080i at 30 Hz/29.97 Hz
+                14: SMPTE 274M-6 1080i at 25 Hz
+                15: SMPTE 274M-7, SMPTE 274M-8 1080p at 30 Hz/29.97 Hz
+                16: SMPTE 274M-9 1080p at 25 Hz
+                17: SMPTE 274M-10, SMPTE 274M-11 1080p at 24 Hz/23.98 Hz
+                18: ITU-R BT.709-5 1080Psf at 24 Hz
+            - name: ED_HD_SYNC_FORMAT
+              bits: [2]
+              type: enum
+              description: ED/HD input synchronization format
+              default: 0
+              values:
+                0: External HSYNC, VSYNC and field inputs
+                1: Embedded EAV/SAV codes
+            - name: ED_HD_OUTPUT_STD
+              bits: [1, 0]
+              type: enum
+              description: ED/HD output standard
+              default: 0
+              values:
+                0: EIA-770.2 output (ED), EIA-770.3 output (HD)
+                1: EIA-770.1 output
+                2: Output levels for full input range
+                3: Reserved
+          '0x31':
+            name: ED/HD Mode Register 2
+            description: ED/HD pixel data valid, oversample, test pattern, VBI, undershoot, sharpness
+            fields:
+            - name: ED_HD_SHARPNESS
+              bits: [7]
+              type: enum
+              description: ED/HD sharpness filter
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_UNDERSHOOT
+              bits: [6, 5]
+              type: enum
+              description: ED/HD undershoot limiter
+              default: 0
+              values:
+                0: Disabled
+                1: −11 IRE
+                2: −6 IRE
+                3: −1.5 IRE
+            - name: ED_HD_VBI_OPEN
+              bits: [4]
+              type: enum
+              description: ED/HD vertical blanking interval (VBI) open
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_TEST_HATCH
+              bits: [3]
+              type: enum
+              description: ED/HD test pattern hatch/field
+              default: 0
+              values:
+                0: Hatch
+                1: Field/frame
+            - name: ED_HD_TEST_EN
+              bits: [2]
+              type: enum
+              description: ED/HD test pattern enable
+              default: 0
+              values:
+                0: HD test pattern off
+                1: HD test pattern on
+            - name: HD_OVERSAMPLE
+              bits: [1]
+              type: enum
+              description: HD oversample rate select
+              default: 0
+              values:
+                0: 4×
+                1: 2×
+            - name: ED_HD_PIXEL_VALID
+              bits: [0]
+              type: enum
+              description: ED/HD pixel data valid
+              default: 0
+              values:
+                0: Pixel data valid off
+                1: Pixel data valid on
+          '0x32':
+            name: ED/HD Mode Register 3
+            description: ED/HD Y and color delay, CGMS enable and CRC
+            fields:
+            - name: ED_HD_CGMS_CRC
+              bits: [7]
+              type: enum
+              description: ED/HD CGMS CRC enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_CGMS_EN
+              bits: [6]
+              type: enum
+              description: ED/HD CGMS enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_COLOR_DELAY
+              bits: [5, 4, 3]
+              type: enum
+              description: ED/HD color delay with respect to falling edge of HSYNC
+              default: 0
+              values:
+                0: 0 clock cycles
+                1: One clock cycle
+                2: Two clock cycles
+                3: Three clock cycles
+                4: Four clock cycles
+            - name: ED_HD_Y_DELAY
+              bits: [2, 1, 0]
+              type: enum
+              description: ED/HD Y delay with respect to falling edge of HSYNC
+              default: 0
+              values:
+                0: 0 clock cycles
+                1: One clock cycle
+                2: Two clock cycles
+                3: Three clock cycles
+                4: Four clock cycles
+          '0x33':
+            name: ED/HD Mode Register 4
+            description: ED/HD Cr/Cb sequence, input format, sinc filter, chroma SSAF, double buffering
+            fields:
+            - name: ED_HD_DOUBLE_BUF
+              bits: [7]
+              type: enum
+              description: ED/HD double buffering
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [6]
+              type: reserved
+              description: Reserved bits - do not modify
+              default: 1
+            - name: ED_HD_CHROMA_SSAF
+              bits: [5]
+              type: enum
+              description: ED/HD chroma SSAF filter
+              default: 1
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [4]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SINC_COMP_FILTER
+              bits: [3]
+              type: enum
+              description: Sinc compensation filter on DAC 1, DAC 2, DAC 3
+              default: 1
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_INPUT_FMT
+              bits: [2]
+              type: enum
+              description: ED/HD input format
+              default: 0
+              values:
+                0: 8-bit input
+                1: 10-bit input (ADV7392/ADV7393 only)
+            - name: Reserved
+              bits: [1]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: ED_HD_CR_CB_SEQ
+              bits: [0]
+              type: enum
+              description: ED/HD Cr/Cb sequence
+              default: 0
+              values:
+                0: Cb after falling edge of HSYNC
+                1: Cr after falling edge of HSYNC
+          '0x34':
+            name: ED/HD Mode Register 5
+            description: ED/HD timing reset, sync control, Macrovision, field/VSYNC, counter mode
+            fields:
+            - name: ED_HD_COUNTER_MODE
+              bits: [7]
+              type: enum
+              description: ED/HD horizontal/vertical counter mode
+              default: 0
+              values:
+                0: Update field/line counter
+                1: Field/line counter free running
+            - name: ED_HD_VSYNC_FIELD
+              bits: [6]
+              type: enum
+              description: ED/HD VSYNC input/field input
+              default: 1
+              values:
+                0: Field input
+                1: VSYNC input
+            - name: Reserved
+              bits: [5]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: ED_MACROVISION_EN
+              bits: [4]
+              type: enum
+              description: ED Macrovision enable (ADV7390/ADV7392 only)
+              default: 0
+              values:
+                0: ED Macrovision disabled
+                1: ED Macrovision enabled
+            - name: Reserved
+              bits: [3]
+              type: reserved
+              description: Reserved bits - do not modify
+              default: 1
+            - name: ED_HD_VSYNC_CTRL
+              bits: [2]
+              type: enum
+              description: ED/HD VSYNC control (see Table 56)
+              default: 0
+              values:
+                0: Pipelined VSYNC/field (input or AV code)
+                1: VSYNC from vertical counter
+            - name: ED_HD_HSYNC_CTRL
+              bits: [1]
+              type: enum
+              description: ED/HD HSYNC control (see Table 55)
+              default: 0
+              values:
+                0: Pipelined HSYNC (input or AV code H bit)
+                1: HSYNC from horizontal counter
+            - name: ED_HD_TIMING_RESET
+              bits: [0]
+              type: enum
+              description: ED/HD timing reset
+              default: 0
+              values:
+                0: Internal ED/HD timing counters enabled
+                1: Resets the internal ED/HD timing counters
+          '0x35':
+            name: ED/HD Mode Register 6
+            description: ED/HD sync on PrPb, DAC swap, gamma, adaptive filter
+            fields:
+            - name: ED_HD_ADAPTIVE_EN
+              bits: [7]
+              type: enum
+              description: ED/HD adaptive filter enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_ADAPTIVE_MODE
+              bits: [6]
+              type: enum
+              description: ED/HD adaptive filter mode
+              default: 0
+              values:
+                0: Mode A
+                1: Mode B
+            - name: ED_HD_GAMMA_EN
+              bits: [5]
+              type: enum
+              description: ED/HD gamma correction enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: ED_HD_GAMMA_CURVE
+              bits: [4]
+              type: enum
+              description: ED/HD gamma correction curve select
+              default: 0
+              values:
+                0: Gamma Correction Curve A
+                1: Gamma Correction Curve B
+            - name: ED_HD_DAC_SWAP
+              bits: [3]
+              type: enum
+              description: ED/HD color DAC swap
+              default: 0
+              values:
+                0: DAC 2 = Pb, DAC 3 = Pr
+                1: DAC 2 = Pr, DAC 3 = Pb
+            - name: ED_HD_SYNC_PRPB
+              bits: [2]
+              type: enum
+              description: ED/HD sync on PrPb
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [1, 0]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x36':
+            name: ED/HD Y Level
+            description: ED/HD Test Pattern Y level
+            fields:
+            - name: Y_LEVEL
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Y level value
+              range: [0, 255]
+              default: 160
+          '0x37':
+            name: ED/HD Cr Level
+            description: ED/HD Test Pattern Cr level
+            fields:
+            - name: CR_LEVEL
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Cr level value
+              range: [0, 255]
+              default: 128
+          '0x38':
+            name: ED/HD Cb Level
+            description: ED/HD Test Pattern Cb level
+            fields:
+            - name: CB_LEVEL
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Cb level value
+              range: [0, 255]
+              default: 128
+          '0x39':
+            name: ED/HD Mode Register 7
+            description: EIA/CEA-861B synchronization compliance
+            fields:
+            - name: Reserved
+              bits: [7, 6]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: ED_HD_EIA_CEA_861B_SYNC_COMPL
+              bits: [5]
+              type: enum
+              description: ED/HD EIA/CEA-861B synchronization compliance
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [4, 3, 2, 1, 0]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x3A':
+            name: ED/HD Mode Register 8
+            description: Invert sync polarity and blank
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5, 4, 3]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: INV_PBLANK_POL
+              bits: [2]
+              type: enum
+              description: Invert PBLANK polarity
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: INV_PVSYNC_POL
+              bits: [1]
+              type: enum
+              description: Invert PVSYNC polarity
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: INV_PHSYNC_POL
+              bits: [0]
+              type: enum
+              description: Invert PHSYNC polarity
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+          '0x40':
+            name: ED/HD Sharpness Filter Gain
+            description: ED/HD sharpness filter gain values A and B
+            fields:
+            - name: SHARP_GAIN_A
+              bits: [3, 2, 1, 0]
+              type: int
+              description: ED/HD sharpness filter gain Value A (signed 4-bit)
+              range: [0, 15]
+              default: 0
+            - name: SHARP_GAIN_B
+              bits: [7, 6, 5, 4]
+              type: int
+              description: ED/HD sharpness filter gain Value B (signed 4-bit)
+              range: [0, 15]
+              default: 0
+          '0x41':
+            name: ED/HD CGMS Data 0
+            description: ED/HD CGMS data bits C19 to C16
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5, 4]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: CGMS_DATA_0
+              bits: [3, 2, 1, 0]
+              type: int
+              description: CGMS C19 to C16
+              range: [0, 15]
+              default: 0
+          '0x42':
+            name: ED/HD CGMS Data 1
+            description: ED/HD CGMS data bits C15 to C8
+            fields:
+            - name: CGMS_DATA_1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: CGMS C15 to C8
+              range: [0, 255]
+              default: 0
+          '0x43':
+            name: ED/HD CGMS Data 2
+            description: ED/HD CGMS data bits C7 to C0
+            fields:
+            - name: CGMS_DATA_2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: CGMS C7 to C0
+              range: [0, 255]
+              default: 0
+          '0x44':
+            name: ED/HD Gamma A0
+            description: ED/HD Gamma Curve A (Point 24)
+            fields:
+            - name: GAMMA_A0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 24
+              range: [0, 255]
+              default: 0
+          '0x45':
+            name: ED/HD Gamma A1
+            description: ED/HD Gamma Curve A (Point 32)
+            fields:
+            - name: GAMMA_A1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 32
+              range: [0, 255]
+              default: 0
+          '0x46':
+            name: ED/HD Gamma A2
+            description: ED/HD Gamma Curve A (Point 48)
+            fields:
+            - name: GAMMA_A2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 48
+              range: [0, 255]
+              default: 0
+          '0x47':
+            name: ED/HD Gamma A3
+            description: ED/HD Gamma Curve A (Point 64)
+            fields:
+            - name: GAMMA_A3
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 64
+              range: [0, 255]
+              default: 0
+          '0x48':
+            name: ED/HD Gamma A4
+            description: ED/HD Gamma Curve A (Point 80)
+            fields:
+            - name: GAMMA_A4
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 80
+              range: [0, 255]
+              default: 0
+          '0x49':
+            name: ED/HD Gamma A5
+            description: ED/HD Gamma Curve A (Point 96)
+            fields:
+            - name: GAMMA_A5
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 96
+              range: [0, 255]
+              default: 0
+          '0x4A':
+            name: ED/HD Gamma A6
+            description: ED/HD Gamma Curve A (Point 128)
+            fields:
+            - name: GAMMA_A6
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 128
+              range: [0, 255]
+              default: 0
+          '0x4B':
+            name: ED/HD Gamma A7
+            description: ED/HD Gamma Curve A (Point 160)
+            fields:
+            - name: GAMMA_A7
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 160
+              range: [0, 255]
+              default: 0
+          '0x4C':
+            name: ED/HD Gamma A8
+            description: ED/HD Gamma Curve A (Point 192)
+            fields:
+            - name: GAMMA_A8
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 192
+              range: [0, 255]
+              default: 0
+          '0x4D':
+            name: ED/HD Gamma A9
+            description: ED/HD Gamma Curve A (Point 224)
+            fields:
+            - name: GAMMA_A9
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 224
+              range: [0, 255]
+              default: 0
+          '0x4E':
+            name: ED/HD Gamma B0
+            description: ED/HD Gamma Curve B (Point 24)
+            fields:
+            - name: GAMMA_B0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 24
+              range: [0, 255]
+              default: 0
+          '0x4F':
+            name: ED/HD Gamma B1
+            description: ED/HD Gamma Curve B (Point 32)
+            fields:
+            - name: GAMMA_B1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 32
+              range: [0, 255]
+              default: 0
+          '0x50':
+            name: ED/HD Gamma B2
+            description: ED/HD Gamma Curve B (Point 48)
+            fields:
+            - name: GAMMA_B2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 48
+              range: [0, 255]
+              default: 0
+          '0x51':
+            name: ED/HD Gamma B3
+            description: ED/HD Gamma Curve B (Point 64)
+            fields:
+            - name: GAMMA_B3
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 64
+              range: [0, 255]
+              default: 0
+          '0x52':
+            name: ED/HD Gamma B4
+            description: ED/HD Gamma Curve B (Point 80)
+            fields:
+            - name: GAMMA_B4
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 80
+              range: [0, 255]
+              default: 0
+          '0x53':
+            name: ED/HD Gamma B5
+            description: ED/HD Gamma Curve B (Point 96)
+            fields:
+            - name: GAMMA_B5
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 96
+              range: [0, 255]
+              default: 0
+          '0x54':
+            name: ED/HD Gamma B6
+            description: ED/HD Gamma Curve B (Point 128)
+            fields:
+            - name: GAMMA_B6
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 128
+              range: [0, 255]
+              default: 0
+          '0x55':
+            name: ED/HD Gamma B7
+            description: ED/HD Gamma Curve B (Point 160)
+            fields:
+            - name: GAMMA_B7
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 160
+              range: [0, 255]
+              default: 0
+          '0x56':
+            name: ED/HD Gamma B8
+            description: ED/HD Gamma Curve B (Point 192)
+            fields:
+            - name: GAMMA_B8
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 192
+              range: [0, 255]
+              default: 0
+          '0x57':
+            name: ED/HD Gamma B9
+            description: ED/HD Gamma Curve B (Point 224)
+            fields:
+            - name: GAMMA_B9
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 224
+              range: [0, 255]
+              default: 0
+          '0x58':
+            name: ED/HD Adaptive Filter Gain 1
+            description: ED/HD Adaptive Filter Gain 1 values A and B
+            fields:
+            - name: ADAPTIVE_GAIN_1_B
+              bits: [7, 6, 5, 4]
+              type: int
+              description: Adaptive Filter Gain 1 Value B (signed 4-bit)
+              range: [0, 15]
+              default: 0
+            - name: ADAPTIVE_GAIN_1_A
+              bits: [3, 2, 1, 0]
+              type: int
+              description: Adaptive Filter Gain 1 Value A (signed 4-bit)
+              range: [0, 15]
+              default: 0
+          '0x59':
+            name: ED/HD Adaptive Filter Gain 2
+            description: ED/HD Adaptive Filter Gain 2 values A and B
+            fields:
+            - name: ADAPTIVE_GAIN_2_B
+              bits: [7, 6, 5, 4]
+              type: int
+              description: Adaptive Filter Gain 2 Value B (signed 4-bit)
+              range: [0, 15]
+              default: 0
+            - name: ADAPTIVE_GAIN_2_A
+              bits: [3, 2, 1, 0]
+              type: int
+              description: Adaptive Filter Gain 2 Value A (signed 4-bit)
+              range: [0, 15]
+              default: 0
+          '0x5A':
+            name: ED/HD Adaptive Filter Gain 3
+            description: ED/HD Adaptive Filter Gain 3 values A and B
+            fields:
+            - name: ADAPTIVE_GAIN_3_B
+              bits: [7, 6, 5, 4]
+              type: int
+              description: Adaptive Filter Gain 3 Value B (signed 4-bit)
+              range: [0, 15]
+              default: 0
+            - name: ADAPTIVE_GAIN_3_A
+              bits: [3, 2, 1, 0]
+              type: int
+              description: Adaptive Filter Gain 3 Value A (signed 4-bit)
+              range: [0, 15]
+              default: 0
+          '0x5B':
+            name: ED/HD Adaptive Filter Threshold A
+            description: ED/HD Adaptive Filter Threshold A
+            fields:
+            - name: ADAPTIVE_THRESHOLD_A
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Threshold A
+              range: [0, 255]
+              default: 0
+          '0x5C':
+            name: ED/HD Adaptive Filter Threshold B
+            description: ED/HD Adaptive Filter Threshold B
+            fields:
+            - name: ADAPTIVE_THRESHOLD_B
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Threshold B
+              range: [0, 255]
+              default: 0
+          '0x5D':
+            name: ED/HD Adaptive Filter Threshold C
+            description: ED/HD Adaptive Filter Threshold C
+            fields:
+            - name: ADAPTIVE_THRESHOLD_C
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Threshold C
+              range: [0, 255]
+              default: 0
+          '0x5E':
+            name: ED/HD CGMS Type B Register 0
+            description: ED/HD CGMS Type B enable, CRC, and header bits
+            fields:
+            - name: CGMS_TYPE_B_EN
+              bits: [0]
+              type: enum
+              description: ED/HD CGMS Type B enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: CGMS_TYPE_B_CRC
+              bits: [1]
+              type: enum
+              description: ED/HD CGMS Type B CRC enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: CGMS_TYPE_B_HEADER
+              bits: [7, 6, 5, 4, 3, 2]
+              type: int
+              description: ED/HD CGMS Type B header bits H5 to H0
+              range: [0, 63]
+              default: 0
+          '0x5F':
+            name: ED/HD CGMS Type B Register 1
+            description: ED/HD CGMS Type B data bits P7 to P0
+            fields:
+            - name: CGMS_TYPE_B_P7_P0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P7 to P0
+              range: [0, 255]
+              default: 0
+          '0x60':
+            name: ED/HD CGMS Type B Register 2
+            description: ED/HD CGMS Type B data bits P15 to P8
+            fields:
+            - name: CGMS_TYPE_B_P15_P8
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P15 to P8
+              range: [0, 255]
+              default: 0
+          '0x61':
+            name: ED/HD CGMS Type B Register 3
+            description: ED/HD CGMS Type B data bits P23 to P16
+            fields:
+            - name: CGMS_TYPE_B_P23_P16
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P23 to P16
+              range: [0, 255]
+              default: 0
+          '0x62':
+            name: ED/HD CGMS Type B Register 4
+            description: ED/HD CGMS Type B data bits P31 to P24
+            fields:
+            - name: CGMS_TYPE_B_P31_P24
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P31 to P24
+              range: [0, 255]
+              default: 0
+          '0x63':
+            name: ED/HD CGMS Type B Register 5
+            description: ED/HD CGMS Type B data bits P39 to P32
+            fields:
+            - name: CGMS_TYPE_B_P39_P32
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P39 to P32
+              range: [0, 255]
+              default: 0
+          '0x64':
+            name: ED/HD CGMS Type B Register 6
+            description: ED/HD CGMS Type B data bits P47 to P40
+            fields:
+            - name: CGMS_TYPE_B_P47_P40
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P47 to P40
+              range: [0, 255]
+              default: 0
+          '0x65':
+            name: ED/HD CGMS Type B Register 7
+            description: ED/HD CGMS Type B data bits P55 to P48
+            fields:
+            - name: CGMS_TYPE_B_P55_P48
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P55 to P48
+              range: [0, 255]
+              default: 0
+          '0x66':
+            name: ED/HD CGMS Type B Register 8
+            description: ED/HD CGMS Type B data bits P63 to P56
+            fields:
+            - name: CGMS_TYPE_B_P63_P56
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P63 to P56
+              range: [0, 255]
+              default: 0
+          '0x67':
+            name: ED/HD CGMS Type B Register 9
+            description: ED/HD CGMS Type B data bits P71 to P64
+            fields:
+            - name: CGMS_TYPE_B_P71_P64
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P71 to P64
+              range: [0, 255]
+              default: 0
+          '0x68':
+            name: ED/HD CGMS Type B Register 10
+            description: ED/HD CGMS Type B data bits P79 to P72
+            fields:
+            - name: CGMS_TYPE_B_P79_P72
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P79 to P72
+              range: [0, 255]
+              default: 0
+          '0x69':
+            name: ED/HD CGMS Type B Register 11
+            description: ED/HD CGMS Type B data bits P87 to P80
+            fields:
+            - name: CGMS_TYPE_B_P87_P80
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P87 to P80
+              range: [0, 255]
+              default: 0
+          '0x6A':
+            name: ED/HD CGMS Type B Register 12
+            description: ED/HD CGMS Type B data bits P95 to P88
+            fields:
+            - name: CGMS_TYPE_B_P95_P88
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P95 to P88
+              range: [0, 255]
+              default: 0
+          '0x6B':
+            name: ED/HD CGMS Type B Register 13
+            description: ED/HD CGMS Type B data bits P103 to P96
+            fields:
+            - name: CGMS_TYPE_B_P103_P96
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P103 to P96
+              range: [0, 255]
+              default: 0
+          '0x6C':
+            name: ED/HD CGMS Type B Register 14
+            description: ED/HD CGMS Type B data bits P111 to P104
+            fields:
+            - name: CGMS_TYPE_B_P111_P104
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P111 to P104
+              range: [0, 255]
+              default: 0
+          '0x6D':
+            name: ED/HD CGMS Type B Register 15
+            description: ED/HD CGMS Type B data bits P119 to P112
+            fields:
+            - name: CGMS_TYPE_B_P119_P112
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P119 to P112
+              range: [0, 255]
+              default: 0
+          '0x6E':
+            name: ED/HD CGMS Type B Register 16
+            description: ED/HD CGMS Type B data bits P127 to P120
+            fields:
+            - name: CGMS_TYPE_B_P127_P120
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: P127 to P120
+              range: [0, 255]
+              default: 0
+          '0x80':
+            name: SD Mode Register 1
+            description: SD standard, luma filter, chroma filter
+            fields:
+            - name: SD_CHROMA_FILTER
+              bits: [7, 6, 5]
+              type: enum
+              description: SD chroma filter
+              default: 0
+              values:
+                0: 1.3 MHz
+                1: 0.65 MHz
+                2: 1.0 MHz
+                3: 2.0 MHz
+                4: Reserved
+                5: Chroma CIF
+                6: Chroma QCIF
+                7: 3.0 MHz
+            - name: SD_LUMA_FILTER
+              bits: [4, 3, 2]
+              type: enum
+              description: SD luma filter
+              default: 4
+              values:
+                0: LPF NTSC
+                1: LPF PAL
+                2: Notch NTSC
+                3: Notch PAL
+                4: Luma SSAF
+                5: Luma CIF
+                6: Luma QCIF
+                7: Reserved
+            - name: SD_STANDARD
+              bits: [1, 0]
+              type: enum
+              description: SD standard
+              default: 0
+              values:
+                0: NTSC
+                1: PAL B, PAL D, PAL G, PAL H, PAL I
+                2: PAL M
+                3: PAL N
+          '0x82':
+            name: SD Mode Register 2
+            description: SD PrPb SSAF, DAC output, pedestal, square pixel, VCR, pixel valid, active video edge
+            fields:
+            - name: SD_ACTIVE_EDGE
+              bits: [7]
+              type: enum
+              description: SD active video edge control
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_PIXEL_VALID
+              bits: [6]
+              type: enum
+              description: SD pixel data valid
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_VCR_SYNC
+              bits: [5]
+              type: enum
+              description: SD VCR FF/RW sync
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_SQUARE_PIXEL
+              bits: [4]
+              type: enum
+              description: SD square pixel mode
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_PEDESTAL
+              bits: [3]
+              type: enum
+              description: SD pedestal
+              default: 1
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [2]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_DAC_OUTPUT
+              bits: [1]
+              type: enum
+              description: SD DAC Output 1 (see Table 37)
+              default: 1
+              values:
+                0: Component (RGB/YPrPb, per 0x02 bit 5)
+                1: CVBS + Y/C (with 0x02 bit 5 = 1)
+            - name: SD_PRPB_SSAF
+              bits: [0]
+              type: enum
+              description: SD PrPb SSAF filter
+              default: 1
+              values:
+                0: Disabled
+                1: Enabled
+          '0x83':
+            name: SD Mode Register 3
+            description: SD pedestal YPrPb, output levels, VBI, closed captioning
+            fields:
+            - name: Reserved
+              bits: [7]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_CC_FIELD
+              bits: [6, 5]
+              type: enum
+              description: SD closed captioning field control
+              default: 0
+              values:
+                0: Closed captioning disabled
+                1: Closed captioning on odd field only
+                2: Closed captioning on even field only
+                3: Closed captioning on both fields
+            - name: SD_VBI_OPEN
+              bits: [4]
+              type: enum
+              description: SD vertical blanking interval (VBI) open
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_OUTPUT_PRPB
+              bits: [3, 2]
+              type: enum
+              description: SD Output Levels PrPb
+              default: 1
+              values:
+                0: 700 mV p-p (PAL), 1000 mV p-p (NTSC)
+                1: 700 mV p-p
+                2: 1000 mV p-p
+                3: 648 mV p-p
+            - name: SD_OUTPUT_Y
+              bits: [1]
+              type: enum
+              description: SD Output Levels Y
+              default: 0
+              values:
+                0: Y = 700 mV/300 mV
+                1: Y = 714 mV/286 mV
+            - name: SD_PEDESTAL_YPRPB
+              bits: [0]
+              type: enum
+              description: SD pedestal YPrPb output
+              default: 0
+              values:
+                0: No pedestal on YPrPb
+                1: 7.5 IRE pedestal on YPrPb
+          '0x84':
+            name: SD Mode Register 4
+            description: SD SFL/SCR/TR, active video length, chroma, burst, color bars, luma/chroma swap
+            fields:
+            - name: SD_LUMA_CHROMA_SWAP
+              bits: [7]
+              type: enum
+              description: SD luma/chroma swap
+              default: 0
+              values:
+                0: DAC 2 = luma, DAC 3 = chroma
+                1: DAC 2 = chroma, DAC 3 = luma
+            - name: SD_COLOR_BARS
+              bits: [6]
+              type: enum
+              description: SD color bars
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_BURST
+              bits: [5]
+              type: enum
+              description: SD burst
+              default: 0
+              values:
+                0: Enabled
+                1: Disabled
+            - name: SD_CHROMA
+              bits: [4]
+              type: enum
+              description: SD chroma
+              default: 0
+              values:
+                0: Chroma enabled
+                1: Chroma disabled
+            - name: SD_ACTIVE_LEN
+              bits: [3]
+              type: enum
+              description: SD active video length
+              default: 0
+              values:
+                0: 720 pixels
+                1: 710 (NTSC), 702 (PAL)
+            - name: SD_SFL_MODE
+              bits: [2, 1]
+              type: enum
+              description: SD SFL/SCR/TR mode select
+              default: 0
+              values:
+                0: Disabled
+                1: Reserved
+                2: Reserved
+                3: SFL mode enabled
+            - name: Reserved
+              bits: [0]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x86':
+            name: SD Mode Register 5
+            description: NTSC subcarrier adjust, EIA/CEA-861B, counter mode, RGB swap
+            fields:
+            - name: SD_RGB_SWAP
+              bits: [7]
+              type: enum
+              description: SD RGB color swap (ADV7392/ADV7393 only)
+              default: 0
+              values:
+                0: Normal
+                1: Color reversal enabled
+            - name: SD_COUNTER_MODE
+              bits: [6]
+              type: enum
+              description: SD horizontal/vertical counter mode
+              default: 0
+              values:
+                0: Update field/line counter
+                1: Field/line counter free running
+            - name: Reserved
+              bits: [5, 4]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_EIA_SYNC
+              bits: [3]
+              type: enum
+              description: SD EIA/CEA-861B synchronization compliance
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [2]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: NTSC_SUBCARRIER
+              bits: [1, 0]
+              type: enum
+              description: NTSC color subcarrier adjust
+              default: 2
+              values:
+                0: 5.17 μs
+                1: 5.31 μs
+                2: 5.59 μs (must be set for Macrovision compliance)
+                3: Reserved
+          '0x87':
+            name: SD Mode Register 6
+            description: SD luma/color scale, saturation, hue, brightness, SSAF gain, autodetect, RGB input
+            fields:
+            - name: SD_RGB_INPUT
+              bits: [7]
+              type: enum
+              description: SD RGB input enable (ADV7392/ADV7393 only)
+              default: 0
+              values:
+                0: SD YCrCb input
+                1: SD RGB input
+            - name: Reserved
+              bits: [6]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_AUTODETECT
+              bits: [5]
+              type: enum
+              description: SD input standard autodetection
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_LUMA_SSAF_GAIN
+              bits: [4]
+              type: enum
+              description: SD luma SSAF gain
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_BRIGHTNESS
+              bits: [3]
+              type: enum
+              description: SD brightness
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_HUE
+              bits: [2]
+              type: enum
+              description: SD hue adjust
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_LUMA_SAT
+              bits: [1]
+              type: enum
+              description: SD luma scale saturation
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_SCALE_CTRL
+              bits: [0]
+              type: enum
+              description: SD luma and color scale control
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+          '0x88':
+            name: SD Mode Register 7
+            description: SD noninterlaced, double buffering, input format, DNR, gamma
+            fields:
+            - name: SD_GAMMA_CURVE
+              bits: [7]
+              type: enum
+              description: SD gamma correction curve select
+              default: 0
+              values:
+                0: Gamma Correction Curve A
+                1: Gamma Correction Curve B
+            - name: SD_GAMMA_EN
+              bits: [6]
+              type: enum
+              description: SD gamma correction enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_DNR
+              bits: [5]
+              type: enum
+              description: SD digital noise reduction
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_INPUT_FMT
+              bits: [4, 3]
+              type: enum
+              description: SD input format
+              default: 0
+              values:
+                0: 8-bit YCbCr input
+                1: 16-bit YCbCr input (ADV7392/ADV7393 only)
+                2: 10-bit YCbCr/16-bit SD RGB input (ADV7392/ADV7393 only)
+                3: Reserved
+            - name: SD_DOUBLE_BUF
+              bits: [2]
+              type: enum
+              description: SD double buffering
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_NONINTERLACED
+              bits: [1]
+              type: enum
+              description: SD noninterlaced mode
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: Reserved
+              bits: [0]
+              type: reserved
+              description: Reserved bits - do not modify
+          '0x89':
+            name: SD Mode Register 8
+            description: SD undershoot limiter, chroma delay
+            fields:
+            - name: Reserved
+              bits: [7, 6]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_CHROMA_DELAY
+              bits: [5, 4]
+              type: enum
+              description: SD chroma delay
+              default: 0
+              values:
+                0: Disabled
+                1: 4 clock cycles
+                2: 8 clock cycles
+                3: Reserved
+            - name: Reserved
+              bits: [3, 2]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: SD_UNDERSHOOT
+              bits: [1, 0]
+              type: enum
+              description: SD undershoot limiter
+              default: 0
+              values:
+                0: Disabled
+                1: −11 IRE
+                2: −6 IRE
+                3: −1.5 IRE
+          '0x8A':
+            name: SD Timing Register 0
+            description: SD slave/master, timing mode, luma delay, min luma, timing reset
+            fields:
+            - name: SD_TIMING_RESET
+              bits: [7]
+              type: enum
+              description: SD timing reset (low-high-low transition resets)
+              default: 0
+              values:
+                0: Normal operation
+                1: Reset timing counters
+            - name: SD_MIN_LUMA
+              bits: [6]
+              type: enum
+              description: SD minimum luma value
+              default: 0
+              values:
+                0: −40 IRE
+                1: −7.5 IRE
+            - name: SD_LUMA_DELAY
+              bits: [5, 4]
+              type: enum
+              description: SD luma delay
+              default: 0
+              values:
+                0: No delay
+                1: Two clock cycles
+                2: Four clock cycles
+                3: Six clock cycles
+            - name: Reserved
+              bits: [3]
+              type: reserved
+              description: Reserved bits - do not modify
+              default: 1
+            - name: SD_TIMING_MODE
+              bits: [2, 1]
+              type: enum
+              description: SD timing mode
+              default: 0
+              values:
+                0: Mode 0
+                1: Mode 1
+                2: Mode 2
+                3: Mode 3
+            - name: SD_SLAVE_MASTER
+              bits: [0]
+              type: enum
+              description: SD slave/master mode
+              default: 0
+              values:
+                0: Slave mode
+                1: Master mode
+          '0x8B':
+            name: SD Timing Register 1
+            description: SD HSYNC width, HSYNC to VSYNC delay, VSYNC width, HSYNC to pixel data adjust
+            fields:
+            - name: SD_HSYNC_TO_PIXEL
+              bits: [7, 6]
+              type: enum
+              description: SD HSYNC to pixel data adjust
+              default: 0
+              values:
+                0: 0 clock cycles
+                1: One clock cycle
+                2: Two clock cycles
+                3: Three clock cycles
+            - name: SD_VSYNC_WIDTH
+              bits: [5, 4]
+              type: enum
+              description: SD VSYNC width (Mode 2 only); in Mode 1 bit 4 sets tc (0 = tb, 1 = tb + 32 us)
+              default: 0
+              values:
+                0: One clock cycle
+                1: Four clock cycles
+                2: 16 clock cycles
+                3: 128 clock cycles
+            - name: SD_HSYNC_VSYNC_DELAY
+              bits: [3, 2]
+              type: enum
+              description: SD HSYNC to VSYNC delay
+              default: 0
+              values:
+                0: tb = 0 clock cycles
+                1: tb = four clock cycles
+                2: tb = eight clock cycles
+                3: tb = 18 clock cycles
+            - name: SD_HSYNC_WIDTH
+              bits: [1, 0]
+              type: enum
+              description: SD HSYNC width (main mode only)
+              default: 0
+              values:
+                0: ta = one clock cycle
+                1: ta = four clock cycles
+                2: ta = 16 clock cycles
+                3: ta = 128 clock cycles
+          '0x8C':
+            name: SD FSC Register 0
+            description: Subcarrier Frequency Bits[7:0]
+            fields:
+            - name: FSC_0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Subcarrier Frequency Bits[7:0]
+              range: [0, 255]
+              default: 31
+          '0x8D':
+            name: SD FSC Register 1
+            description: Subcarrier Frequency Bits[15:8]
+            fields:
+            - name: FSC_1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Subcarrier Frequency Bits[15:8]
+              range: [0, 255]
+              default: 124
+          '0x8E':
+            name: SD FSC Register 2
+            description: Subcarrier Frequency Bits[23:16]
+            fields:
+            - name: FSC_2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Subcarrier Frequency Bits[23:16]
+              range: [0, 255]
+              default: 240
+          '0x8F':
+            name: SD FSC Register 3
+            description: Subcarrier Frequency Bits[31:24]
+            fields:
+            - name: FSC_3
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Subcarrier Frequency Bits[31:24]
+              range: [0, 255]
+              default: 33
+          '0x90':
+            name: SD FSC Phase
+            description: Subcarrier Phase Bits[9:2]
+            fields:
+            - name: FSC_PHASE
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Subcarrier Phase Bits[9:2]
+              range: [0, 255]
+              default: 0
+          '0x91':
+            name: SD Closed Captioning Extended 0
+            description: Extended data on even fields bits[7:0]
+            fields:
+            - name: CC_EXT_0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Extended Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x92':
+            name: SD Closed Captioning Extended 1
+            description: Extended data on even fields bits[15:8]
+            fields:
+            - name: CC_EXT_1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Extended Data Bits[15:8]
+              range: [0, 255]
+              default: 0
+          '0x93':
+            name: SD Closed Captioning Data 0
+            description: Data on odd fields bits[7:0]
+            fields:
+            - name: CC_DATA_0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x94':
+            name: SD Closed Captioning Data 1
+            description: Data on odd fields bits[15:8]
+            fields:
+            - name: CC_DATA_1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[15:8]
+              range: [0, 255]
+              default: 0
+          '0x95':
+            name: SD Pedestal Register 0
+            description: Pedestal on odd fields (lines 17-10)
+            fields:
+            - name: PEDESTAL_ODD_17
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x96':
+            name: SD Pedestal Register 1
+            description: Pedestal on odd fields (lines 25-18)
+            fields:
+            - name: PEDESTAL_ODD_25
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x97':
+            name: SD Pedestal Register 2
+            description: Pedestal on even fields (lines 17-10)
+            fields:
+            - name: PEDESTAL_EVEN_17
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x98':
+            name: SD Pedestal Register 3
+            description: Pedestal on even fields (lines 25-18)
+            fields:
+            - name: PEDESTAL_EVEN_25
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Data Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0x99':
+            name: SD CGMS/WSS 0
+            description: SD CGMS data and WSS enable
+            fields:
+            - name: SD_WSS
+              bits: [7]
+              type: enum
+              description: SD WSS
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_CGMS_EVEN
+              bits: [6]
+              type: enum
+              description: SD CGMS on even fields
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_CGMS_ODD
+              bits: [5]
+              type: enum
+              description: SD CGMS on odd fields
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_CGMS_CRC
+              bits: [4]
+              type: enum
+              description: SD CGMS CRC
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_CGMS_DATA
+              bits: [3, 2, 1, 0]
+              type: int
+              description: CGMS Data Bits[C19:C16]
+              range: [0, 15]
+              default: 0
+          '0x9A':
+            name: SD CGMS/WSS 1
+            description: SD CGMS/WSS data bits[C15:C14] or [W13:W8]
+            fields:
+            - name: SD_CGMS_WSS_1
+              bits: [5, 4, 3, 2, 1, 0]
+              type: int
+              description: CGMS Data Bits[C13:C8] or WSS Data Bits[W13:W8]
+              range: [0, 63]
+              default: 0
+            - name: SD_CGMS
+              bits: [7, 6]
+              type: int
+              description: CGMS Data Bits[C15:C14]
+              range: [0, 3]
+              default: 0
+          '0x9B':
+            name: SD CGMS/WSS 2
+            description: SD CGMS/WSS data bits[C7:C0] or [W7:W0]
+            fields:
+            - name: SD_CGMS_WSS_2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: CGMS Data Bits[C7:C0] or WSS Data Bits[W7:W0]
+              range: [0, 255]
+              default: 0
+          '0x9C':
+            name: SD Scale LSB
+            description: LSBs for SD Y, Cb, Cr scale values and FSC phase
+            fields:
+            - name: FSC_PHASE_LSB
+              bits: [7, 6]
+              type: int
+              description: Subcarrier Phase Bits[1:0]
+              range: [0, 3]
+              default: 0
+            - name: CR_SCALE_LSB
+              bits: [5, 4]
+              type: int
+              description: SD Cr Scale Bits[1:0]
+              range: [0, 3]
+              default: 0
+            - name: CB_SCALE_LSB
+              bits: [3, 2]
+              type: int
+              description: SD Cb Scale Bits[1:0]
+              range: [0, 3]
+              default: 0
+            - name: Y_SCALE_LSB
+              bits: [1, 0]
+              type: int
+              description: SD Y Scale Bits[1:0]
+              range: [0, 3]
+              default: 0
+          '0x9D':
+            name: SD Y Scale
+            description: SD Y scale value bits[9:2]
+            fields:
+            - name: Y_SCALE
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD Y Scale Bits[9:2]
+              range: [0, 255]
+              default: 0
+          '0x9E':
+            name: SD Cb Scale
+            description: SD Cb scale value bits[9:2]
+            fields:
+            - name: CB_SCALE
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD Cb Scale Bits[9:2]
+              range: [0, 255]
+              default: 0
+          '0x9F':
+            name: SD Cr Scale
+            description: SD Cr scale value bits[9:2]
+            fields:
+            - name: CR_SCALE
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD Cr Scale Bits[9:2]
+              range: [0, 255]
+              default: 0
+          '0xA0':
+            name: SD Hue Adjust
+            description: SD hue adjust value
+            fields:
+            - name: HUE_ADJUST
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD Hue Adjust Bits[7:0]
+              range: [0, 255]
+              default: 0
+          '0xA1':
+            name: SD Brightness/WSS
+            description: SD brightness value and WSS blank
+            fields:
+            - name: SD_BLANK_WSS
+              bits: [7]
+              type: enum
+              description: SD blank WSS data
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+            - name: SD_BRIGHTNESS
+              bits: [6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD Brightness Bits[6:0]
+              range: [0, 127]
+              default: 0
+          '0xA2':
+            name: SD Luma SSAF
+            description: SD luma SSAF gain/attenuation
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5, 4]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: LUMA_SSAF_GAIN
+              bits: [3, 2, 1, 0]
+              type: int
+              description: SD luma SSAF gain/attenuation (−4 dB to +4 dB)
+              range: [0, 15]
+              default: 0
+          '0xA3':
+            name: SD DNR 0
+            description: SD digital noise reduction coring gain border and data
+            fields:
+            - name: DNR_CORING_GAIN_DATA
+              bits: [7, 6, 5, 4]
+              type: int
+              description: Coring gain data (0-8 steps, in DNR mode negative values)
+              range: [0, 15]
+              default: 0
+            - name: DNR_CORING_GAIN_BORDER
+              bits: [3, 2, 1, 0]
+              type: int
+              description: Coring gain border (0-8 steps, in DNR mode negative values)
+              range: [0, 15]
+              default: 0
+          '0xA4':
+            name: SD DNR 1
+            description: SD digital noise reduction threshold and block settings
+            fields:
+            - name: DNR_BLOCK_SIZE
+              bits: [7]
+              type: enum
+              description: Block size
+              default: 0
+              values:
+                0: Eight pixels
+                1: 16 pixels
+            - name: DNR_BORDER_AREA
+              bits: [6]
+              type: enum
+              description: Border area
+              default: 0
+              values:
+                0: Two pixels
+                1: Four pixels
+            - name: DNR_THRESHOLD
+              bits: [5, 4, 3, 2, 1, 0]
+              type: int
+              description: DNR threshold (0-63)
+              range: [0, 63]
+              default: 0
+          '0xA5':
+            name: SD DNR 2
+            description: SD digital noise reduction mode, input select, and block offset
+            fields:
+            - name: DNR_BLOCK_OFFSET
+              bits: [7, 6, 5, 4]
+              type: int
+              description: DNR block offset (0-15 pixel offset)
+              range: [0, 15]
+              default: 0
+            - name: DNR_MODE
+              bits: [3]
+              type: enum
+              description: DNR mode
+              default: 0
+              values:
+                0: DNR mode
+                1: DNR sharpness mode
+            - name: DNR_INPUT_SELECT
+              bits: [2, 1, 0]
+              type: enum
+              description: DNR input select
+              default: 0
+              values:
+                0: Reserved
+                1: Filter A
+                2: Filter B
+                3: Filter C
+                4: Filter D
+          '0xA6':
+            name: SD Gamma A0
+            description: SD Gamma Curve A (Point 24)
+            fields:
+            - name: GAMMA_A0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 24
+              range: [0, 255]
+              default: 0
+          '0xA7':
+            name: SD Gamma A1
+            description: SD Gamma Curve A (Point 32)
+            fields:
+            - name: GAMMA_A1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 32
+              range: [0, 255]
+              default: 0
+          '0xA8':
+            name: SD Gamma A2
+            description: SD Gamma Curve A (Point 48)
+            fields:
+            - name: GAMMA_A2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 48
+              range: [0, 255]
+              default: 0
+          '0xA9':
+            name: SD Gamma A3
+            description: SD Gamma Curve A (Point 64)
+            fields:
+            - name: GAMMA_A3
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 64
+              range: [0, 255]
+              default: 0
+          '0xAA':
+            name: SD Gamma A4
+            description: SD Gamma Curve A (Point 80)
+            fields:
+            - name: GAMMA_A4
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 80
+              range: [0, 255]
+              default: 0
+          '0xAB':
+            name: SD Gamma A5
+            description: SD Gamma Curve A (Point 96)
+            fields:
+            - name: GAMMA_A5
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 96
+              range: [0, 255]
+              default: 0
+          '0xAC':
+            name: SD Gamma A6
+            description: SD Gamma Curve A (Point 128)
+            fields:
+            - name: GAMMA_A6
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 128
+              range: [0, 255]
+              default: 0
+          '0xAD':
+            name: SD Gamma A7
+            description: SD Gamma Curve A (Point 160)
+            fields:
+            - name: GAMMA_A7
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 160
+              range: [0, 255]
+              default: 0
+          '0xAE':
+            name: SD Gamma A8
+            description: SD Gamma Curve A (Point 192)
+            fields:
+            - name: GAMMA_A8
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 192
+              range: [0, 255]
+              default: 0
+          '0xAF':
+            name: SD Gamma A9
+            description: SD Gamma Curve A (Point 224)
+            fields:
+            - name: GAMMA_A9
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve A Point 224
+              range: [0, 255]
+              default: 0
+          '0xB0':
+            name: SD Gamma B0
+            description: SD Gamma Curve B (Point 24)
+            fields:
+            - name: GAMMA_B0
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 24
+              range: [0, 255]
+              default: 0
+          '0xB1':
+            name: SD Gamma B1
+            description: SD Gamma Curve B (Point 32)
+            fields:
+            - name: GAMMA_B1
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 32
+              range: [0, 255]
+              default: 0
+          '0xB2':
+            name: SD Gamma B2
+            description: SD Gamma Curve B (Point 48)
+            fields:
+            - name: GAMMA_B2
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 48
+              range: [0, 255]
+              default: 0
+          '0xB3':
+            name: SD Gamma B3
+            description: SD Gamma Curve B (Point 64)
+            fields:
+            - name: GAMMA_B3
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 64
+              range: [0, 255]
+              default: 0
+          '0xB4':
+            name: SD Gamma B4
+            description: SD Gamma Curve B (Point 80)
+            fields:
+            - name: GAMMA_B4
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 80
+              range: [0, 255]
+              default: 0
+          '0xB5':
+            name: SD Gamma B5
+            description: SD Gamma Curve B (Point 96)
+            fields:
+            - name: GAMMA_B5
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 96
+              range: [0, 255]
+              default: 0
+          '0xB6':
+            name: SD Gamma B6
+            description: SD Gamma Curve B (Point 128)
+            fields:
+            - name: GAMMA_B6
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 128
+              range: [0, 255]
+              default: 0
+          '0xB7':
+            name: SD Gamma B7
+            description: SD Gamma Curve B (Point 160)
+            fields:
+            - name: GAMMA_B7
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 160
+              range: [0, 255]
+              default: 0
+          '0xB8':
+            name: SD Gamma B8
+            description: SD Gamma Curve B (Point 192)
+            fields:
+            - name: GAMMA_B8
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 192
+              range: [0, 255]
+              default: 0
+          '0xB9':
+            name: SD Gamma B9
+            description: SD Gamma Curve B (Point 224)
+            fields:
+            - name: GAMMA_B9
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: Gamma Curve B Point 224
+              range: [0, 255]
+              default: 0
+          '0xBA':
+            name: SD brightness detect
+            description: SD brightness detect
+            readonly: true
+            fields:
+            - name: SD_BRIGHTNESS_DETECT
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: SD brightness detect
+              range: [0, 255]
+              default: 0
+          '0xBB':
+            name: Field Count and Version
+            description: Field count and encoder version code
+            readonly: true
+            fields:
+            - name: ENCODER_VERSION
+              bits: [7, 6]
+              type: enum
+              description: Encoder version code (read only)
+              default: 0
+              values:
+                0: First encoder version
+                1: Second encoder version
+            - name: Reserved
+              bits: [5, 4, 3]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: FIELD_COUNT
+              bits: [2, 1, 0]
+              type: int
+              description: Field count (read only)
+              range: [0, 7]
+              default: 0
+          '0xC9':
+            name: Teletext Control
+            description: Teletext enable, request mode, input pin
+            fields:
+            - name: Reserved
+              bits: [7, 6, 5, 4, 3]
+              type: reserved
+              description: Reserved bits - do not modify
+            - name: TTX_INPUT_PIN
+              bits: [2]
+              type: enum
+              description: Teletext input pin select
+              default: 0
+              values:
+                0: VSYNC
+                1: P0 (ADV7392/ADV7393 only)
+            - name: TTX_REQUEST_MODE
+              bits: [1]
+              type: enum
+              description: Teletext request mode
+              default: 0
+              values:
+                0: Line request signal
+                1: Bit request signal
+            - name: TTX_EN
+              bits: [0]
+              type: enum
+              description: Teletext enable
+              default: 0
+              values:
+                0: Disabled
+                1: Enabled
+          '0xCA':
+            name: Teletext Request Control
+            description: Teletext request rising/falling edge position
+            fields:
+            - name: TTX_REQ_RISING
+              bits: [7, 6, 5, 4]
+              type: int
+              description: Teletext request rising edge position (clock cycles)
+              range: [0, 15]
+              default: 0
+            - name: TTX_REQ_FALLING
+              bits: [3, 2, 1, 0]
+              type: int
+              description: Teletext request falling edge position (clock cycles)
+              range: [0, 15]
+              default: 0
+          '0xCB':
+            name: TTX Line Enable 0
+            description: Teletext on odd fields, lines 15 to 22 (bit 0 = line 15)
+            fields:
+            - name: TTX_ODD_15_22
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: 1 enables teletext on that line
+              range: [0, 255]
+              default: 0
+          '0xCC':
+            name: TTX Line Enable 1
+            description: Teletext on odd fields, lines 7 to 14 (bit 0 = line 7)
+            fields:
+            - name: TTX_ODD_7_14
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: 1 enables teletext on that line
+              range: [0, 255]
+              default: 0
+          '0xCD':
+            name: TTX Line Enable 2
+            description: Teletext on even fields, lines 15 to 22 (bit 0 = line 15)
+            fields:
+            - name: TTX_EVEN_15_22
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: 1 enables teletext on that line
+              range: [0, 255]
+              default: 0
+          '0xCE':
+            name: TTX Line Enable 3
+            description: Teletext on even fields, lines 7 to 14 (bit 0 = line 7)
+            fields:
+            - name: TTX_EVEN_7_14
+              bits: [7, 6, 5, 4, 3, 2, 1, 0]
+              type: int
+              description: 1 enables teletext on that line
+              range: [0, 255]
+              default: 0

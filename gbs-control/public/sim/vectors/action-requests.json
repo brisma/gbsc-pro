@@ -1,0 +1,22 @@
+[
+  {"name": "restart", "board": "pro", "devmode": false, "action": "system.restart", "data": null},
+  {"name": "unknown action", "board": "pro", "devmode": false, "action": "nope", "data": null},
+  {"name": "developer action without devmode", "board": "pro", "devmode": false, "action": "dev.crash", "data": null},
+  {"name": "adv action on standard", "board": "standard", "devmode": false, "action": "adv.decoder_reset", "data": null},
+  {"name": "hex triplets", "board": "pro", "devmode": true, "action": "dev.adv_i2c", "data": "42,0E,40,42,80,80,42,0E,00"},
+  {"name": "hex triplets incomplete", "board": "pro", "devmode": true, "action": "dev.adv_i2c", "data": "42,0E"},
+  {"name": "hex triplets missing", "board": "pro", "devmode": true, "action": "dev.adv_i2c", "data": null},
+  {"name": "menu key bytes", "board": "pro", "devmode": false, "action": "menu.key", "data": "06,1,4"},
+  {"name": "menu key bad hex", "board": "pro", "devmode": false, "action": "menu.key", "data": "1G"},
+  {"name": "termination on", "board": "pro", "devmode": false, "action": "input.termination", "data": "1"},
+  {"name": "termination off", "board": "pro", "devmode": false, "action": "input.termination", "data": "0"},
+  {"name": "termination 2", "board": "pro", "devmode": false, "action": "input.termination", "data": "2"},
+  {"name": "tv5725 read segment 5", "board": "pro", "devmode": true, "action": "dev.tv5725_read", "data": "5"},
+  {"name": "tv5725 read segment 6", "board": "pro", "devmode": true, "action": "dev.tv5725_read", "data": "6"},
+  {"name": "adv read map 2", "board": "pro", "devmode": true, "action": "dev.adv_read", "data": "42,40,80,04"},
+  {"name": "adv read bad map", "board": "pro", "devmode": true, "action": "dev.adv_read", "data": "42,10,00,01"},
+  {"name": "check channel beta", "board": "pro", "devmode": false, "action": "system.check_channel", "data": "beta"},
+  {"name": "check channel uppercase", "board": "pro", "devmode": false, "action": "system.check_channel", "data": "Beta"},
+  {"name": "install manual", "board": "pro", "devmode": false, "action": "system.install_update", "data": "manual"},
+  {"name": "rom dump optional bytes", "board": "pro", "devmode": true, "action": "dev.osd_rom_dump", "data": "27,20"}
+]

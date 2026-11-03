@@ -107,6 +107,9 @@ class Si5351mcu {
     public:
         // var to check the clock state
         bool clkOn[SICHANNELS] = { 0 };     // This should not really be public - use isEnabled()
+        // GBSC: gbs-control-nx's divider rule, VCO ~648 MHz instead of 810/864 MHz at 81/108 MHz;
+        // off by default, switched by dev.si5351 for the measurements (pro/clock/si5351-lab.h mirrors it)
+        bool vco648 = false;
 
     public:
         // default init procedure

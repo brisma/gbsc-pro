@@ -1,0 +1,147 @@
+# The three GBSC PRO Flasher zips of this commit, for a release (ota-publish.yml) or a test build (flasher.yml).
+# A system is built only when nobody has its zip yet: a published release with the same fingerprint (flasher sources +
+# built UI) gives all three; else each system comes from the cache of an earlier run of this fingerprint (also a failed
+# or cancelled one, or a run on main), and only the missing ones are built. So a re-run after a runner that never
+# came builds that system alone, and a build by hand on main leaves nothing to build at the tag.
+# The zips are the run's artifacts: flasher-reused (from a release), flasher-cached, flasher-<system> (built here).
+name: flashers
+on:
+  workflow_call:
+    inputs:
+      macos:
+        description: "runner image of the macOS build"
+        type: string
+        default: macos-26
+    outputs:
+      fingerprint:
+        value: ${{ jobs.plan.outputs.fingerprint }}
+      reuse:
+        description: "the release the zips come from, empty when they were built or cached"
+        value: ${{ jobs.plan.outputs.reuse }}
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-26.04
+    outputs:
+      fingerprint: ${{ steps.fp.outputs.fingerprint }}
+      reuse: ${{ steps.find.outputs.tag }}
+      build: ${{ steps.need.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+      - name: Flasher UI (its bundle is part of the fingerprint)
+        run: |
+          set -euo pipefail
+          pip install fonttools brotli
+          npm ci --prefix gbs-control/public
+          npm ci --prefix gbsc-pro-flasher/ui
+          npm run build --prefix gbsc-pro-flasher/ui
+      - name: Fingerprint
+        id: fp
+        run: |
+          set -euo pipefail
+          FP=$(python3 tools/release_assets.py fingerprint)   # a failure stops here (no empty fingerprint)
+          echo "fingerprint=$FP" >> "$GITHUB_OUTPUT"
+      - name: A release with the same flashers
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FP: ${{ steps.fp.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+          TAGS=$(gh release list --limit 30 --json tagName,isDraft -q '.[] | select(.isDraft | not) | .tagName')
+          for t in $TAGS; do gh release download "$t" -p artifacts.json -D "rel/$t" 2>/dev/null || true; done
+          TAG=$(python3 tools/release_assets.py pick --fingerprint "$FP" --dir rel $TAGS)
+          echo "flashers $FP: ${TAG:-no release has them}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - name: Its flasher zips
+        if: steps.find.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.find.outputs.tag }}
+        run: gh release download "$TAG" -p 'GBSC-PRO-Flasher-*.zip' -D flasher-assets
+      - uses: actions/upload-artifact@v7
+        if: steps.find.outputs.tag != ''
+        with:
+          name: flasher-reused
+          path: flasher-assets
+      # the same relative path and the cross-OS switch on every side: the Windows zip is saved on Windows, read here
+      - id: c-macos
+        if: steps.find.outputs.tag == ''
+        uses: actions/cache/restore@v6
+        with: { path: flasher-assets, key: "flasher-macos-${{ steps.fp.outputs.fingerprint }}", enableCrossOsArchive: true }
+      - id: c-windows
+        if: steps.find.outputs.tag == ''
+        uses: actions/cache/restore@v6
+        with: { path: flasher-assets, key: "flasher-windows-${{ steps.fp.outputs.fingerprint }}", enableCrossOsArchive: true }
+      - id: c-linux
+        if: steps.find.outputs.tag == ''
+        uses: actions/cache/restore@v6
+        with: { path: flasher-assets, key: "flasher-linux-${{ steps.fp.outputs.fingerprint }}", enableCrossOsArchive: true }
+      - name: What is left to build
+        id: need
+        env:
+          REUSE: ${{ steps.find.outputs.tag }}
+          MACOS: ${{ inputs.macos }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          # the app is universal (Apple Silicon + Intel) whatever Mac builds it: the image only decides which runner
+          legs = [{"os": os.environ["MACOS"], "flag": "--mac", "system": "macos", "zip": "GBSC-PRO-Flasher-macOS.zip"},
+                  {"os": "windows-2025", "flag": "--windows-native", "system": "windows", "zip": "GBSC-PRO-Flasher-Windows.zip"},
+                  # the oldest Ubuntu image: the AppImage and the binary need no newer glibc than the build machine's
+                  {"os": "ubuntu-22.04", "flag": "--linux-native", "system": "linux", "zip": "GBSC-PRO-Flasher-Linux.zip"}]
+          have = lambda leg: os.path.getsize(os.path.join("flasher-assets", leg["zip"])) > 0 if os.path.exists(os.path.join("flasher-assets", leg["zip"])) else False
+          todo = [] if os.environ["REUSE"] else [{k: v for k, v in leg.items() if k != "zip"} for leg in legs if not have(leg)]
+          print("build=" + json.dumps(todo))
+          PY
+          echo "to build: $(grep '^build=' "$GITHUB_OUTPUT" | cut -d= -f2-)"
+      - uses: actions/upload-artifact@v7
+        if: steps.find.outputs.tag == '' && hashFiles('flasher-assets/*.zip') != ''
+        with:
+          name: flasher-cached
+          path: flasher-assets
+
+  build:
+    needs: plan
+    if: ${{ needs.plan.outputs.build != '[]' }}
+    strategy:
+      fail-fast: false   # a system whose runner never comes does not stop the others: their zips reach the cache
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.build) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: gbsc-pro-flasher
+          cache-bin: true   # keeps the installed tauri-cli
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+      - name: Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libudev-dev patchelf
+      - run: pip install fonttools brotli
+      - run: cargo install tauri-cli --version '^2' --locked
+      - run: npm ci --prefix gbs-control/public   # the UI reuses the web app's icon generator and font
+      - run: python tools/flasher-build.py ${{ matrix.flag }} --out flasher-out   # macOS: universal (Apple Silicon + Intel)
+      # one zip per system keeps the file modes (an Actions artifact drops them: the macOS app and the Linux binaries)
+      - run: python tools/release_assets.py pack --flasher flasher-out --out flasher-assets --system ${{ matrix.system }}
+      - uses: actions/cache/save@v6
+        with: { path: flasher-assets, key: "flasher-${{ matrix.system }}-${{ needs.plan.outputs.fingerprint }}", enableCrossOsArchive: true }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flasher-${{ matrix.system }}
+          path: flasher-assets

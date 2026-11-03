@@ -1,0 +1,21 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255
+S 125
+R 1D2 - | Name                         |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | RGBs 240p                    |
+        |BBBBBBBBBBCBBBBBBBBBBBBBBBBBBB|
+R 24E - |                              |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 28C - |  A B C D E F G H I J K L M   |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 2CA - |  N O P Q R S T U V W X Y Z   |
+        |BBBBBBCBBBBBBBBBBBBBBBBBBBBBBB|
+R 308 - |  0 1 2 3 4 5 6 7 8 9 - . /   |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 346 - |  aA  ⑪  ⑫  Space  Del  Done  |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 384 - | OK type  EXIT cancel         |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+S 255x2
+attrs A=70 B=07 C=60

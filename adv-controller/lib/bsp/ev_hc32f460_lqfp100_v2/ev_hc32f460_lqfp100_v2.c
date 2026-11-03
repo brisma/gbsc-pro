@@ -126,11 +126,14 @@ void TMR02_A_Config(void)
 }
 
 static uint32_t timer0_CHB_count = 0;
+volatile uint32_t g_u32_tick10us = 0;   /* link v3: free-running 10 us clock (halTimeUs) */
+volatile uint32_t g_u32_ms = 0;         /* link v3: free-running ms (uptime) */
 void TMR0_CHA_CompareIrqCallback(void) // 10US
 {
     static uint32_t u32TmrCnt = 0U;
     if (timer0_CHB_count % 100 == 0) // 1ms
     {
+        g_u32_ms++;
         u32TmrCnt++;
         //     if (u32TmrCnt >= 5U)
         //    {
@@ -201,8 +204,9 @@ void TMR0_CHA_CompareIrqCallback(void) // 10US
             BSP_LED_Sw(led_state); // led_state
     }
     timer0_CHB_count++;
+    g_u32_tick10us++;
 
-    TMR0_ClearStatus(CM_TMR0_2, TMR0_FLAG_CMP_B);
+    TMR0_ClearStatus(CM_TMR0_2, TMR0_FLAG_CMP_A);   /* the interrupt is compare A (was CMP_B; harmless, verified) */
 }
 
 /*******************************************************************************

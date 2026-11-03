@@ -1,0 +1,81 @@
+name: Problem report
+description: Something does not work as it should on a GBSC PRO or on a standard gbs-control board
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One problem per issue, please. The more of the fields below you fill in, the faster it can be reproduced.
+  - type: input
+    id: version
+    attributes:
+      label: Firmware version
+      description: System > Update in the TV or OLED menu, or the Status page of the web app.
+      placeholder: GBS-Control 3.0.0-beta1, ADV Controller 3.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: board
+    attributes:
+      label: Board
+      options:
+        - GBSC PRO
+        - Standard gbs-control board
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Console or source
+      description: With its region or frame rate, and the game or screen if the problem depends on it.
+      placeholder: Mega Drive PAL at 50 Hz, Sonic 2 title screen
+    validations:
+      required: true
+  - type: dropdown
+    id: input
+    attributes:
+      label: Input
+      options:
+        - RGB SCART
+        - RGB SoG
+        - VGA
+        - Component
+        - S-Video
+        - Composite
+        - Not about an input
+    validations:
+      required: true
+  - type: input
+    id: cable
+    attributes:
+      label: Cable
+      description: What carries the sync, when you know it; adapters and switches in between.
+      placeholder: RGB SCART cable with composite sync, through a SCART switch
+  - type: input
+    id: output
+    attributes:
+      label: Output resolution and display
+      placeholder: 1080p on an LG C2
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happens
+      description: What you see, what you expected, and the steps that lead to it. A photo or a short video helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: before
+    attributes:
+      label: Did it work on 2.4.1?
+      options:
+        - "Yes"
+        - "No"
+        - Not tried
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Report from the web app
+      description: >
+        Right after the problem shows, open the web app, go to Status > Diagnostics, press "Copy for an issue" and
+        paste here. It holds the versions, the last crash and the last 50 console lines.

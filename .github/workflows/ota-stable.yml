@@ -1,0 +1,32 @@
+# OTA stable channel.
+# Off until the repository variable OTA_ENABLED is "true". A tag vX.Y.Z on main publishes
+# X.Y.Z (the tag must equal GBS_FW_VERSION) and creates the GitHub release; a manual run from a tag ref with
+# rollback points the channel at an already published version.
+name: OTA stable
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Point the stable manifest at an already published version (no build); run it from a tag"
+        type: boolean
+        default: false
+      rollback_version:
+        description: "Version for the rollback, e.g. 3.0.1"
+        type: string
+        default: ""
+concurrency:
+  group: ota-stable
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: vars.OTA_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')   # not a Beta release tag
+    permissions:
+      id-token: write
+      contents: write
+    uses: ./.github/workflows/ota-publish.yml
+    with:
+      channel: stable
+      rollback: ${{ inputs.rollback || false }}
+      rollback_version: ${{ inputs.rollback_version || '' }}

@@ -16,23 +16,41 @@ __pycache__/
 venv/
 .venv/
 
-# Claude Code
-.claude/
-.claudeignore
-CLAUDE.md
-
 # PlatformIO
 .pio/
 
 # Node.js
 node_modules/
 
-# HC32 build
+# ADV Controller build
 adv-controller/build/
 
 # Compiled binaries
+out/
 *.o
 *.elf
 *.bin
 *.hex
 *.map
+dist/
+
+# golden diffs from native UI tests
+gbs-control/test/golden/**/*.actual.txt
+!adv-controller/release/adv-controller.bin
+gbs-control/pro/link/adv-controller-image.gen.h
+gbs-control/test/golden/**/*.actual.pbm
+
+# Web app tooling: generated from the firmware (npm run gen)
+gbs-control/public/gen/
+# Web page build outputs (generated, not committed; tools/build.py or the pio pre-script)
+gbs-control/webui_html.h
+gbs-control/regmap_gz.h
+gbs-control/public/dist/
+gbs-control/public/test-results/
+gbs-control/public/playwright-report/
+
+# Rust flasher
+gbsc-pro-flasher/target/
+gbsc-pro-flasher/ui/node_modules/
+gbsc-pro-flasher/ui/dist/
+gbsc-pro-flasher/app/gen/

@@ -48,7 +48,7 @@ extern "C"
 #define LL_TMRA_ENABLE             (DDL_OFF)
 #define LL_TRNG_ENABLE             (DDL_OFF)
 #define LL_USART_ENABLE            (DDL_ON)
-#define LL_USB_ENABLE              (DDL_OFF)
+#define LL_USB_ENABLE              (DDL_ON)
 #define LL_WDT_ENABLE              (DDL_ON)
 
 #define BSP_EV_HC32F460_LQFP100_V2 (4U)
@@ -65,5 +65,7 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#include "usb_app_conf.h"   /* USB console (hc32_ll_usb.c reads it through this header) */
 
 #endif

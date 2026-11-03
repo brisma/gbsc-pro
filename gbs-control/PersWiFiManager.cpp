@@ -146,43 +146,9 @@ void PersWiFiManager::setupWiFiHandlers()
 {
     // note: removed DNS server setup here
 
-    _server->on("/wifi/list", HTTP_GET, [](AsyncWebServerRequest *request) {
-        //scan for wifi networks
-        int n = WiFi.scanComplete();
-        String s = "";
-        if (n == -2) {
-            WiFi.scanNetworks(true);
-        } else if (n) {
-            //build array of indices
-            int ix[n];
-            for (int i = 0; i < n; i++)
-                ix[i] = i;
+    // Wi-Fi HTTP routes live in pro/api/api-web.cpp (/api/wifi/*)
 
-            //sort by signal strength
-            for (int i = 0; i < n; i++)
-                for (int j = 1; j < n - i; j++)
-                    if (WiFi.RSSI(ix[j]) > WiFi.RSSI(ix[j - 1]))
-                        std::swap(ix[j], ix[j - 1]);
-            //remove duplicates
-            for (int i = 0; i < n; i++)
-                for (int j = i + 1; j < n; j++)
-                    if (WiFi.SSID(ix[i]).equals(WiFi.SSID(ix[j])) && WiFi.encryptionType(ix[i]) == WiFi.encryptionType(ix[j]))
-                        ix[j] = -1;
-
-            s.reserve(2050);
-            //build plain text string of wifi info
-            //format [signal%]:[encrypted 0 or 1]:SSID
-            for (int i = 0; i < n && s.length() < 2000; i++) { //check s.length to limit memory usage
-                if (ix[i] != -1) {
-                    s += String(i ? "\n" : "") + ((constrain(WiFi.RSSI(ix[i]), -100, -50) + 100) * 2) + "," + ((WiFi.encryptionType(ix[i]) == ENC_TYPE_NONE) ? 0 : 1) + "," + WiFi.SSID(ix[i]);
-                }
-            }
-            // don't cache found ssid's
-            WiFi.scanDelete();
-        }
-        //send string to client
-        request->send(200, "text/plain", s);
-    }); //_server->on /wifi/list
+ //_server->on /wifi/list
 
     // #ifdef WIFI_HTM_PROGMEM
     //   _server->on("/wifi.htm", HTTP_GET, [](AsyncWebServerRequest* request) {

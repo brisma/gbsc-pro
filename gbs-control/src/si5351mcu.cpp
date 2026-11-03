@@ -107,6 +107,12 @@ void Si5351mcu::setFreq(uint8_t clk, uint32_t freq) {
     // finds the even divider which delivers the intended Frequency
     if (outdivider % 2) outdivider--;
 
+    // GBSC: gbs-control-nx (lib/si5351mcu, commit 58f1d83) keeps the VCO away from the top of its range
+    if (vco648) {
+        if (outdivider == 8 && freq >= 100000000UL) outdivider = 6;
+        if (outdivider == 10 && freq >= 75000000UL && freq <= 90000000UL) outdivider = 8;
+    }
+
     // Calculate the PLL-Frequency (given the even divider)
     fvco = outdivider * R * freq;
 

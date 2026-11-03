@@ -1,0 +1,73 @@
+/* The flasher's layout on top of the web app's tokens and classes (dark only, as the web app): one centred column
+   of numbered steps; every button is 44 px high, primary actions take the full width, paired actions share a
+   two-column grid, choices are an equal-width 2 x 2 grid. */
+.flasher { height: 100vh; }
+.flasher .hd { border-bottom: 1px solid var(--ln); gap: 12px; }
+.flasher .hd .ttl { color: var(--t2); font-weight: 600; }
+.flasher .areas { margin-left: auto; display: flex; gap: 4px; background: var(--b1); padding: 4px; border-radius: 14px; }
+.flasher .areas button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; color: var(--t2); font-weight: 700; font-size: 13px; }
+.flasher .areas button.on { background: color-mix(in srgb, var(--ac) 22%, transparent); color: var(--ac); }
+.flasher .areas .ms { font-size: 19px; }
+.flasher main { flex: 1; overflow: auto; }
+
+/* steps */
+.flasher .steps { max-width: 600px; margin: 0 auto; padding: 18px 16px 24px; display: grid; gap: 12px; }
+.flasher .step { display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+.flasher .num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; background: var(--b2); color: var(--t2); margin-top: 6px; }
+.flasher .num .ms { font-size: 18px; }
+.flasher .step.done .num { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+.flasher .step.now .num { background: var(--ac); color: var(--acx); }
+.flasher .card { background: var(--b1); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; min-width: 0; }
+.flasher .step.wait .card { background: none; border: 1px dashed var(--ln); }
+.flasher .step.wait .sh b { color: var(--t2); }
+.flasher .sh { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 22px; }
+.flasher .sh b { font-size: 14px; }
+.flasher .lnk { color: var(--ac); font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; }
+.flasher .lnk .ms { font-size: 17px; }
+.flasher .sum { color: var(--t2); font-size: 13px; overflow-wrap: anywhere; }
+.flasher .stack { display: grid; gap: 10px; }
+
+/* buttons: one height, aligned */
+.flasher .btn { min-height: 44px; }
+.flasher .btn.wide { width: 100%; }
+.flasher .btn.big { min-height: 50px; font-size: 15px; border-radius: 14px; }
+.flasher .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.flasher .pair .btn { width: 100%; }
+.flasher .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.flasher .choices button { min-height: 44px; padding: 8px 10px; border-radius: 12px; background: var(--b2); color: var(--t2); font-weight: 700; font-size: 12.5px; text-align: center; border: 1.5px solid transparent; }
+.flasher .choices button.on { background: color-mix(in srgb, var(--ac) 18%, var(--b1)); border-color: var(--ac); color: var(--t1); }
+.flasher button:disabled { opacity: .45; cursor: default; }
+
+/* devices and files */
+.flasher .dev { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: var(--b0); border: 1.5px solid transparent; width: 100%; }
+.flasher .dev.on { border-color: var(--ac); }
+.flasher .dev.no { opacity: .7; }
+.flasher .dev .ms { font-size: 26px; color: var(--ac); }
+.flasher .dev span { display: grid; gap: 2px; min-width: 0; text-align: left; }
+.flasher .dev small, .flasher .prow small { color: var(--t2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.flasher .empty { padding: 14px; border-radius: 12px; background: var(--b0); color: var(--t2); display: grid; grid-template-columns: 24px 1fr; gap: 10px; font-size: 13px; }
+.flasher .drop { margin: 0; gap: 8px; }
+.flasher .drop .ms { font-size: 30px; color: var(--ac); }
+.flasher .drop b { color: var(--t1); }
+.flasher .okbox { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 13px;
+                  background: color-mix(in srgb, var(--good) 10%, var(--b0)); border: 1px solid color-mix(in srgb, var(--good) 35%, transparent); }
+.flasher .okbox .ms { color: var(--good); }
+.flasher .hint { color: var(--t2); font-size: 12.5px; margin: 0; text-align: center; }
+.flasher .field { padding: 0; margin: 0; }
+.flasher .row { display: flex; gap: 8px; align-items: center; }
+.flasher input { width: 100%; min-width: 0; min-height: 44px; background: var(--b0); color: var(--t1); border: 1px solid var(--ln); border-radius: 12px; padding: 10px 12px; font: inherit; font-weight: 600; user-select: text; -webkit-user-select: text; }
+.flasher input:focus { outline: none; border-color: var(--ac); }
+.flasher .row input { flex: 1; }
+.flasher .prow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px; background: var(--b0); }
+.flasher .prow .btn { min-width: 112px; }
+
+/* progress, job log, confirmations */
+.flasher .bar { height: 6px; border-radius: 99px; background: var(--b3); overflow: hidden; }
+.flasher .bar i { display: block; height: 100%; background: var(--ac); transition: width .2s; }
+.flasher .job { border-top: 1px solid var(--ln); background: var(--b1); padding: 10px 16px 12px; display: grid; gap: 8px; }
+.flasher .lines { font-size: 12px; color: var(--t2); display: grid; gap: 2px; max-height: 96px; overflow: auto; user-select: text; -webkit-user-select: text; }
+.flasher .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 50; }
+.flasher .dlg { background: var(--b1); border: 1px solid var(--ln); border-radius: 16px; padding: 18px 18px 6px; width: min(440px, calc(100vw - 32px)); }
+.flasher .dlg h2 { margin: 0 0 8px; font-size: 16px; }
+.flasher .dlg p { margin: 0; color: var(--t2); font-size: 13.5px; line-height: 1.45; }
+.flasher .dlg .btns { display: grid; grid-template-columns: 1fr 1fr; padding: 14px 0 10px; }

@@ -67,7 +67,7 @@
 #define WEBSOCKETS_USE_BIG_MEM
 #define GET_FREE_HEAP ESP.getFreeHeap()
 // moves all Header strings to Flash (~300 Byte)
-// #define WEBSOCKETS_SAVE_RAM
+#define WEBSOCKETS_SAVE_RAM   // GBSC: header strings in flash
 
 #if defined(ESP8266)
 #define WEBSOCKETS_YIELD() delay(0)

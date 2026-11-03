@@ -1,0 +1,14 @@
+{
+  "name": "GBSC PRO",
+  "dockerComposeFile": ["../compose.yaml", "compose.devcontainer.yaml"],
+  "service": "dev",
+  "workspaceFolder": "/work",
+  "overrideCommand": false,
+  "initializeCommand": "mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules",
+  "remoteUser": "dev",
+  "customizations": {
+    "vscode": {
+      "extensions": ["platformio.platformio-ide", "rust-lang.rust-analyzer", "ms-playwright.playwright"]
+    }
+  }
+}

@@ -1,20 +1,15 @@
-/**
- *******************************************************************************
- * @file  main.c
- * @brief ADV Controller - Main entry point
- *******************************************************************************
- */
-
 #include "main.h"
 #include "debug_uart.h"
-#include "adv_cli.h"
-#include "flash.h"
+#include "console_hc32.h"
+#include "usb_console.h"
+
+extern volatile uint32_t g_u32_ms;          /* BSP: free-running ms */
+#include "link.h"
 #include "fault_handler.h"
 
 #define LL_PERIPH_SEL (LL_PERIPH_GPIO | LL_PERIPH_FCG | LL_PERIPH_PWC_CLK_RMU | LL_PERIPH_EFM | LL_PERIPH_SRAM)
 
 extern uint16_t g_u16_sys_timer;
-extern uint16_t g_u16_key_timer;
 extern uint16_t g_u16_mis_timer;
 extern uint16_t g_u16_osd_timer;
 
@@ -49,52 +44,37 @@ static void GPIO_InitPins(void)
     cfg.u16PinDrv        = PIN_HIGH_DRV;
     cfg.u16PinOutputType = PIN_OUT_TYPE_CMOS;
     GPIO_Init_Output(GPIO_PORT_ASW, GPIO_PIN_ASW1, &cfg);
+    GPIO_Init_Output(GPIO_PORT_ASW, GPIO_PIN_ASW2, &cfg);
     GPIO_Init_Output(GPIO_PORT_ASW, GPIO_PIN_ASW3, &cfg);
     GPIO_Init_Output(GPIO_PORT_ASW, GPIO_PIN_ASW4, &cfg);
 
-    // Load settings from flash
-    FLASH_LoadSettings();
-
-    // Configure ASW2 and AV connect based on loaded settings
-    cfg.u16PinState = asw_02 ? PIN_STAT_SET : PIN_STAT_RST;
-    GPIO_Init_Output(GPIO_PORT_ASW, GPIO_PIN_ASW2, &cfg);
-
-    cfg.u16PullUp   = AVsw ? PIN_PU_OFF : PIN_PU_ON;
-    cfg.u16PinState = AVsw ? PIN_STAT_RST : PIN_STAT_SET;
-    GPIO_Init_Output(GPIO_PORT_A, GPIO_PIN_08, &cfg);
-
-    ASW_SetSwitches(asw_01, asw_02, asw_03, asw_04, 1);
+    // Link v3: no settings in flash. Safe default until the ESP's first STATE (about 2 s): the RGBs path with
+    // the sync stripper on, AV disconnected, ADV7280 held powered down (PB00/PB01/PA03 low above)
+    asw_01 = 0; asw_02 = 0; asw_03 = 0; asw_04 = 1; AVsw = 0;
+    ASW_SetSwitches(asw_01, asw_02, asw_03, asw_04);
+    ASW_SetAVConnect(AVsw);
 }
 
-static void LED_UpdateState(void)
+// Older firmware kept its settings in a record at 0x7C000 (magic 0xBC): erase it once so it can never be mistaken later
+static void EraseLegacySettings(void)
 {
-    static uint8_t last_signal = 0;
-
-    switch (c_state)
-    {
-        case 1: C_LED_OK();        break;
-        case 2: C_LED_ERR_RED();   break;
-        case 3: C_LED_ERR_GREEN(); break;
-        case 4: C_LED_ERR_BLUE();  break;
-    }
-    c_state = 0;
-
-    if (Input_signal != last_signal)
-    {
-        LED_SetSignal(Input_signal);
-        last_signal = Input_signal;
+    const uint32_t addr = EFM_BASE + FLASH_LEAF_ADDR(USER);
+    if (*(volatile const uint8_t*)addr == 0xBC) {
+        (void)EFM_SectorErase(addr);
     }
 }
 
 int main(void)
 {
-    // System init
     LL_PERIPH_WE(LL_PERIPH_SEL);
     __enable_irq();
     EFM_FWMC_Cmd(ENABLE);
     BSP_CLK_Init();
     BSP_LED_Init();
     GPIO_InitPins();
+    EraseLegacySettings();
+    EFM_FWMC_Cmd(DISABLE);                      /* flash program/erase locked: only the firmware update opens it */
+    LL_PERIPH_WP(LL_PERIPH_EFM);
 
 #if (LL_TMR0_ENABLE == DDL_ON)
     TMR02_A_Config();
@@ -103,46 +83,49 @@ int main(void)
     DDL_PrintfInit(BSP_PRINTF_DEVICE, BSP_PRINTF_BAUDRATE, BSP_PRINTF_Preinit);
 #endif
 
-    // Peripheral init
+    /* USB console first (its init waits ~70 ms for the core): before the watchdog and the link */
+    const ConsolePort *usbPort = USBCON_Init();
+
     I2C_DriverInit();
     TMR0_Start(CM_TMR0_2, TMR0_CHA);
     UART_DMA_Init();
     DebugUart_Init();
-    ADVCLI_Init();
 
     printf("\r\n[SYSTEM] ADV Controller ready\r\n");
 
-    /* Initialize watchdog for crash recovery */
     WDT_Config();
 
-    ADV_Enable(adv_sw);
-    LED_SetSignal(Input_signal);
+    LINK_Init();
+    CONSOLE_HC32_Init(usbPort);                 /* after this, no printf: console output is non-blocking */
 
-    // Main loop
     for (;;)
     {
-        UART_ProcessCommand();
+        LINK_Poll();   /* frames from the ESP: STATE diff applied at once */
 
-        if (g_u16_sys_timer >= SYS_TIMEOUT_100MS)
+        if (g_u16_sys_timer >= SYS_TIMEOUT_50MS)
         {
-            WDT_Refresh();  /* Feed watchdog every 100ms */
+            WDT_Refresh();
             ADV_DetectLoop();
-            FLASH_Task();
             g_u16_sys_timer = 0;
         }
 
         if (g_u16_mis_timer >= SYS_TIMEOUT_100MS)
         {
-            LED_UpdateState();
+            LED_Tick();
             g_u16_mis_timer = 0;
         }
 
-        ADVCLI_Task();
+        USBCON_Poll(g_u32_ms);
+        CONSOLE_HC32_Poll(g_u32_ms);         /* after LINK_Poll: bounded work per pass */
 
         if (g_u16_osd_timer >= SYS_TIMEOUT_500MS)
         {
             err_flag = 1;
             g_u16_osd_timer = 0;
         }
+
+        /* Rest until the next interrupt (the 10 us TMR0 tick at the latest; UART RX keeps running on DMA, USB
+         * wakes it): without it the loop spins at 100 % CPU and heats the chip */
+        __WFI();
     }
 }

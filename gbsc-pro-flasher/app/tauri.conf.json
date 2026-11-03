@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GBSC PRO Flasher",
+  "version": "3.0.0",
+  "identifier": "it.brisma.gbsc-flasher",
+  "build": {
+    "frontendDist": "../ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "GBSC PRO Flasher",
+        "width": 980,
+        "height": 700,
+        "minWidth": 720,
+        "minHeight": 540,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "appimage", "deb"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "resources": {
+      "../resources/esp8266-stub.json": "esp8266-stub.json",
+      "../resources/LICENSES/": "LICENSES/"
+    },
+    "publisher": "Brisma",
+    "category": "Utility",
+    "shortDescription": "Flash and update GBSC PRO units",
+    "copyright": "GPL-3.0; esp8266-stub.json: esptool flasher stub, GPL-2.0-or-later"
+  }
+}

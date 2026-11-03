@@ -1,0 +1,97 @@
+# first state
+gpio reset B 8000
+gpio reset B 4000
+gpio set B 2000
+gpio reset B 1000
+gpio init A 0100 dir1 st0 pu0
+gpio set B 0001
+delay 5
+gpio set A 0008
+delay 10
+gpio set B 0002
+delay 10
+delay 15
+w 42 0F 80
+w 56 17 02
+delay 10
+w 42 0F 00
+w 42 05 00
+w 42 02 04
+w 42 07 7F
+w 42 14 11
+w 42 00 00
+w 42 0E 80
+w 42 9C 00
+w 42 9C FF
+w 42 0E 00
+w 42 03 0C
+w 42 04 07
+w 42 13 00
+w 42 17 40
+w 42 1D 40
+w 42 52 CD
+w 42 80 51
+w 42 81 51
+w 42 82 00
+w 42 0E 80
+w 42 D9 44
+w 42 0E 00
+w 42 FD 84
+w 84 A3 00
+w 84 5B 00
+w 84 55 80
+w 84 5A 02
+w 42 6B 11
+w 56 17 02
+delay 10
+w 56 00 9C
+w 56 01 70
+w 56 30 1C
+w 56 31 01
+w 42 0E 00
+w 42 0E 00
+w 42 00 09
+w 42 0E 40
+w 42 80 00
+w 42 0E 00
+w 42 0E 40
+w 42 83 0D
+w 42 84 88
+w 42 85 F8
+w 42 0E 00
+w 42 0E 00
+w 42 17 01
+w 42 18 93
+w 42 19 F1
+w 42 38 80
+w 42 39 C0
+w 42 4D CC
+w 42 02 04
+r 42 13 n1
+w 56 30 04
+w 56 31 11
+w 42 0E 00
+w 42 0A 00
+w 42 08 80
+w 42 E3 80
+w 42 E4 80
+w 42 0B 00
+w 42 0E 40
+w 42 80 00
+w 42 0E 00
+w 42 0E 40
+w 42 83 0D
+w 42 84 88
+w 42 85 F8
+w 42 0E 00
+w 42 0E 00
+w 42 17 01
+w 42 18 93
+w 42 19 F1
+w 42 38 80
+w 42 39 C0
+w 42 4D CC
+w 84 55 80
+w 84 5A 02
+delay 300
+# end c_state 1 led 0 input 5 adv 1

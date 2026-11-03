@@ -1,0 +1,23 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255
+S 105
+R 1D2 - | Quick menu               1/5 |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | Profile             Defaults |
+        |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
+R 24E - | Source       Auto: RGB SCART |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 28C - | Resolution        960p/1024p |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 2CA - | Filter                Normal |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 308 - | Scanlines                Off |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 346 - |                              |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 384 - |                              |
+        |CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC|
+R 3C2 - | Left/Right on the remote loa |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+S 255x2
+attrs A=70 B=60 C=07

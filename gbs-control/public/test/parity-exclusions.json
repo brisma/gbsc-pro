@@ -1,0 +1,98 @@
+[
+  {
+    "ref": "action:dev.crash",
+    "reason": "safe-mode crash test tool: kept off the page on purpose"
+  },
+  {
+    "ref": "action:dev.menu_key",
+    "reason": "developer alias of menu.key for host scripts; the page's Remote sends menu.key"
+  },
+  {
+    "ref": "action:dev.osd_timing",
+    "reason": "STV9426 PLL timing probe for bring-up (raw hex, serial and tools); no page control"
+  },
+  {
+    "ref": "action:dev.screen_snapshot",
+    "reason": "OSD/OLED screen capture used by host scripts; no page control"
+  },
+  {
+    "ref": "action:picture.brightness_down",
+    "reason": "the Picture › Brightness stepper writes picture.brightness; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "action:picture.brightness_up",
+    "reason": "the Picture › Brightness stepper writes picture.brightness; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "action:picture.color_down",
+    "reason": "the Picture › Saturation stepper writes picture.saturation; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "action:picture.color_up",
+    "reason": "the Picture › Saturation stepper writes picture.saturation; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "action:picture.contrast_down",
+    "reason": "the Picture › Contrast stepper writes picture.contrast; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "action:picture.contrast_up",
+    "reason": "the Picture › Contrast stepper writes picture.contrast; the ± actions stay for the serial console"
+  },
+  {
+    "ref": "menu:profiles/load",
+    "reason": "the Profiles page (app/pages/profiles) does this with /api/profiles, not through the menu node"
+  },
+  {
+    "ref": "menu:profiles/manage",
+    "reason": "the Profiles page (app/pages/profiles) does this with /api/profiles, not through the menu node"
+  },
+  {
+    "ref": "menu:profiles/new-profile",
+    "reason": "the Profiles page (app/pages/profiles) does this with /api/profiles, not through the menu node"
+  },
+  {
+    "ref": "menu:profiles/discard-changes",
+    "reason": "the Profiles page and the unsaved notice (app/pages/profiles/ops.tsx) do this with /api/profiles/load, not through the menu node"
+  },
+  {
+    "ref": "menu:profiles/save-changes",
+    "reason": "the Profiles page (app/pages/profiles) does this with /api/profiles, not through the menu node"
+  },
+  {
+    "ref": "route:GET /api/dev/snapshot",
+    "reason": "the capture of dev.screen_snapshot, read by host scripts"
+  },
+  {
+    "ref": "setting:input.last",
+    "reason": "read-only scan hint of automatic input; no control"
+  },
+  {
+    "ref": "setting:profile.hash",
+    "reason": "read-only signal fingerprint of the active profile; no control"
+  },
+  {
+    "ref": "setting:system.adv_controller_skip",
+    "reason": "read-only: the ADV Controller image the user declined; no control"
+  },
+  {
+    "ref": "action:dev.clockgen",
+    "reason": "Developer experiment: Si5351 output on/off to look for the no-signal WiFi noise; tools only"
+  },
+  {
+    "ref": "action:dev.loop_pause",
+    "reason": "Developer experiment: a pause at every loop pass to test the no-signal WiFi slowness; tools only"
+  },
+  {
+    "ref": "action:dev.si5351",
+    "reason": "Developer measurements of the Si5351 (gbs-control-nx evaluation): status, divider rule, crystal load, lock timing, output frame rate; tools only"
+  },
+  {
+    "ref": "action:dev.listen",
+    "reason": "Developer experiment for the input search: the ADV7280 listening on pin 20 by hand; tools only"
+  },
+  {
+    "ref": "action:dev.content_probe",
+    "reason": "Developer experiment for the input search: channel content before a preset is loaded; tools only"
+  }
+]

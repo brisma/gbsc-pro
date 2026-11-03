@@ -1,0 +1,21 @@
+[
+  {"name": "enum by label", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["S-Video"]},
+  {"name": "enum by number", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["5"]},
+  {"name": "enum number not an option", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["8"]},
+  {"name": "leading space number", "board": "pro", "devmode": false, "keys": ["adv.brightness"], "values": [" 70"]},
+  {"name": "bool word on", "board": "pro", "devmode": false, "keys": ["profiles.autoload"], "values": ["on"]},
+  {"name": "enum label with trailing CR", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["Composite\r"]},
+  {"name": "out of range", "board": "pro", "devmode": false, "keys": ["picture.sharpness"], "values": ["99"]},
+  {"name": "not a number", "board": "pro", "devmode": false, "keys": ["adv.brightness"], "values": ["abc"]},
+  {"name": "unknown key", "board": "pro", "devmode": false, "keys": ["nope.key"], "values": ["1"]},
+  {"name": "developer key without devmode", "board": "pro", "devmode": false, "keys": ["dev.syncwatcher"], "values": ["1"]},
+  {"name": "developer key with devmode", "board": "pro", "devmode": true, "keys": ["dev.syncwatcher"], "values": ["1"]},
+  {"name": "adv key on standard", "board": "standard", "devmode": false, "keys": ["adv.brightness"], "values": ["70"]},
+  {"name": "svideo on standard", "board": "standard", "devmode": false, "keys": ["input.source"], "values": ["S-Video"]},
+  {"name": "extra hosts valid", "board": "pro", "devmode": false, "keys": ["system.extra_hosts"], "values": ["tv.lan, gbs.local"]},
+  {"name": "extra hosts invalid", "board": "pro", "devmode": false, "keys": ["system.extra_hosts"], "values": ["a b"]},
+  {"name": "ota password", "board": "pro", "devmode": false, "keys": ["system.ota_password"], "values": ["secret pw"]},
+  {"name": "read-only key", "board": "pro", "devmode": false, "keys": ["profile.active"], "values": ["01"]},
+  {"name": "two strings in one request", "board": "pro", "devmode": false, "keys": ["system.ota_password", "system.extra_hosts"], "values": ["x", "tv.lan"]},
+  {"name": "string and numbers", "board": "pro", "devmode": false, "keys": ["system.ota_password", "adv.brightness", "picture.scanlines"], "values": ["x", "60", "1"]}
+]

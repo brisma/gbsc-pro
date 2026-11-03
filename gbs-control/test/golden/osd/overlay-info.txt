@@ -1,0 +1,19 @@
+OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
+S 255
+S 145
+R 1D2 - | ⑤ Signal info                |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+R 210 - | Input  RGB SCART 240p 59.9Hz |
+        |BBBBBBBBCCCCCCCCCCCCCCBBBBBBBB|
+R 24E - | Output     1280x960 60.0Hz ③ |
+        |BBBBBBBBBBBBCCCCCCCCBBBBBBBBDB|
+R 28C - | Profile           Mega Drive |
+        |BBBBBBBBBBBBBBBBBBBCCCCCCCCCCB|
+R 2CA - | WiFi                  ④ home |
+        |BBBBBBBBBBBBBBBBBBBBBBBCBCCCCB|
+R 308 - | IP              192.168.0.99 |
+        |BBBBBBBBBBBBBBBBBCCCCCCCCCCCCB|
+R 346 - | INFO or EXIT to close        |
+        |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
+S 255x2
+attrs A=70 B=07 C=06 D=20

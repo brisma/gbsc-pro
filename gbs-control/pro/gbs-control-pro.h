@@ -1,66 +1,34 @@
-// ====================================================================================
-// gbs-control-pro.h
-// GBSC-Pro Main Header
-//
-// This file contains Pro-specific declarations:
-// - IR remote control (IRremoteESP8266)
-// - TV OSD menu system (STV9426 chip)
-// - Audio volume control (PT2257 chip)
-// - OLED display integration
-// - Extended color/video adjustments
-//
-// Code organization:
-// - gbs-control-pro.cpp: Core functions, global variables
-// - menu/menu-core.cpp: Menu navigation, IR dispatch, OLED handlers
-// - osd/osd-core.cpp: OSD dispatch table, command handler
-// - menu/*.cpp: IR menu handlers per section
-// - osd/*.cpp: OSD rendering handlers per section
-//
-// Types and enums are in:
-// - osd/osd-registry.h: OsdCommand, MenuEntry, handler declarations
-// - menu/menu-registry.h: OLED_MenuState, MenuItemMapping, IR declarations
-// ====================================================================================
-
+// Pro additions shared with gbs-control.ino: firmware version, IR receiver, input path switching, picture registers,
+// the no-signal info panel state and the 75R sync termination. The menu lives in ui/, settings in settings/.
 #pragma once
 
 #include <Arduino.h>
 #include "options-pro.h"
-#include "drivers/adv_controller.h"
+#include "link/adv-defaults.h"
+#include "input/input-types.h"
 
-// ====================================================================================
-// Firmware Version Strings
-// ====================================================================================
+#define GBS_FW_VERSION "3.0.0"  // GBS-Control firmware version X.Y.Z (ESP8266); tools parse this line
+// Build channel, set by tools/release.py: 0 Stable, 1 Beta. A plain local build is Beta "-dev0", below every
+// published build, so a developer's device is offered the real ones
+#ifndef GBS_FW_CHANNEL
+#define GBS_FW_CHANNEL 1
+#endif
+#ifndef GBS_FW_VERSION_SUFFIX
+#define GBS_FW_VERSION_SUFFIX "-dev0"
+#endif
+#define GBS_FW_FULL_VERSION GBS_FW_VERSION GBS_FW_VERSION_SUFFIX   // the running version: "3.1.0-beta12"
+static_assert(sizeof(GBS_FW_FULL_VERSION) <= 16, "versions are at most 15 characters (manifest, menus)");
+// Found by the web UI inside uploaded images (version check before installing); reported by /api/info
+#define GBS_FW_VERSION_MARKER "GBSCVER=" GBS_FW_FULL_VERSION ";"
 
-#define GBS_FW_VERSION "2.4.1"  // GBS Control firmware version (ESP8266)
-#define ADV_FW_VERSION "2.4.1"  // ADV Controller firmware version (HC32)
+// TV5725 ADC_SOGEN / ADC_INPUT_SEL and SP_EXT_SYNC_SEL values used by the input paths
+#define RGB1 0x01
+#define YUV0 0x00
+#define HV_Enable  0x00
+#define HV_Disable 0x01
 
-// ====================================================================================
-// Registry Headers (types and enums)
-// ====================================================================================
-
-#include "osd/osd-registry.h"
-#include "menu/menu-registry.h"
-
-// ====================================================================================
-// Forward Declarations
-// ====================================================================================
-
-class SSD1306Wire;
-class WebSocketsServer;
 struct runTimeOptions;
 struct userOptions;
-template <uint8_t> class TV5725;
-
-// ====================================================================================
-// Macros
-// ====================================================================================
-
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) > (b) ? (b) : (a))
-
-// ====================================================================================
-// External Variables - IR Remote
-// ====================================================================================
 
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
@@ -68,177 +36,26 @@ template <uint8_t> class TV5725;
 extern IRrecv irrecv;
 extern decode_results results;
 
-// ====================================================================================
-// Input Source Helper
-// ====================================================================================
-
-// Input source routing values (for GBS ADC configuration)
-enum InputSource : uint8_t {
-    InputSourceRGBs = 0,
-    InputSourceVGA = 1,
-    InputSourceYUV = 2
-};
-
-// Input type values (logical input selection)
-enum InputType : uint8_t {
-    InputTypeRGBs = 1,
-    InputTypeRGsB = 2,
-    InputTypeVGA = 3,
-    InputTypeYUV = 4,
-    InputTypeSV = 5,
-    InputTypeAV = 6
-};
-
-// Derive InputSource from activeInputType (replaces inputSource variable)
-inline uint8_t getInputSourceFromType(uint8_t inputType) {
-    switch (inputType) {
-        case InputTypeRGBs:
-        case InputTypeRGsB:
-            return InputSourceRGBs;
-        case InputTypeVGA:
-            return InputSourceVGA;
-        case InputTypeYUV:
-        case InputTypeSV:
-        case InputTypeAV:
-        default:
-            return InputSourceYUV;
-    }
-}
-
-// ====================================================================================
-// External Variables - Timing
-// ====================================================================================
-
-extern bool irDecodedFlag;
-extern unsigned long lastSignalTime;
 extern unsigned long lastSystemTime;
 extern unsigned long lastWebUpdateTime;
-extern unsigned long lastMenuItemTime;
 
-// ====================================================================================
-// External Variables - OLED Menu State
-// ====================================================================================
-
-extern int oled_menuItem;
-extern int lastOledMenuItem;
-extern uint8_t oledClearFlag;
-extern boolean NEW_OLED_MENU;
-extern int selectedMenuLine;
-
-// ====================================================================================
-// External Variables - TV OSD State
-// ====================================================================================
-
-extern char osdDisplayValue;
-extern boolean irEnabled;
-extern uint8_t menuLineColors[OSD_MAX_MENU_ROWS];  // Index 0-2 = rows 1-3
-extern uint8_t isInfoDisplayActive;
+extern uint8_t isInfoDisplayActive;        // sync detection pauses while the no-signal info panel is shown
 extern uint16_t horizontalBlankStart;
 extern uint16_t horizontalBlankStop;
 
-// ====================================================================================
-// External Variables - Video Mode Flags
-// ====================================================================================
+extern bool advSyncTermination;            // experimental 75R sync termination (RGB SCART, runtime only)
+bool ADV_setSyncTermination(bool enable);  // false when the input is not RGB SCART or there is no ADV Controller
 
-extern uint8_t svVideoFormatChanged;   // Flag: S-Video format changed, needs ADV update
-extern uint8_t avVideoFormatChanged;   // Flag: Composite format changed, needs ADV update
+void applySavedInputSource(void);                // setup(): the GBS side of the path in activeInputType, no link kick
+void switchInputPath(uint8_t type, bool save);   // type 1..6; save = false: no device.cfg write (auto scan)
+// switchInputPath forced the sync watcher on for the detection: the profile's choice (dev.syncwatcher) is applied
+// again once the new signal is stable, even when no preset reload follows (same mode)
+extern bool inputWatcherForced;
+void inputAdoptDetected(uint8_t type);           // standard board in Auto: record what the detection found
 
-// ====================================================================================
-// External Variables - Factory Reset
-// ====================================================================================
-
-extern uint8_t factoryResetSelection;  // 0 = No (default), 1 = Yes
-
-// ====================================================================================
-// Function Declarations - ADV Communication
-// ====================================================================================
-
-// ADV packet wrappers
-void ADV_sendI2P(bool enable);
-void ADV_sendSmooth(bool enable);
-void ADV_sendSyncStripper(bool mode);
-void ADV_sendACE(bool enable);
-void ADV_sendVideoFormat(uint8_t format);
-void ADV_sendBCSH(unsigned char reg, unsigned char val);
-void ADV_sendCustomI2C(const unsigned char* data, size_t size);
-void ADV_applyPendingOptions(void);
-void ADV_applySlotSettings(void);
-
-// ACE parameter functions
-void ADV_sendACELumaGain(uint8_t gain);
-void ADV_sendACEChromaGain(uint8_t gain);
-void ADV_sendACEChromaMax(uint8_t max);
-void ADV_sendACEGammaGain(uint8_t gain);
-void ADV_sendACEResponseSpeed(uint8_t speed);
-void ADV_sendACEDefaults(void);
-void ADV_sendACEParams(void);
-
-// Video Filter parameter functions
-void ADV_sendFilterYShaping(uint8_t filter);
-void ADV_sendFilterCShaping(uint8_t filter);
-void ADV_sendFilterWYShaping(uint8_t filter);
-void ADV_sendFilterWYOverride(uint8_t ovr);
-void ADV_sendFilterCombNTSC(uint8_t bw);
-void ADV_sendFilterCombPAL(uint8_t bw);
-void ADV_sendCombLumaModeNTSC(uint8_t mode);
-void ADV_sendCombChromaModeNTSC(uint8_t mode);
-void ADV_sendCombChromaTapsNTSC(uint8_t taps);
-void ADV_sendCombLumaModePAL(uint8_t mode);
-void ADV_sendCombChromaModePAL(uint8_t mode);
-void ADV_sendCombChromaTapsPAL(uint8_t taps);
-// Video filter functions
-void ADV_sendVideoFilters(void);
-void ADV_sendVideoFiltersDefaults(void);
-
-// ====================================================================================
-// Function Declarations - Input Source Switching
-// ====================================================================================
-
-void InputRGBs(void);
-void InputRGsB(void);
-void InputVGA(void);
-void InputYUV(void);
-void InputSV(void);
-void InputAV(void);
-
-void InputRGBs_mode(uint8_t mode);
-void InputRGsB_mode(uint8_t mode);
-void InputVGA_mode(uint8_t mode);
-void InputSV_mode(uint8_t mode);
-void InputAV_mode(uint8_t mode);
-
-void applySavedInputSource(void);
-
-// ====================================================================================
-// Function Declarations - OLED Menu
-// ====================================================================================
-
-void resetOLEDScreenSaverTimer();
-
-// ====================================================================================
-// Function Declarations - Color Conversion
-// ====================================================================================
-
-void applyRGBtoYUVConversion(void);
-void readYUVtoRGBConversion(void);
-
-// ====================================================================================
-// Function Declarations - Video Mode
-// ====================================================================================
-
-void applyVideoModePreset(void);
-boolean hasOutputFrequencyChanged(void);
-
-// ====================================================================================
-// Function Declarations - Menu Refresh
-// ====================================================================================
-
-void refreshMenusOnSignalChange(void);
-
-// ====================================================================================
-// Function Declarations - Status
-// ====================================================================================
-
-bool isPeakingLocked(void);
-void broadcastProStatus(WebSocketsServer& ws);
+void applyPictureColor(void);                    // every VDS colour register from the settings (picture-color.cpp)
+void applyPictureSharpness(void);                // picture.sharpness -> VDS peaking
+void applyScanlineStrength(void);                // picture.scanline_strength -> MADPT offsets while scanlines are on
+void pictureStep(uint8_t sid, int delta);        // clamped, persisted step of a picture setting
+void pictureResetColors(void);                   // Red/Green/Blue back to neutral 128
 

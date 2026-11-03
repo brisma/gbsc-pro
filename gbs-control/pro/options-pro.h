@@ -1,145 +1,78 @@
-// ====================================================================================
-// options-pro.h
-// GBSC-Pro Extensions for options.h
-//
-// This file contains Pro-specific enum definitions that extend the original
-// gbs-control options. These enums are used in the Pro-specific fields added
-// to userOptions struct for persistent settings storage.
-// ====================================================================================
-
+// Pro fields of struct userOptions (options.h). Ranges, defaults and keys live in settings/settings-table.h: the
+// comments here say what a field is, not its values.
 #ifndef OPTIONS_PRO_H_
 #define OPTIONS_PRO_H_
 
 #include <stdint.h>
 
-// ====================================================================================
-// Input Source Selection
-// ====================================================================================
-
-enum INPUT_PresetPreference : uint8_t {
-    MT_RGBs,
-    MT_RGsB,
-    MT_VGA,
-    MT_YPBPR,
-    MT_SV,
-    MT_AV,
-};
-
-// ====================================================================================
-// Video Processing Settings
-// ====================================================================================
-
-enum SETTING_PresetPreference : uint8_t {
-    MT_I2P_OFF,
-    MT_I2P_ON,
-    MT_SMOOTH_OFF,
-    MT_SMOOTH_ON,
-    MT_SYNCSTRIPPER_OFF,
-    MT_SYNCSTRIPPER_ON,
-    MT_ACE_OFF,
-    MT_ACE_ON,
-};
-
-// ====================================================================================
-// TV Mode / Video Standard Selection (ADV7280 Decoder)
-// ====================================================================================
-
-enum TVMODE_PresetPreference : uint8_t {
-    MT_MODE_AUTO = 0,
-    MT_MODE_PAL,
-    MT_MODE_NTSCM,
-    MT_MODE_PAL60,
-    MT_MODE_NTSC443,
-    MT_MODE_NTSCJ,
-    MT_MODE_PALNwp,
-    MT_MODE_PALMwop,
-    MT_MODE_PALM,
-    MT_MODE_PALCmbN,
-    MT_MODE_PALCmbNwp,
-    MT_MODE_SECAM,
-};
-
-// ====================================================================================
-// Pro userOptions Fields
-// These fields are included in struct userOptions via options.h
-// ====================================================================================
-
 #define USER_OPTIONS_PRO_FIELDS \
-    INPUT_PresetPreference INPUT_presetPreference; \
-    SETTING_PresetPreference SETTING_presetPreference; \
-    TVMODE_PresetPreference TVMODE_presetPreference; \
-    uint8_t volume;                 /* PT2257 volume (0-50, 50=max, 0=mute) */ \
-    uint8_t audioMuted;             /* PT2257 mute state (0=unmuted, 1=muted) */ \
-    uint8_t activeInputType;        /* Input type (1-6: RGBs/RGsB/VGA/YUV/SV/AV) */ \
-    uint8_t svVideoFormat;          /* ADV7280 S-Video format (0=Auto, 1-11) */ \
-    uint8_t avVideoFormat;          /* ADV7280 Composite format (0=Auto, 1-11) */ \
-    uint8_t bcshAdjustMode;         /* BCSH adjustment UI mode */ \
-    uint8_t advSyncStripper;        /* LM1881 sync stripper (0=off/bypass, 1=on) */ \
-    uint8_t osdTheme;               /* TV OSD theme (0-3) */ \
-    /* GBS TV5725 Color Balance */ \
-    uint8_t gbsColorR;              /* R channel (0-255, default 128) */ \
-    uint8_t gbsColorG;              /* G channel (0-255, default 128) */ \
-    uint8_t gbsColorB;              /* B channel (0-255, default 128) */ \
-    /* ADV7280 Processing Settings */ \
-    uint8_t advI2P;                 /* I2P - interlace to progressive (0-1, default 1) */ \
-    uint8_t advSmooth;              /* Smooth interpolation (0-1, default 0) */ \
-    uint8_t advACE;                 /* ACE - Adaptive Contrast Enhancement (0-1, default 0) */ \
-    /* ADV7280 BCSH (Brightness/Contrast/Saturation/Hue) */ \
-    uint8_t advBrightness;          /* Brightness (0-254, default 128) */ \
-    uint8_t advContrast;            /* Contrast (0-254, default 128) */ \
-    uint8_t advSaturation;          /* Saturation (0-254, default 128) */ \
-    uint8_t advHue;                 /* Hue (0-254, default 128 = 0°) */ \
-    /* ADV7280 ACE Parameters */ \
-    uint8_t advACELumaGain;         /* Luma Gain (0-31, default 13) */ \
-    uint8_t advACEChromaGain;       /* Chroma Gain (0-15, default 8) */ \
-    uint8_t advACEChromaMax;        /* Chroma Max (0-15, default 8) */ \
-    uint8_t advACEGammaGain;        /* Gamma Gain (0-15, default 8) */ \
-    uint8_t advACEResponseSpeed;    /* Response Speed (0-15, default 15) */ \
-    /* ADV7280 Video Filter Parameters */ \
-    uint8_t advFilterYShaping;      /* Y Shaping Filter for CVBS (0-30, default 1=Auto Narrow) */ \
-    uint8_t advFilterCShaping;      /* C Shaping Filter for CVBS (0-7, default 0=Auto 1.5MHz) */ \
-    uint8_t advFilterWYShaping;     /* WY Shaping Filter for S-Video (2-19, default 19=SVHS 18) */ \
-    uint8_t advFilterWYOverride;    /* WY Override (0=Auto, 1=Manual, default 1) */ \
-    uint8_t advFilterCombNTSC;      /* Comb Filter NTSC bandwidth (0-3, default 0=Narrow) */ \
-    uint8_t advFilterCombPAL;       /* Comb Filter PAL bandwidth (0-3, default 1=Medium) */ \
-    uint8_t advCombLumaModeNTSC;    /* NTSC Luma Mode (0=Adaptive, 4=Notch, 5-7=Fixed) */ \
-    uint8_t advCombChromaModeNTSC;  /* NTSC Chroma Mode (0=Adaptive, 4=Off, 5-7=Fixed) */ \
-    uint8_t advCombChromaTapsNTSC;  /* NTSC Chroma Taps (0-3, default 2=5→3 lines) */ \
-    uint8_t advCombLumaModePAL;     /* PAL Luma Mode (0=Adaptive, 4=Notch, 5-7=Fixed) */ \
-    uint8_t advCombChromaModePAL;   /* PAL Chroma Mode (0=Adaptive, 4=Off, 5-7=Fixed) */ \
-    uint8_t advCombChromaTapsPAL;   /* PAL Chroma Taps (0-3, default 3=5→4 lines) */ \
-    /* HDMI Limited Range */ \
-    uint8_t hdmiLimitedRange;       /* Force Limited Range output (0=Off, 1=HD, 2=SD, 3=All) */ \
-    /* Developer menu persistent tweaks for NTSC group (videoStandardInput in {1,3,5,6,7,8,9}) */ \
-    /* (0 / 0xFF = no override, use preset default) */ \
-    uint16_t devHTotal_ntsc;        /* VDS_HSYNC_RST custom (0 = no override) */ \
-    uint16_t devPllDiv_ntsc;        /* PLLAD_MD custom (0 = no override) */ \
-    uint8_t  devSdramClock_ntsc;    /* PLL_MS (0xFF = no override, range 0-7) */ \
-    uint8_t  devAdcFilter_ntsc;     /* ADC_FLTR (0xFF = no override, range 0-3) */ \
-    uint8_t  devOsr_ntsc;           /* OSR (0xFF = no override, valid: 1/2/4) */ \
-    uint8_t  devSogLevel_ntsc;      /* ADC_SOGCTRL (0xFF = no override, range 0-16) */ \
-    uint8_t  devSyncInvert_ntsc;    /* bit0=HS, bit1=VS, bit7=set (0 = no override) */ \
-    /* Screen Move / Scale for NTSC group */ \
-    uint16_t screenHMove_ntsc;      /* IF_HBIN_SP (0 = no override) */ \
-    uint16_t screenVMoveSt_ntsc;    /* IF_VB_ST (0xFFFF = no override) */ \
-    uint16_t screenVMoveSp_ntsc;    /* IF_VB_SP (0xFFFF = no override) */ \
-    uint16_t screenHScale_ntsc;     /* VDS_HSCALE (0 = no override) */ \
-    uint16_t screenVScale_ntsc;     /* VDS_VSCALE (0 = no override) */ \
-    /* Developer menu persistent tweaks for PAL group (videoStandardInput in {2,4}) */ \
-    uint16_t devHTotal_pal; \
-    uint16_t devPllDiv_pal; \
-    uint8_t  devSdramClock_pal; \
-    uint8_t  devAdcFilter_pal; \
-    uint8_t  devOsr_pal; \
-    uint8_t  devSogLevel_pal; \
-    uint8_t  devSyncInvert_pal; \
-    /* Screen Move / Scale for PAL group */ \
-    uint16_t screenHMove_pal; \
-    uint16_t screenVMoveSt_pal; \
-    uint16_t screenVMoveSp_pal; \
-    uint16_t screenHScale_pal; \
-    uint16_t screenVScale_pal; \
-    /* Per-slot SyncWatcher override */ \
-    uint8_t  slotSyncwatcherMode;   /* 0=inherit global, 1=force ON, 2=force OFF */
+    uint8_t volume;                 /* audio.volume in percent, 100 = 0 dB (pt2257-map.h) */ \
+    uint8_t audioMuted;             /* audio.mute */ \
+    uint8_t activeInputType;        /* the input the hardware is on (InputType 1..6); not a setting */ \
+    uint8_t inputChoice;            /* input.source: 0 Auto, 1..6 a temporary manual input (Auto at every start) */ \
+    uint8_t inputLast;              /* input.last: the last path where a source was found (scan hint, boot path) */ \
+    uint8_t scanVga, scanRgbs, scanRgsb, scanYuv, scanSv, scanAv;   /* input.scan_*: paths Auto looks at */ \
+    uint8_t inputLostWait;          /* input.lost_wait: seconds without a source before Auto looks elsewhere */ \
+    uint8_t wifiOptimize;           /* system.wifi_optimize: the GBSC picks the quietest memory clock */ \
+    uint8_t wifiWatch;              /* dev.wifi_watch: pings the router every minute, logs when the link goes bad */ \
+    uint8_t svVideoFormat;          /* adv.format_sv: ADV7280 standard index (advFormatRegister) */ \
+    uint8_t avVideoFormat;          /* adv.format_av */ \
+    uint8_t advSyncStripper;        /* input.sync_stripper: LM1881 in the RGB SCART / RGB SoG sync path */ \
+    uint8_t adaptiveSync;           /* input.adaptive_sync: the sync processor follows the source's sync pulse (sync-pulse.h) */ \
+    uint8_t osdTheme;               /* osd.theme */ \
+    uint8_t osdPosition;            /* osd.position: menu, info, keyboard and update placement (9 positions) */ \
+    uint8_t osdPopupPosition;       /* osd.popup_position: mute/volume pill and status pop-up */ \
+    uint8_t osdTimeout;             /* osd.timeout: menu and info auto-close (index into the options) */ \
+    uint8_t gbsColorR;              /* picture.red: R offset through the VDS YUV matrix, 128 = neutral */ \
+    uint8_t gbsColorG;              /* picture.green */ \
+    uint8_t gbsColorB;              /* picture.blue */ \
+    uint8_t picBrightness;          /* picture.brightness, 50 = neutral */ \
+    uint8_t picContrast;            /* picture.contrast, 50 = neutral */ \
+    uint8_t picSaturation;          /* picture.saturation, 50 = neutral */ \
+    uint8_t picSharpness;           /* picture.sharpness: VDS peaking gain, 0 = off */ \
+    uint8_t advI2P;                 /* adv.i2p: decoder line doubling (2X) */ \
+    uint8_t advSmooth;              /* adv.smooth: needs 2X */ \
+    uint8_t advACE;                 /* adv.ace: adaptive contrast enhancement */ \
+    uint8_t advBrightness;          /* adv.brightness, 50 = neutral (adv-state.cpp maps it to the register) */ \
+    uint8_t advContrast;            /* adv.contrast */ \
+    uint8_t advSaturation;          /* adv.saturation */ \
+    uint8_t advHue;                 /* adv.hue */ \
+    uint8_t advACELumaGain;         /* adv.ace_luma_gain */ \
+    uint8_t advACEChromaGain;       /* adv.ace_chroma_gain */ \
+    uint8_t advACEChromaMax;        /* adv.ace_chroma_max */ \
+    uint8_t advACEGammaGain;        /* adv.ace_gamma_gain */ \
+    uint8_t advACEResponseSpeed;    /* adv.ace_response_speed */ \
+    uint8_t advFilterYShaping;      /* adv.filter_y: CVBS luma shaping filter */ \
+    uint8_t advFilterCShaping;      /* adv.filter_c: CVBS chroma shaping filter */ \
+    uint8_t advFilterWYShaping;     /* adv.filter_wy: S-Video luma shaping filter */ \
+    uint8_t advFilterWYOverride;    /* adv.filter_wy_override: 0 automatic, 1 the filter above */ \
+    uint8_t advFilterCombNTSC;      /* adv.comb_ntsc: NTSC comb bandwidth */ \
+    uint8_t advFilterCombPAL;       /* adv.comb_pal: PAL comb bandwidth */ \
+    uint8_t advCombLumaModeNTSC;    /* adv.comb_luma_ntsc */ \
+    uint8_t advCombChromaModeNTSC;  /* adv.comb_chroma_ntsc */ \
+    uint8_t advCombChromaTapsNTSC;  /* adv.ct_ntsc: chroma comb taps */ \
+    uint8_t advCombLumaModePAL;     /* adv.comb_luma_pal */ \
+    uint8_t advCombChromaModePAL;   /* adv.comb_chroma_pal */ \
+    uint8_t advCombChromaTapsPAL;   /* adv.ct_pal */ \
+    uint8_t advDnr;                 /* adv.dnr: digital noise reduction */ \
+    uint8_t advCti;                 /* adv.cti: chroma transient improvement */ \
+    uint8_t hdmiLimitedRange;       /* output.hdmi_range */ \
+    uint8_t  boardOverride;         /* system.board: BOARD_AUTO / BOARD_PRO / BOARD_ORIGINAL (Standard) */ \
+    uint8_t  encoderReverse;        /* system.encoder_direction: 0 the board's own direction, 1 reversed */ \
+    uint8_t  encoderSteps;          /* system.encoder_steps: 1, 2 or 4 menu steps per detent */ \
+    uint8_t  devMode;               /* system.devmode: developer entries in menus and API */ \
+    uint8_t  menuMode;              /* system.menu_mode: 0 Easy, 1 Advanced */ \
+    uint8_t  profilesAutoload;      /* profiles.autoload: load the profile that matches the signal */ \
+    uint8_t  profilesSwitchInput;   /* profiles.switch_input: a manual load switches to the profile's input */ \
+    uint8_t  profilesStartup;       /* profiles.startup: 0 last used working state, 1 defaults */ \
+    uint8_t  osdStatusPopup;        /* osd.status_popup: 0 off, 1 input or profile change, 2 every change */ \
+    uint8_t  tvChanges;             /* osd.tv_changes: standard board, TV5725 icons while the user adjusts */ \
+    char     profileActive[4];      /* profile.active: id of the loaded profile, "" for none */ \
+    char     profileHash[9];        /* profile.hash: CRC32 (hex) of the Profile scope at load/save */ \
+    uint8_t  autoUpdateCheck;       /* system.auto_update_check */ \
+    char     otaPassword[33];       /* system.ota_password: ArduinoOTA password (write-only over HTTP) */ \
+    char     extraHosts[64];        /* system.extra_hosts: extra Host names, comma-separated (guardExtraHostsValid) */ \
+    char     advControllerSkip[9];  /* system.adv_controller_skip: ADV Controller build id the boot prompt skips */ \
+    uint8_t  syncwatcherMode;       /* dev.syncwatcher: per-profile override, 0 inherit, 1 on, 2 off */
 
 #endif // OPTIONS_PRO_H_

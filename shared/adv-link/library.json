@@ -1,0 +1,8 @@
+{
+  "name": "adv-link",
+  "version": "3.0.0",
+  "description": "GBSC PRO ESP8266 <-> ADV Controller link v3: frames, parser, state, diff planner (shared by both firmwares)",
+  "frameworks": "*",
+  "platforms": "*",
+  "build": { "srcDir": ".", "includeDir": "." }
+}

@@ -1,0 +1,16 @@
+# LF in the repository and in every checkout (Windows included): goldens, scripts and generated headers compare byte
+# for byte on every system
+* text=auto eol=lf
+*.pbm binary
+*.bin binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.woff2 binary
+*.zip binary
+# committed with CRLF: left as they are
+LICENSE -text
+gbs-control/LICENSE -text
+gbsc-pro-flasher/resources/LICENSES/** -text
+hardware/** -text

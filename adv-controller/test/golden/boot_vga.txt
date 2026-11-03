@@ -1,0 +1,10 @@
+# first state
+gpio set B 8000
+gpio set B 4000
+gpio set B 2000
+gpio set B 1000
+gpio init A 0100 dir1 st1 pu1
+gpio reset B 0001
+gpio reset A 0008
+gpio reset B 0002
+# end c_state 1 led 0 input 3 adv 0

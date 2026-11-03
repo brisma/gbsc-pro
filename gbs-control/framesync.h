@@ -29,41 +29,32 @@
 #define fsDebugPrintf(...)
 #endif
 
+// Two rising edges of the vsync on the debug pin. The ISR only stores cycle counts: it used to call
+// detach/attachInterrupt (flash code) and stayed attached when a measurement timed out, so a vsync edge during
+// a flash operation (web upload, backup, settings save: the cache is off) ran flash code from the ISR -
+// Exception 0 crashes in whatever function was hit. stop() detaches from the loop context.
 namespace MeasurePeriod {
     volatile uint32_t stopTime, startTime;
     volatile uint32_t armed;
+    volatile uint8_t edges;
 
-    void _risingEdgeISR_prepare();
-    void _risingEdgeISR_measure();
+    void IRAM_ATTR _risingEdgeISR()
+    {
+        uint32_t t;
+        __asm__ __volatile__("rsr %0,ccount" : "=a"(t));
+        if (edges == 0) { startTime = t; armed = 1; edges = 1; }
+        else if (edges == 1) { stopTime = t; edges = 2; }
+    }
 
     void start() {
         startTime = 0;
         stopTime = 0;
         armed = 0;
-        attachInterrupt(DEBUG_IN_PIN, _risingEdgeISR_prepare, RISING);
+        edges = 0;
+        attachInterrupt(DEBUG_IN_PIN, _risingEdgeISR, RISING);
     }
 
-    void IRAM_ATTR _risingEdgeISR_prepare()
-    {
-        noInterrupts();
-        //startTime = ESP.getCycleCount();
-        __asm__ __volatile__("rsr %0,ccount"
-                            : "=a"(startTime));
-        detachInterrupt(DEBUG_IN_PIN);
-        armed = 1;
-        attachInterrupt(DEBUG_IN_PIN, _risingEdgeISR_measure, RISING);
-        interrupts();
-    }
-
-    void IRAM_ATTR _risingEdgeISR_measure()
-    {
-        noInterrupts();
-        //stopTime = ESP.getCycleCount();
-        __asm__ __volatile__("rsr %0,ccount"
-                            : "=a"(stopTime));
-        detachInterrupt(DEBUG_IN_PIN);
-        interrupts();
-    }
+    void stop() { detachInterrupt(DEBUG_IN_PIN); }   // always, also after a timeout
 }
 
 void setExternalClockGenFrequencySmooth(uint32_t freq) {
@@ -109,6 +100,7 @@ private:
     static const int32_t syncTargetPhase = Attrs::syncTargetPhase;
 
     static bool syncLockReady;
+    static float smoothedFpsInput;   // EMA of the input FPS for runFrequency(); 0 = unset
     static uint8_t delayLock;
     static int16_t syncLastCorrection;
 
@@ -134,6 +126,7 @@ private:
                 break;
             }
         }
+        MeasurePeriod::stop();
         *start = MeasurePeriod::startTime;
         *stop = MeasurePeriod::stopTime;
         ESP.wdtEnable(0);
@@ -335,6 +328,12 @@ public:
         return syncLockReady;
     }
 
+    // locked and the clock/FPS mapping known (ready() alone can be true right after a preset change)
+    static bool frequencyReady(void)
+    {
+        return syncLockReady && maybeFreqExt_per_videoFps >= 0;
+    }
+
     static int16_t getSyncLastCorrection()
     {
         return syncLastCorrection;
@@ -382,6 +381,7 @@ public:
                 break;
             }
         }
+        MeasurePeriod::stop();
         *start = MeasurePeriod::startTime;
         *stop = MeasurePeriod::stopTime;
         ESP.wdtEnable(0);
@@ -426,7 +426,7 @@ public:
             correction = syncCorrection;
 
 #ifdef FS_DEBUG
-        Serial.printf("phase: %7d target: %7d", phase, target);
+        Serial.printf_P(PSTR("phase: %7d target: %7d"), phase, target);
         if (correction == syncLastCorrection) {
             // terminate line if returning early
             Serial.println();
@@ -466,7 +466,7 @@ public:
         syncLastCorrection = correction;
 
 #ifdef FS_DEBUG
-        Serial.printf("  vtotal: %4d\n", vtotal);
+        Serial.printf_P(PSTR("  vtotal: %4d\n"), vtotal);
 #endif
 
         return true;
@@ -474,6 +474,7 @@ public:
 
     static void clearFrequency() {
         maybeFreqExt_per_videoFps = -1;
+        smoothedFpsInput = 0;
     }
 
     static void initFrequency(float outFramesPerS, uint32_t freqExtClockGen) {
@@ -495,8 +496,8 @@ public:
     static bool runFrequency()
     {
         if (maybeFreqExt_per_videoFps < 0) {
-            SerialM.printf(
-                "Error: trying to tune external clock frequency while clock frequency uninitialized!\n");
+            SerialM.printf_P(
+                PSTR("Error: trying to tune external clock frequency while clock frequency uninitialized!\n"));
             return true;
         }
 
@@ -516,8 +517,8 @@ public:
             return true;
         }
         if (GBS::PLL648_CONTROL_01::read() != 0x75) {
-            SerialM.printf(
-                "Error: trying to tune external clock frequency while set to internal clock, PLL648_CONTROL_01=%d!\n",
+            SerialM.printf_P(
+                PSTR("Error: trying to tune external clock frequency while set to internal clock, PLL648_CONTROL_01=%d!\n"),
                 GBS::PLL648_CONTROL_01::read());
             return true;
         }
@@ -552,14 +553,14 @@ public:
             // TODO make vsyncPeriodAndPhase() restore TEST_BUS_SEL, not the caller?
             GBS::TEST_BUS_SEL::write(0x0);
             if (!ret) {
-                SerialM.printf("runFrequency(): vsyncPeriodAndPhase failed, retrying...\n");
+                SerialM.printf_P(PSTR("runFrequency(): vsyncPeriodAndPhase failed, retrying...\n"));
                 continue;
             }
 
             fpsInput = esp8266_clock_freq / (float)periodInput;
             if (fpsInput < 47.0f || fpsInput > 86.0f) {
-                SerialM.printf(
-                    "runFrequency(): fpsInput wrong: %f, retrying...\n",
+                SerialM.printf_P(
+                    PSTR("runFrequency(): fpsInput wrong: %f, retrying...\n"),
                     fpsInput);
                 continue;
             }
@@ -570,13 +571,13 @@ public:
             GBS::TEST_BUS_SEL::write(0x0);
             uint32_t periodInput2 = getPulseTicks();
             if (periodInput2 == 0) {
-                SerialM.printf("runFrequency(): getPulseTicks failed, retrying...\n");
+                SerialM.printf_P(PSTR("runFrequency(): getPulseTicks failed, retrying...\n"));
                 continue;
             }
             float fpsInput2 = esp8266_clock_freq / (float)periodInput2;
             if (fpsInput2 < 47.0f || fpsInput2 > 86.0f) {
-                SerialM.printf(
-                    "runFrequency(): fpsInput2 wrong: %f, retrying...\n",
+                SerialM.printf_P(
+                    PSTR("runFrequency(): fpsInput2 wrong: %f, retrying...\n"),
                     fpsInput2);
                 continue;
             }
@@ -585,20 +586,27 @@ public:
             float diff = fabs(fpsInput2 - fpsInput);
             float relDiff = diff / std::min(fpsInput, fpsInput2);
             if (relDiff != relDiff || diff > 0.5f || relDiff > 0.00833f) {
-                SerialM.printf(
-                    "FrameSyncManager::runFrequency() measured inconsistent FPS %f and %f, retrying...\n",
+                SerialM.printf_P(
+                    PSTR("FrameSyncManager::runFrequency() measured inconsistent FPS %f and %f, retrying...\n"),
                     fpsInput,
                     fpsInput2);
                 continue;
             }
 
+            fpsInput = 0.5f * (fpsInput + fpsInput2);   // the two consistent measurements averaged (gbs-control-nx)
             success = true;
             break;
         }
         if (!success) {
-            SerialM.printf("FrameSyncManager::runFrequency() failed!\n");
+            SerialM.printf_P(PSTR("FrameSyncManager::runFrequency() failed!\n"));
             return false;
         }
+        // EMA (alpha 0.15) on the input FPS, the smoothed value drives the correction (gbs-control-nx). Measured
+        // with frame lock on (Mega Drive 240p, 86 corrections each): output FPS sd 0.5 -> 0.1 ppm, mean clock step
+        // 89 -> 13 Hz, phase error not worse (max 0.0001 frame). Reseeded by clearFrequency().
+        if (smoothedFpsInput < 47.0f) smoothedFpsInput = fpsInput;
+        smoothedFpsInput = 0.15f * fpsInput + 0.85f * smoothedFpsInput;
+        fpsInput = smoothedFpsInput;
 
         // ESP CPU cycles
         int32_t target = (syncTargetPhase * periodInput) / 360;
@@ -642,8 +650,8 @@ public:
         fpsOutput = std::max(fpsOutput, prevFpsOutput * (1 - MAX_FPS_CHANGE));
 
         if (fabs(rawFpsOutput - prevFpsOutput) >= 1.f) {
-            SerialM.printf(
-                "FPS excursion detected! Measured input FPS %f, previous output FPS %f",
+            SerialM.printf_P(
+                PSTR("FPS excursion detected! Measured input FPS %f, previous output FPS %f"),
                 fpsInput, prevFpsOutput);
         }
 
@@ -677,4 +685,7 @@ uint8_t FrameSyncManager<GBS, Attrs>::delayLock;
 
 template <class GBS, class Attrs>
 bool FrameSyncManager<GBS, Attrs>::syncLockReady;
+
+template <class GBS, class Attrs>
+float FrameSyncManager<GBS, Attrs>::smoothedFpsInput;
 #endif
