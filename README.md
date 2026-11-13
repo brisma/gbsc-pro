@@ -4,28 +4,70 @@
 
 ---
 
-Open-source firmware for the **GBSC PRO** video upscaler: retro consoles in, HDMI out, from 480p to 1200p with low
-latency. It also runs on the original gbs-control boards (GBS-8200/8220 with an ESP8266).
+<p align="center">
+    <a href="https://github.com/brisma/gbsc-pro/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/brisma/gbsc-pro?include_prereleases&label=release" /></a>
+    <a href="https://github.com/brisma/gbsc-pro/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/brisma/gbsc-pro/actions/workflows/test.yml/badge.svg" /></a>
+    <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue" /></a>
+</p>
 
-The GBSC PRO is a [gbs-control](https://github.com/ramapcsx2/gbs-control) board with an extra decoder for S-Video and
-Composite. Its firmware has two parts that are released together:
-- **GBS-Control** (ESP8266): the scaler, the TV menu, the OLED, the remote, WiFi and the web app;
-- **ADV Controller** (HC32F460 microcontroller): the ADV7280 video decoder and the ADV7391 encoder.
+Open-source firmware for the **GBSC PRO**, the [gbs-control](https://github.com/ramapcsx2/gbs-control) upscaler with an
+extra decoder for S-Video and Composite: analog consoles and computers in, HDMI out, 480p to 1200p, with low
+latency. It also runs on the original gbs-control boards (GBS-8200/8220 with an
+ESP8266).
+
+Version 3 is a rewrite on top of upstream gbs-control. It finds the connected console by itself, keeps one profile
+per console and loads it when that console comes back, has one menu for the TV, the OLED and the browser, and updates
+itself over WiFi.
 
 [Releases](https://github.com/brisma/gbsc-pro/releases) · [Changelog](CHANGELOG.md) ·
 [Discord](https://discord.com/invite/2MMWRkVRbk) ·
 [Report a problem](https://github.com/brisma/gbsc-pro/issues/new/choose)
+
+<p align="center">
+    <img alt="The web app on a PC" src="assets/screens/web-pc.png" width="75%" />
+    <img alt="The web app on a phone" src="assets/screens/web-phone.png" width="21.5%" />
+</p>
+
+## How it works
+
+Two firmwares, released together, drive the board:
+- **GBS-Control** (ESP8266): the TV5725 scaler, the TV menu, the OLED, the remote and the knob, WiFi, the web app and
+  the updates;
+- **ADV Controller** (HC32F460): the ADV7280 decoder and the ADV7391 encoder that turn S-Video and Composite into
+  Component for the scaler. GBS-Control sends it the whole state over a serial link and checks that it was applied.
+
+```mermaid
+flowchart LR
+    scart[RGB SCART] --> sync[LM1881<br/>optional sync cleanup] --> tv
+    vga[VGA] --> tv
+    comp[Component] --> tv
+    sv[S-Video] --> dec
+    cvbs[Composite] --> dec
+    dec[ADV7280<br/>decoder, line doubler] --> enc[ADV7391<br/>encoder] --> tv[TV5725<br/>scaler, deinterlacer]
+    tv --> osd[STV9426<br/>TV menu overlay] --> hdmi[MS9288A<br/>HDMI out]
+    clk[Si5351<br/>clock] -.-> tv
+    esp[ESP8266<br/>GBS-Control] -. I2C .-> tv
+    esp -. serial link .-> mcu[HC32F460<br/>ADV Controller]
+    mcu -. I2C .-> dec
+    mcu -. I2C .-> enc
+```
+
+The schematic, the Gerber files and the datasheets of every chip are in [hardware/](hardware/).
 
 ## What it does
 
 **Inputs and outputs**
 - RGB SCART (csync or composite sync), RGB SoG, Component (YPbPr), VGA, and on the GBSC PRO S-Video and Composite
   through the ADV7280 decoder.
-- **Automatic input**: with Source on Auto (the default) the GBSC finds the connected source by itself, tells an RGB
-  SCART cable from a composite-only one before the first picture, and follows a console swap on the same cable.
+- **Automatic input**: with Source on Auto (the default) the GBSC scans its inputs, tells an RGB SCART cable from a
+  composite-only one before the first picture, and follows a console swap on the same cable. Each input can be left
+  out of the scan.
 - Output 480p/576p, 720p, 960p, 1024p, 1080p, 1200p (experimental) or Downscale; every HD output is 4:3.
-- Motion-adaptive deinterlacing, smooth scrolling (frame lock), Always 60 Hz, line doubler (2X) for S-Video and
-  Composite.
+- Motion-adaptive deinterlacing; **Smooth scrolling** (frame lock: the output rate follows the source's, through
+  the Si5351 clock, so no frame is dropped or repeated); Always 60 Hz for PAL sources; line doubler (2X) for S-Video
+  and Composite.
+- **Sync cleanup** (the LM1881 separator) and **Adaptive Sync** (experimental: a steady picture on bright screens
+  with composite sync).
 
 **Picture**
 - Filter (Normal, Sharp, Smooth) and sharpness, scanlines (Light, Medium, Strong), brightness, contrast, saturation,
@@ -38,18 +80,78 @@ Composite. Its firmware has two parts that are released together:
 - **Quick menu** (OK with the menu closed): profile, input, resolution, filter and scanlines in one place.
 - Remote control and rotary knob; status pop-up when the signal or the profile changes; four TV themes.
 
+<p align="center">
+    <img alt="OLED: home screen" src="assets/screens/oled-home.png" width="24%" />
+    <img alt="OLED: Picture menu" src="assets/screens/oled-picture.png" width="24%" />
+    <img alt="OLED: signal info" src="assets/screens/oled-info.png" width="24%" />
+    <img alt="OLED: quick menu" src="assets/screens/oled-quick.png" width="24%" />
+</p>
+
+<p align="center">
+    <img alt="TV menu: main menu" src="assets/screens/osd-menu.png" width="48%" />
+    <img alt="TV menu: Picture" src="assets/screens/osd-picture.png" width="48%" />
+    <img alt="TV menu: quick menu" src="assets/screens/osd-quick.png" width="48%" />
+    <img alt="TV menu: keyboard for a profile name" src="assets/screens/osd-keyboard.png" width="48%" />
+</p>
+
 **Profiles**
-- Up to 36 named profiles with a region (NTSC-U, NTSC-J, PAL, PAL60), each remembering its signal: the right profile
-  loads by itself when that console comes back.
+- Up to 36 named profiles with a region (NTSC-U, NTSC-J, PAL, PAL60). A profile holds the picture settings and the
+  scaler registers of each signal mode it was used with.
+- **Auto-load**: a profile remembers the fingerprint of its signal (input, mode, line count and line rate, matched
+  within 300 ppm), so a Mega Drive and a SNES on the same cable each get their own. Two consoles with the same timing
+  cannot be told apart (known limits, in the [changelog](CHANGELOG.md)).
+- One text file per profile: export, import, and all of them in the backup.
 
 **Web app** (phone, tablet, PC: open `http://gbscontrol.local`)
 - The same settings as the TV menu, profiles (export and import), status with the signal history and a console log,
   WiFi, updates, backup and restore, and a remote that drives the TV menu.
+- One self-contained page of about 125 KB served by the ESP8266; nothing is loaded from the internet.
+
+**WiFi**
+- The scaler's memory clock disturbs the 2.4 GHz radio: **Optimize WiFi** measures it at power-on and picks the
+  clock that disturbs it least.
+- Requests are queued and admitted by free memory, so several browsers or fast clicking do not crash the ESP8266.
 
 **Updates**
 - Over the air from the TV menu, the OLED or the web app, on the **Stable** or **Beta** channel (see below).
 - The ADV Controller is updated by GBS-Control through the internal link: no USB cable after the first install.
-- Safe mode after repeated crashes keeps WiFi, update and backup available.
+- Safe mode after three crash resets in a row keeps WiFi, update and backup available.
+
+## For tinkerers
+
+**HTTP API.** Everything the web app does goes through `/api/*`, and you can use it too. Reads are plain GETs; a POST
+is form-encoded and needs the header `X-GBSC: 1`. An option is set by its name or its number.
+
+```sh
+curl http://gbscontrol.local/api/info                  # versions, board, signal, WiFi, the last crash
+curl http://gbscontrol.local/api/settings              # every setting, key = value
+curl http://gbscontrol.local/api/schema                # types, ranges and option names of every setting
+curl -H "X-GBSC: 1" -d "input.source=S-Video" http://gbscontrol.local/api/settings
+curl -H "X-GBSC: 1" -X POST http://gbscontrol.local/api/actions/system.restart
+curl -o backup.txt http://gbscontrol.local/api/system/backup
+```
+
+Changes are pushed to every open page over a WebSocket on port 81. The other routes (profiles, WiFi, log, update) are
+one table in [`api-route-match.h`](gbs-control/pro/api/api-route-match.h).
+
+**Developer mode** (System > Developer menu in Advanced mode; "Dev" in the web app):
+- every TV5725 register by field name, with live values;
+- the ADV7280 and ADV7391 register maps with their options, plus presets and macros stored on the device as YAML;
+- sync, clock and debug pages, and the console log with the device's decisions;
+- after a crash, `/api/info` holds the exception address and the stack addresses for `addr2line`.
+
+**ADV Controller console.** Plugged into a computer while it runs, the ADV Controller's USB-C port is a serial
+console: register access, link and update status, a log. See [adv-controller](adv-controller/README.md).
+
+**Settings are text.** The backup is one readable file: `key=value` settings, one section per profile, the ADV
+presets and macros.
+
+**Building it.** `python3 tools/dev.py build` builds both firmwares, natively or in the development container
+(`docker compose run --rm dev build`). The menu, the scaler logic and the link are tested on the host, with
+simulators of the OSD chip, the OLED and the whole device for the web app: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Your own update server.** A fork can publish its own builds: the files an update server must hold and how it must
+answer are in [tools/ota/README.md](tools/ota/README.md).
 
 ## Getting started
 
