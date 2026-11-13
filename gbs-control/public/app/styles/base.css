@@ -487,7 +487,7 @@ html:has(.ui.desk), html:has(.ui.desk) body, html:has(.ui.desk) #app { height: a
 .ui .val { color: var(--t1); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
 .ui .stp { display: inline-flex; align-items: center; height: var(--ctl); background: var(--b2); border-radius: 11px; padding: 3px; position: relative; text-align: center; }
 .ui .stp .a { width: 32px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--ac); } .ui .stp .a .ms { font-size: 19px; } .ui .stp .a:hover { background: var(--b3); }
-.ui .stp b { min-width: 52px; padding: 0; font-size: 14.5px; font-variant-numeric: tabular-nums; } .ui .stp .stv { height: 30px; border-radius: 9px; } .ui .stp .stv:hover { background: var(--b3); }
+.ui .stp b { min-width: 52px; padding: 0; font-size: 14.5px; font-variant-numeric: tabular-nums; } .ui .stp .stv { height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; } .ui .stp .stv:hover { background: var(--b3); }
 .ui .seg { display: inline-flex; height: var(--ctl); margin: 0; background: var(--b2); border-radius: 11px; padding: 3px; gap: 2px; }
 .ui .seg button { display: inline-flex; align-items: center; justify-content: center; padding: 0 13px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--t2); white-space: nowrap; }
 .ui .seg button:hover { color: var(--t1); } .ui .seg button.on { background: var(--ac); color: var(--acx); }

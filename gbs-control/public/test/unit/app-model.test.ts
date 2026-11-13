@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { gzipSync } from "node:zlib";
-import { nodeById, labelFor, optionsFor } from "../../app/model/menu.ts";
-import { choiceValue, choiceWrites, choiceOptions } from "../../app/model/choices.ts";
+import { menu, nodeById, labelFor, optionsFor } from "../../app/model/menu.ts";
+import { choiceValue, choiceWrites, choiceOptions, choiceSegments } from "../../app/model/choices.ts";
 import { scanlineDarkness, scanlineOptions, scanlineValue, scanlineWrites } from "../../app/model/scanlines.ts";
 import { balance } from "../../app/model/columns.ts";
 import { compareVersions, readImageVersion } from "../../app/model/version.ts";
@@ -40,6 +40,16 @@ test("filter choice reads and writes both settings", () => {
   assert.equal(choiceValue("filter", { "picture.sharpness": 31, "picture.line_filter": 1 }), 1);
   assert.equal(choiceValue("filter", { "picture.sharpness": 31, "picture.line_filter": 0 }), -1);   // Custom: line filter off
   assert.deepEqual(choiceWrites("filter", 2), [["picture.sharpness", 0], ["picture.line_filter", 1]]);
+});
+
+test("a choice whose settings match no option shows Custom, selected", () => {
+  const c = { mode: "easy" as const, caps: 0x3f };
+  const sharp = choiceSegments("filter", { "picture.sharpness": 31, "picture.line_filter": 1 }, c);
+  assert.deepEqual(sharp.filter((o) => o.on).map((o) => o.label), [menu.choices.filter[1].label]);
+  assert.ok(!sharp.some((o) => o.label === "Custom"));
+  const custom = choiceSegments("filter", { "picture.sharpness": 21, "picture.line_filter": 1 }, c);   // Sharpness moved by hand
+  assert.deepEqual(custom.map((o) => o.label), [...menu.choices.filter.filter((o) => !o.flags.includes("alias")).map((o) => o.label), "Custom"]);
+  assert.deepEqual(custom.filter((o) => o.on).map((o) => o.label), ["Custom"]);
 });
 
 test("resolution choice: aliases, advanced and original options", () => {

@@ -45,3 +45,13 @@ export function choiceOptions(choice: string, c: { mode: Mode; caps: number; cur
             !(o.flags.includes("original") && !(c.caps & CAP.ORIGINAL)) && !(o.flags.includes("advanced") && c.mode === "easy")))
     .map(({ o, index }) => ({ index, label: o.label }));
 }
+
+// The segments a choice row shows: its options, plus "Custom" (selected) when the settings match none of them, as
+// the TV menu names that state. Custom is where the settings are, never something to pick
+export const CUSTOM = "Custom";
+export function choiceSegments(choice: string, values: Values, c: { mode: Mode; caps: number }): { index: number; label: string; on: boolean }[] {
+  const idx = choiceValue(choice, values);
+  const out = choiceOptions(choice, { ...c, current: idx }).map((o) => ({ ...o, on: o.index === idx }));
+  if (idx < 0) out.push({ index: -1, label: CUSTOM, on: true });
+  return out;
+}

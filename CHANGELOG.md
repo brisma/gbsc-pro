@@ -11,6 +11,7 @@ refer to brisma/gbsc-pro.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
+- Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
 
 ### Source code
 - A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before

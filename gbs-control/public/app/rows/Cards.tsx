@@ -1,6 +1,6 @@
 // Look choices (Filter, Scanlines, Deinterlace, HDMI range): segments, one click each
 import { device, mode, pred } from "../store/app.ts";
-import { choiceValue, choiceWrites, choiceOptions } from "../model/choices.ts";
+import { choiceWrites, choiceSegments } from "../model/choices.ts";
 import { scanlineOptions, scanlineValue, scanlineWrites } from "../model/scanlines.ts";
 import { Frame } from "./Frame.tsx";
 import { rowNode, rowSetting } from "./resolve.ts";
@@ -16,9 +16,9 @@ function useOptions(p: RowProps): SegOpt[] {
       pick: () => { if (o.label !== cur && o.label !== "Custom") writeAll(scanlineWrites(mode.value, o.label)); } }));
   }
   if (node?.type === "choice" && node.choice) {
-    const c = node.choice, idx = choiceValue(c, values);
-    return choiceOptions(c, { mode: mode.value, caps: pred.value.caps, current: idx }).map((o) => ({ label: o.label, on: o.index === idx,
-      pick: () => { if (o.index !== idx) writeAll(choiceWrites(c, o.index)); } }));
+    const c = node.choice;
+    return choiceSegments(c, values, { mode: mode.value, caps: pred.value.caps }).map((o) => ({ label: o.label, on: o.on,
+      pick: () => { if (!o.on && o.index >= 0) writeAll(choiceWrites(c, o.index)); } }));
   }
   const key = rowSetting(p.row) ?? "";
   const cur = Number(values[key] ?? 0);
