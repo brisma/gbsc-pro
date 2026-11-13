@@ -144,7 +144,7 @@ test("macro unknown lines kept and marked", () => {
 
 test("legacy preset refused with the message", () => {
   const legacy = "name: Old\ndevices:\n  ADV7280:\n    maps:\n      default:\n        registers:\n          '0x00': '0x09'\n";
-  assert.deepEqual(parseAdvYaml(legacy), { ok: false, error: "old ADV Manager preset: open and save it in ADV Manager first" });
+  assert.deepEqual(parseAdvYaml(legacy), { ok: false, error: "old ADV Manager preset layout (no register maps): not supported" });
   assert.equal(parseAdvYaml("name: Flat\nregisters:\n  '0x00': '0x09'\n").ok, false);
   assert.equal(parseAdvYaml("description: nameless\ncommands:\n  - w 42 0A 10\n").ok, true);   // the page names it from the file
 });

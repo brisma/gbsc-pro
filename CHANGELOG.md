@@ -12,6 +12,10 @@ refer to brisma/gbsc-pro.
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
 
+### Source code
+- A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before
+  each release (it was at every push).
+
 ## 3.0.0-beta1 - 2026-11-12
 
 A rewrite of GBS-Control and the ADV Controller firmware on top of upstream gbs-control: one new menu for the TV OSD and
@@ -136,6 +140,9 @@ and slots from 2.4.x are not carried over. Read the [upgrade notes](#upgrade-not
 - Over USB it flashes the ESP8266 (with optional wipe) and the ADV Controller; over WiFi it updates both firmwares and
   backs up and restores settings and profiles.
 - Windows: allow the Firewall prompt at the first "Find on the network", or the search cannot see the GBSC.
+- ADV Manager, the PC program for the ADV7280/ADV7391 registers, is no longer in the repository: its register maps,
+  presets and macros are in the web app (Developer mode > ADV Controller), over WiFi and without the serial adapter.
+  Its last version is in the 2.4.1 tag.
 
 ### ADV Controller
 - New firmware 3.0.0 with a new link: GBS-Control sends the full state and checks that it was applied.

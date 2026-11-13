@@ -10,7 +10,7 @@ export interface MacroDoc { kind: "macro"; name: string; description?: string; c
 export type AdvDoc = PresetDoc | MacroDoc;
 export type ParseResult = { ok: true; doc: AdvDoc } | { ok: false; error: string };
 
-const LEGACY = "old ADV Manager preset: open and save it in ADV Manager first";
+const LEGACY = "old ADV Manager preset layout (no register maps): not supported";
 
 type Node = string | Node[] | Map<string, Node>;
 
