@@ -99,7 +99,7 @@ With the environment active, `python tools/dev.py doctor` tells what is still mi
 - A new menu item is a string in `pro/ui/menu-strings.h` and a node in `pro/ui/menu-tree.cpp`; the tests check that
   it fits the TV and the OLED.
 - Every change for users adds a line to the `## Unreleased` section of [CHANGELOG.md](CHANGELOG.md), in the same
-  commit.
+  commit. A release empties that section and removes its heading: put it back on top, above the newest version.
 
 ## Releases
 

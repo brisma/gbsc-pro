@@ -43,18 +43,23 @@ class SectionTest(unittest.TestCase):
 class BetaTest(unittest.TestCase):
     def test_unreleased_becomes_the_beta_section(self):
         out = changelog.beta(DOC, "3.1.0")
-        self.assertIn("## Unreleased\n\n## 3.1.0 - beta\n\n### Menus\n- A new row.\n\n## 3.0.0 - 2026-11-20", out)
+        self.assertIn("Intro.\n\n## 3.1.0 - beta\n\n### Menus\n- A new row.\n\n## 3.0.0 - 2026-11-20", out)
         self.assertEqual(changelog.section(out, "3.1.0"), "### Menus\n- A new row.")
+        self.assertNotIn("Unreleased", out)   # an empty heading on top reads as "this version is not out"
 
     def test_a_later_beta_takes_the_new_entries(self):
-        doc = changelog.beta(DOC, "3.1.0").replace("## Unreleased\n", "## Unreleased\n\n### Fixed\n- A crash.\n", 1)
+        # the next change for users puts the heading back on top, above the beta section
+        doc = changelog.beta(DOC, "3.1.0").replace("## 3.1.0 - beta\n", "## Unreleased\n\n### Fixed\n- A crash.\n\n## 3.1.0 - beta\n", 1)
         out = changelog.beta(doc, "3.1.0")
         self.assertEqual(changelog.section(out, "3.1.0"), "### Menus\n- A new row.\n\n### Fixed\n- A crash.")
-        self.assertIn("## Unreleased\n\n## 3.1.0 - beta", out)
+        self.assertIn("Intro.\n\n## 3.1.0 - beta", out)
+        self.assertNotIn("Unreleased", out)
 
     def test_nothing_to_release(self):
         with self.assertRaises(changelog.ChangelogError):
-            changelog.beta(changelog.beta(DOC, "3.1.0"), "3.2.0")   # Unreleased is empty
+            changelog.beta(changelog.beta(DOC, "3.1.0"), "3.2.0")   # no Unreleased section left
+        with self.assertRaises(changelog.ChangelogError):
+            changelog.beta(DOC.replace("### Menus\n- A new row.\n\n", ""), "3.2.0")   # an empty one
 
     def test_a_released_version_takes_no_beta(self):
         with self.assertRaises(changelog.ChangelogError):

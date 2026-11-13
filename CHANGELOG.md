@@ -5,8 +5,6 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
-## Unreleased
-
 ## 3.0.0 - beta
 
 A rewrite of GBS-Control and the ADV Controller firmware on top of upstream gbs-control: one new menu for the TV OSD and

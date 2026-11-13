@@ -3,13 +3,15 @@
 
   changelog.py section X.Y.Z          print the body of a version's section (the GitHub release notes)
   changelog.py beta X.Y.Z             "## Unreleased" becomes "## X.Y.Z - beta" (a later beta adds the new entries)
+                                      and goes away until the next change puts it back
   changelog.py stable X.Y.Z [--date YYYY-MM-DD]
                                       "## X.Y.Z - beta" becomes "## X.Y.Z - <date>" (default: today)
   changelog.py check vX.Y.Z-betaN | vX.Y.Z
                                       exits 1 with the reason when the tag has no matching section
 
-Sections: "## Unreleased" on top (every change for users adds a line there), "## X.Y.Z - beta" while that version
-is in beta, "## X.Y.Z - YYYY-MM-DD" once it is Stable.
+Sections: "## Unreleased" on top while there are changes not yet released (every change for users adds a line there,
+and the heading when it is not there), "## X.Y.Z - beta" while that version is in beta, "## X.Y.Z - YYYY-MM-DD" once
+it is Stable.
 """
 import argparse
 import datetime
@@ -57,11 +59,9 @@ def section(doc, version):
 
 def beta(doc, version):
     preamble, sections = _parse(doc)
-    if not sections or sections[0][0] != UNRELEASED:
-        raise ChangelogError(f'the first section must be "{UNRELEASED}"')
+    if not sections or sections[0][0] != UNRELEASED or not sections[0][1]:
+        raise ChangelogError(f'no "{UNRELEASED}" section with entries on top: nothing to release')
     entries = sections[0][1]
-    if not entries:
-        raise ChangelogError(f'"{UNRELEASED}" is empty: nothing to release')
     if _find(sections, version, r"\d{4}-\d{2}-\d{2}") >= 0:
         raise ChangelogError(f"{version} is already released")
     i = _find(sections, version, "beta")
@@ -69,7 +69,7 @@ def beta(doc, version):
         sections[i][1] = sections[i][1] + "\n\n" + entries
     else:
         sections.insert(1, [f"## {version} - beta", entries])
-    sections[0][1] = ""
+    del sections[0]   # no empty heading left on top: it reads as "this version is not out"
     return _join(preamble, sections)
 
 
