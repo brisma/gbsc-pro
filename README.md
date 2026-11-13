@@ -1,8 +1,6 @@
 <p align="center">
-    <img alt="GBSC PRO" src="assets/gbsc-pro%20logo.png" />
+    <img alt="GBSC PRO: open-source firmware for the GBSC and GBSC PRO upscalers" src="assets/gbsc-pro-banner.svg" width="100%" />
 </p>
-
----
 
 <p align="center">
     <a href="https://github.com/brisma/gbsc-pro/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/brisma/gbsc-pro?include_prereleases&label=release" /></a>
@@ -10,10 +8,10 @@
     <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue" /></a>
 </p>
 
-Open-source firmware for the **GBSC PRO**, the [gbs-control](https://github.com/ramapcsx2/gbs-control) upscaler with an
-extra decoder for S-Video and Composite: analog consoles and computers in, HDMI out, 480p to 1200p, with low
-latency. It also runs on the original gbs-control boards (GBS-8200/8220 with an
-ESP8266).
+Open-source firmware for the **GBSC** and the **GBSC PRO** video upscalers: analog consoles and computers in, 480p
+to 1200p out, with low latency. The GBSC is the [gbs-control](https://github.com/ramapcsx2/gbs-control) upscaler, a
+GBS-8200/8220 scaler board driven by an ESP8266; the GBSC PRO builds on it with a decoder for S-Video and Composite,
+HDMI output, a menu chip for the TV, a remote and volume control.
 
 Version 3 is a rewrite on top of upstream gbs-control. It finds the connected console by itself, keeps one profile
 per console and loads it when that console comes back, has one menu for the TV, the OLED and the browser, and updates
@@ -30,11 +28,13 @@ itself over WiFi.
 
 ## How it works
 
-Two firmwares, released together, drive the board:
-- **GBS-Control** (ESP8266): the TV5725 scaler, the TV menu, the OLED, the remote and the knob, WiFi, the web app and
-  the updates;
-- **ADV Controller** (HC32F460): the ADV7280 decoder and the ADV7391 encoder that turn S-Video and Composite into
-  Component for the scaler. GBS-Control sends it the whole state over a serial link and checks that it was applied.
+- **GBS-Control** (ESP8266) is the firmware of both boards: the TV5725 scaler, the menus, the OLED and the knob, WiFi,
+  the web app and the updates. On a GBSC it is the only one.
+- **ADV Controller** (HC32F460) is the second firmware of the GBSC PRO, released together with it: the ADV7280
+  decoder and the ADV7391 encoder that turn S-Video and Composite into Component for the scaler. GBS-Control sends it
+  the whole state over a serial link and checks that it was applied.
+
+The signal path of a GBSC PRO:
 
 ```mermaid
 flowchart LR
@@ -52,7 +52,18 @@ flowchart LR
     mcu -. I2C .-> enc
 ```
 
-The schematic, the Gerber files and the datasheets of every chip are in [hardware/](hardware/).
+A GBSC is the same path without the decoder, the encoder, the ADV Controller and the menu chip: RGB, Component and
+VGA go straight to the TV5725, which drives the VGA output.
+
+| | GBSC | GBSC PRO |
+|---|---|---|
+| Inputs | RGB SCART, RGB SoG, Component, VGA | the same, plus S-Video and Composite |
+| Menu on the TV | upstream's icon menu | the full menu |
+| Controls | web app; OLED and knob when fitted | web app, OLED, knob and remote |
+| Sound | no | volume and mute |
+| Firmware | GBS-Control | GBS-Control and ADV Controller |
+
+The schematic, the Gerber files and the datasheets of the GBSC PRO are in [hardware/](hardware/).
 
 ## What it does
 
@@ -79,6 +90,7 @@ The schematic, the Gerber files and the datasheets of every chip are in [hardwar
   for everything, and a help line for every item.
 - **Quick menu** (OK with the menu closed): profile, input, resolution, filter and scanlines in one place.
 - Remote control and rotary knob; status pop-up when the signal or the profile changes; four TV themes.
+- On a GBSC the full menu is on the OLED and in the web app; the TV shows upstream's icon menu.
 
 <p align="center">
     <img alt="OLED: home screen" src="assets/screens/oled-home.png" width="24%" />
@@ -160,7 +172,7 @@ answer are in [tools/ota/README.md](tools/ota/README.md).
 | Board | What to flash |
 |-------|---------------|
 | GBSC PRO | GBS-Control and the ADV Controller, always from the same release |
-| Original gbs-control (GBS-8200/8220 + ESP8266, optional OLED, knob and Si5351) | GBS-Control only. *Not yet tested by users: reports are welcome.* |
+| GBSC (gbs-control: GBS-8200/8220 + ESP8266, optional OLED, knob and Si5351) | GBS-Control only. *Not yet tested by users: reports are welcome.* |
 
 ### First install (USB)
 
@@ -207,8 +219,9 @@ ESP8266: 2.4.1 does not read the 3.0 settings. Take a backup first if you plan t
 ## Hardware
 
 The GBSC PRO is sold ready to use at the [official store](https://www.aliexpress.com/item/3256808268415575.html): that
-board is the one the firmware supports. Its design files (schematic, Gerber, BOM and datasheets) are open, for
-reference, in [hardware/](hardware/).
+board is the one the firmware is developed and tested on. Its design files (schematic, Gerber, BOM and datasheets) are
+open, for reference, in [hardware/](hardware/). A GBSC is built from a GBS-8200/8220 board as the
+[gbs-control wiki](https://github.com/ramapcsx2/gbs-control/wiki) describes.
 
 ![](assets/product-01.jpg)
 
