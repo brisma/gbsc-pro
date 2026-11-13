@@ -286,6 +286,7 @@ static void switchTo(uint8_t want, uint32_t now) {
 // detection runs this in place of the VSync wait those two paths ignore on the Pro
 static const uint32_t kVgaLookConfirmMs = 200, kVgaLookSettleMs = 60, kVgaLookSampleMs = 160, kVgaLookBackMs = 60;
 static const uint8_t kVgaLookRun = 6, kVgaLookNoHs = 8;         // 5 ms samples: H and V 6 in a row; no H in the first 8
+static const uint8_t kVgaLookVsEarly = 6;                       // a VS in the first samples is not a measured one
 
 bool inputAutoVgaLookDue() {
     return gBegun && platformLinkHardware() && gAuto.vgaLookWanted() && uopt->activeInputType == gAuto.want() &&
@@ -297,29 +298,31 @@ bool inputAutoLookAtVga() {
     uint32_t t0 = millis();
     uopt->activeInputType = InputTypeVGA;                        // the switches only: the TV5725 stays as it is
     bool moved = advLinkStateConfirmed(kVgaLookConfirmMs);       // never read before the switches are there
-    uint8_t n = 0, hs = 0, vs = 0, run = 0;
+    uint8_t n = 0, hs = 0, vs = 0, run = 0, vsFirst = 0;
     bool onVga = false;
     if (moved) {
         uint8_t ext = GBS::SP_EXT_SYNC_SEL::read();
         GBS::SP_EXT_SYNC_SEL::write(0);                          // the VS pin connected, only now: never the LM1881's VS
         delay(kVgaLookSettleMs);
-        // The VS detector answers some tens of ms after the HS one (a Dreamcast: V in 10 of the first 15 samples). Ends
-        // early on a run of both (a source) and on no HS at all (a SCART console: the common case costs least)
+        // The VS detector answers about 120 ms after the pin is connected (a Dreamcast: from sample 14 or later). A VS
+        // reported from the first samples is its state after the TV5725 reset, not a sync (seen 8/8 and 31/31 with a
+        // console on the SCART, right after a scan started): never a source. Ends early on a run of both (a source)
+        // and on no HS at all (a SCART console: the common case costs least)
         for (uint32_t t = millis(); millis() - t < kVgaLookSampleMs; delay(5)) {
             uint8_t st = GBS::STATUS_16::read();
             n++;
             if (st & 0x02) hs++;
-            if (st & 0x08) vs++;
+            if (st & 0x08) { vs++; if (!vsFirst) vsFirst = n; }
             run = (st & 0x0A) == 0x0A ? (uint8_t)(run + 1) : 0;
-            if (run >= kVgaLookRun) { onVga = true; break; }
+            if (run >= kVgaLookRun && vsFirst > kVgaLookVsEarly) { onVga = true; break; }
             if (n >= kVgaLookNoHs && !hs) break;
         }
         GBS::SP_EXT_SYNC_SEL::write(ext);
     }
     uopt->activeInputType = was;
     if (onVga && gAuto.syncOnVga(millis())) {
-        logPrintf(LC_SCAN, LL_INFO, PSTR("the sync on %s comes from the VGA connector (H %u/%u, V %u/%u, %lu ms): probing VGA"),
-                  inputLongName(was), hs, n, vs, n, (unsigned long)(millis() - t0));
+        logPrintf(LC_SCAN, LL_INFO, PSTR("the sync on %s comes from the VGA connector (H %u/%u, V %u/%u from sample %u, %lu ms): probing VGA"),
+                  inputLongName(was), hs, n, vs, n, vsFirst, (unsigned long)(millis() - t0));
         gJudgeMoved = true;                                      // the TV5725 detects from scratch there, as at boot
         switchTo(InputTypeVGA, millis());
         return true;
@@ -345,8 +348,9 @@ bool inputAutoLookAtVga() {
     char pin20[56] = "";
     if (m) snprintf_P(pin20, sizeof(pin20), PSTR("; VS from this path %u/%u from sample %u, cleanup %s"), sv, m, first,
                       uopt->advSyncStripper ? "on" : "off");
-    logPrintf(LC_SCAN, hs ? LL_INFO : LL_DEBUG, PSTR("look at VGA from %s: no source there (H %u/%u, V %u/%u, %lu ms%s%s%s)"),
-              inputLongName(was), hs, n, vs, n, (unsigned long)(millis() - t0), moved ? "" : ", switches not confirmed",
+    logPrintf(LC_SCAN, (hs || vs) ? LL_INFO : LL_DEBUG,
+              PSTR("look at VGA from %s: no source there (H %u/%u, V %u/%u from sample %u, %lu ms%s%s%s)"), inputLongName(was), hs, n,
+              vs, n, vsFirst, (unsigned long)(millis() - t0), moved ? "" : ", switches not confirmed",
               back ? "" : ", return not confirmed", pin20);
     return false;
 }
