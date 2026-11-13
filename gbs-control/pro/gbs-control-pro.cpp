@@ -35,13 +35,13 @@ uint8_t isInfoDisplayActive = 0;
 uint16_t horizontalBlankStart = 0;
 uint16_t horizontalBlankStop = 0;
 
-// Experimental 75R sync termination (RGB SCART only): runtime only, cleared on every input change, sent to the
-// ADV Controller in the link state
-bool advSyncTermination = false;
+// The input search's own 75 ohm termination (RGB SCART only, an ADV Controller image that cannot listen): runtime
+// only, cleared on every input change, sent in the link state. The user's 75 ohm sync is the setting input.sync_75ohm
+bool advListenTermination = false;
 
-bool ADV_setSyncTermination(bool enable) {
+bool ADV_setListenTermination(bool enable) {
     if (!hwHas(CAP_ADV) || uopt->activeInputType != InputTypeRGBs) return false;
-    advSyncTermination = enable;
+    advListenTermination = enable;
     advLinkKick();
     return true;
 }
@@ -85,7 +85,7 @@ void switchInputPath(uint8_t type, bool save) {
     const InputConfig& c = kInputConfigs[type - 1];
     advLinkKick();
     uopt->activeInputType = type;
-    advSyncTermination = false;
+    advListenTermination = false;
     // The detection runs only with the sync watcher on: a profile's "Watcher Off" (dev.syncwatcher 2) left it off
     // after an input change, so the new input was never detected; that profile choice applies again after the next
     // preset load (applyProfileSyncWatcher)

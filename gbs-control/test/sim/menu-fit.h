@@ -76,7 +76,6 @@ inline void menuFitWalk(MenuFitRule& rule, const MenuNode* kids, uint8_t count, 
             case N_CHOICE: { MenuChoice c; menuChoiceRead(n.ref, c); for (uint8_t k = 0; k < c.count; k++) { MenuChoiceOpt o; menuChoiceOptRead(c, k, o); check(menuFitStr(o.label), ROWK_CYCLE); } break; }
             case N_STEPPER: check(n.ref2 ? menuFitLiveMax(n.ref2) : "-/+", ROWK_VALUE); break;
             case N_ADJUST2D: check(menuFitLiveMax(n.ref2), ROWK_ACTION); break;
-            case N_TOGGLE_FN: check("Off", ROWK_VALUE); break;
             case N_ACTION:
                 if (n.opts) break;                              // free text (clipped at runtime)
                 check(n.ref2 ? menuFitLiveMax(n.ref2) : "", ROWK_ACTION);

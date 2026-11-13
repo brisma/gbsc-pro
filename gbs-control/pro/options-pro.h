@@ -19,6 +19,7 @@
     uint8_t avVideoFormat;          /* adv.format_av */ \
     uint8_t advSyncStripper;        /* input.sync_stripper: LM1881 in the RGB SCART / RGB SoG sync path */ \
     uint8_t adaptiveSync;           /* input.adaptive_sync: the sync processor follows the source's sync pulse (sync-pulse.h) */ \
+    uint8_t sync75Ohm;              /* input.sync_75ohm: 75 ohm load on SCART pin 20 while an RGB SCART picture is shown */ \
     uint8_t osdTheme;               /* osd.theme */ \
     uint8_t osdPosition;            /* osd.position: menu, info, keyboard and update placement (9 positions) */ \
     uint8_t osdPopupPosition;       /* osd.popup_position: mute/volume pill and status pop-up */ \

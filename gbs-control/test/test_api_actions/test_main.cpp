@@ -195,7 +195,7 @@ void test_regs_actions_flagged(void) {
 
 // Menu functions the web app calls: none needs Developer mode
 void test_action_names_for_menu_functions(void) {
-    const char* names[] = {"picture.reset", "screen.reset", "adv.decoder_reset", "input.termination"};
+    const char* names[] = {"picture.reset", "screen.reset", "adv.decoder_reset"};
     for (const char* n : names) {
         ActionDef d = def(n);
         TEST_ASSERT_FALSE_MESSAGE(d.flags & ACTION_DEV, n);
@@ -206,14 +206,12 @@ void test_action_names_for_menu_functions(void) {
     TEST_ASSERT_TRUE(def("screen.reset").flags & ACTION_REGS);
     TEST_ASSERT_TRUE(def("adv.decoder_reset").flags & ACTION_CONFIRM);
     TEST_ASSERT_EQUAL_UINT8(CAP_ADV, def("adv.decoder_reset").caps);
-    TEST_ASSERT_EQUAL_UINT8(CAP_ADV, def("input.termination").caps);
-    TEST_ASSERT_TRUE(def("input.termination").flags & ACTION_PARAM_BYTES);
 }
 
-// input.termination takes exactly one byte, 0 (off) or 1 (on)
-void test_termination_param_validation(void) {
-    ActionDef d = def("input.termination");
-    uint8_t one[] = {1}, zero[] = {0}, two[] = {2}, pair[] = {1, 0};
+// dev.tv5725_read takes exactly one byte, a segment 0..5
+void test_exact_length_param_validation(void) {
+    ActionDef d = def("dev.tv5725_read");
+    uint8_t one[] = {1}, zero[] = {0}, two[] = {6}, pair[] = {1, 0};
     TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, one, 0));
     TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, pair, 2));
     TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, two, 1));
@@ -226,8 +224,8 @@ void test_termination_param_validation(void) {
 
 void test_actions_list_shows_bytes_param(void) {
     std::string out;
-    actionsListJson(false, sink, &out);
-    size_t at = out.find("\"name\":\"input.termination\"");
+    actionsListJson(true, sink, &out);                               // a Developer action
+    size_t at = out.find("\"name\":\"dev.tv5725_read\"");
     TEST_ASSERT_TRUE(at != std::string::npos);
     size_t end = out.find('}', out.find("\"params\"", at));
     std::string row = out.substr(at, end - at);
@@ -324,7 +322,7 @@ int main(int, char**) {
     RUN_TEST(test_sog_actions_not_dev);
     RUN_TEST(test_regs_actions_flagged);
     RUN_TEST(test_action_names_for_menu_functions);
-    RUN_TEST(test_termination_param_validation);
+    RUN_TEST(test_exact_length_param_validation);
     RUN_TEST(test_actions_list_shows_bytes_param);
     RUN_TEST(test_action_queue_full_is_busy);
     RUN_TEST(test_menu_key_available_without_devmode);

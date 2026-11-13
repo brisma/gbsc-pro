@@ -28,7 +28,7 @@ static uint8_t rowKind(const MenuNode& n, int slider) {
             return d.type == SettingType::Bool ? ROWK_VALUE : ROWK_CYCLE;
         }
         case N_CHOICE: return ROWK_CYCLE;
-        case N_TOGGLE_FN: case N_STEPPER: return ROWK_VALUE;
+        case N_STEPPER: return ROWK_VALUE;
         case N_LIVE: return ROWK_LIVE;
         default: return ROWK_ACTION;
     }
@@ -603,9 +603,6 @@ void MenuEngine::stepRow(const Row& r, int dir, bool repeat) {
         case N_STEPPER:
             if (!be_.run(dir < 0 ? n.ref : n.opts)) busyToast();
             return;
-        case N_TOGGLE_FN:
-            if (!repeat) be_.toggleSet(n.ref, !be_.toggleGet(n.ref));
-            return;
         case N_ACTION:
             if (!repeat && n.ref2 != LV_NONE) activate(r, K_OK);   // toggle-like actions with a readback
             return;
@@ -799,9 +796,6 @@ void MenuEngine::activate(const Row& r, uint8_t k) {
             return;
         case N_STEPPER:
             if (click) editing_ = true;
-            return;
-        case N_TOGGLE_FN:
-            stepRow(r, +1, false);
             return;
         case N_ADJUST2D:
             openAdjust(n);

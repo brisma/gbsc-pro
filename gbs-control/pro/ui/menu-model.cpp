@@ -200,7 +200,6 @@ void menuFormatValue(const MenuNode& n, MenuBackend& be, char* out, size_t len) 
             menuFormatSettingValue(n, be.value(n.ref), out, len);
             break;
         case N_CHOICE: menuFormatChoice(n.ref, menuChoiceCurrent(n.ref, be), out, len); break;
-        case N_TOGGLE_FN: copyStr(out, len, onOff(be.toggleGet(n.ref))); break;
         case N_LIVE: be.text(n.ref, out, len); menuSanitize(out); break;
         case N_ACTION:
             if (n.opts) { be.text(n.opts, out, len); menuSanitize(out); }

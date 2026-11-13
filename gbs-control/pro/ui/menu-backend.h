@@ -19,8 +19,6 @@ public:
     virtual bool run(uint8_t aid) = 0;                         // false: queue full
     virtual bool actionsIdle() = 0;                            // every queued action has run (legacy commands too)
     virtual bool fn(uint8_t menuFn) = 0;                       // FN_DECODER_RESET, FN_GEOMETRY_RESET, FN_WIFI_RESET
-    virtual bool toggleGet(uint8_t menuFn) = 0;                // FN_TERMINATION
-    virtual void toggleSet(uint8_t menuFn, bool on) = 0;
     virtual int32_t live(uint8_t lv) = 0;                      // MenuLive readbacks (raw values)
     virtual void text(uint8_t lt, char* out, size_t n) = 0;    // MenuText strings
     virtual bool setText(uint8_t lt, const char* v) = 0;       // LT_OTA_PASSWORD / LT_EXTRA_HOSTS; false: busy

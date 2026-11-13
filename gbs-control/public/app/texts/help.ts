@@ -24,7 +24,7 @@ export const HELP: Record<string, [string, string]> = {
   "input/decoder/hue": ["Hue (decoder)", "Shifts the colours of S-Video and Composite (skin tones), in the decoder before Picture. Picture has no hue."],
   "input/decoder/adaptive-contrast": ["Adaptive contrast", "The decoder changes contrast with the scene: more punch in dark scenes, less clipping in bright ones. S-Video and Composite only."],
   "output/analog-out": ["Analog out", "Signal on the analog port: RGB for PC monitors, or YPbPr for the component input of a TV."],
-  "input/75-ohm-sync": ["75 ohm sync", "Adds the 75 ohm load on the sync line for luma-sync cables. It is not stored: it resets at restart."],
+  "input/75-ohm-sync": ["75 ohm sync", "Adds the 75 ohm load on the SCART sync line, for cables that expect it. Saved with the profile; it is on while a picture from RGB SCART is shown."],
   "menu-mode": ["Menu mode", "Easy or Advanced for the menu on the TV and the OLED. It does not change this page: the switch at the top does that."],
   "system/status-pop-up": ["Status pop-up", "A small box on the TV when the input or the profile changes."],
   "system/sound/volume": ["Volume", "Volume of the audio output. The remote keys change it too."],

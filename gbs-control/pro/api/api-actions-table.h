@@ -39,7 +39,6 @@
     ACTION(pic_reset_colors,   "picture.reset_colors",     CAP_NONE, 0, ACT_USER,   'U') \
     ACTION(pic_reset,          "picture.reset",            CAP_NONE, ACTION_CONFIRM, ACT_FUNC, AF_PICTURE_RESET) \
     ACTION(scr_reset,          "screen.reset",             CAP_NONE, ACTION_CONFIRM | ACTION_REGS, ACT_FUNC, AF_SCREEN_RESET) \
-    ACTION(in_termination,     "input.termination",        CAP_ADV,  ACTION_PARAM_BYTES, ACT_FUNC, AF_TERMINATION) \
     ACTION(adv_ace_defaults,   "adv.ace_defaults",         CAP_ADV,  0, ACT_FUNC,   AF_ACE_DEFAULTS) \
     ACTION(adv_filt_defaults,  "adv.filters_defaults",     CAP_ADV,  0, ACT_FUNC,   AF_FILTERS_DEFAULTS) \
     ACTION(adv_decoder_reset,  "adv.decoder_reset",        CAP_ADV,  ACTION_CONFIRM, ACT_FUNC, AF_DECODER_RESET) \

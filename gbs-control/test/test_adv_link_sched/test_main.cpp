@@ -3,6 +3,7 @@
 #include "adv-link.h"
 #include "adv-link-sched.h"
 #include "adv-state.h"
+#include "../../pro/input/input-types.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -191,8 +192,23 @@ void test_sched_quiet_on_decoder_init(void) {
     TEST_ASSERT_TRUE(k.requestAllowed(4000));
 }
 
+// 75 ohm sync is a saved setting: it reaches the board only while an RGB SCART picture is shown, so the input
+// search identifies every new source with the termination under its own control
+void test_termination_follows_the_setting_on_an_rgb_scart_picture(void) {
+    userOptions u; memset(&u, 0, sizeof(u));
+    u.activeInputType = InputTypeRGBs; u.sync75Ohm = 1;
+    TEST_ASSERT_TRUE(advTerminationWanted(u, true, false));
+    TEST_ASSERT_FALSE(advTerminationWanted(u, false, false));   // no source yet, or the search runs
+    TEST_ASSERT_FALSE(advTerminationWanted(u, true, true));     // the cable is being identified
+    u.activeInputType = InputTypeRGsB;
+    TEST_ASSERT_FALSE(advTerminationWanted(u, true, false));    // the load sits on SCART pin 20 only
+    u.activeInputType = InputTypeRGBs; u.sync75Ohm = 0;
+    TEST_ASSERT_FALSE(advTerminationWanted(u, true, false));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_termination_follows_the_setting_on_an_rgb_scart_picture);
     RUN_TEST(test_first_tick_sends);
     RUN_TEST(test_change_coalesced_20ms);
     RUN_TEST(test_burst_sends_once_after_the_last_change);

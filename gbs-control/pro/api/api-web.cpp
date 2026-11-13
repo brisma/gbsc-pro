@@ -239,11 +239,6 @@ void actionsPost(AsyncWebServerRequest* req, uint8_t) {
         sendJson(req, 400, F("{\"ok\":0,\"errors\":{\"data\":\"invalid\"}}"));
         return;
     }
-    if (d.kind == ACT_FUNC && d.arg == AF_TERMINATION && uopt->activeInputType != InputTypeRGBs) {   // 75R sync: RGB SCART only
-        logPrintf(LC_API, LL_INFO, PSTR("termination: refused, input %u"), (unsigned)uopt->activeInputType);
-        sendJson(req, 409, F("{\"error\":\"not_rgb_scart\"}"));
-        return;
-    }
     bool canStart = !(d.kind == ACT_FUNC && d.arg == AF_ADV_CONTROLLER_UPDATE) || advLinkUpdateCanStart();
     if (!canStart || apiActionQueueFull()) { sendJson(req, 409, F("{\"error\":\"busy\"}")); return; }
     if (d.kind == ACT_FUNC && d.arg == AF_ADV_READ) {         // as dev.tv5725_read: the gen of the result comes back now
@@ -450,7 +445,7 @@ void apiInfoGet(AsyncWebServerRequest* req, uint8_t) {
         rto->extClockGenDetected ? 1u : 0u, (unsigned long)rto->freqExtClockGen, (unsigned)rto->presetID,   // RAM copies: no I2C here
         (unsigned)uopt->inputChoice, (unsigned)uopt->activeInputType, (unsigned)uopt->inputLast,   // auto input
         uopt->inputChoice ? "manual" : inputAutoSearching() ? "searching" : "found",
-        advSyncTermination ? "true" : "false");                                                   // 75R sync (RGB SCART)
+        advLinkTerminationOn() ? "true" : "false");                                               // 75 ohm sync on the board now
     const MenuSignal& ms = menuDeviceSignal();   // RAM copy, no I2C here
     InfoSignal sg = {ms.noSignal, (uint8_t)rto->videoStandardInput, ms.srcLines, ms.srcHzX10, ms.outHzX10, ms.interlaced,
                      ms.scanlinesAllowed, ms.advNtsc, ms.presetId};

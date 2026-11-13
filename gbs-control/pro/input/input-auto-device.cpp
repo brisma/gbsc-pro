@@ -329,7 +329,7 @@ static void probe(uint8_t want, uint32_t now) {
 static uint8_t gLastLevel = 0;          // the last G level read (logs)
 
 static void listenSet(bool on) {
-    if (gIdTermination) ADV_setSyncTermination(on);          // an older ADV Controller image: the termination alone
+    if (gIdTermination) ADV_setListenTermination(on);          // an older ADV Controller image: the termination alone
     else advLinkSetListen(on);
     gListenOn = on;
 }

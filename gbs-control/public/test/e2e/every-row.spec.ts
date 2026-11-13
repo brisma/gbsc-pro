@@ -99,9 +99,6 @@ for (const it of ITEMS) {
         if (strip) await el.getByRole("radiogroup", { name: "Source" }).getByRole("radio", { name: opts[0].n, exact: true }).click();
         else { await el.getByRole("button", { name: /^Source:/ }).click(); await page.getByRole("listbox", { name: "Source" }).getByRole("option", { name: new RegExp(`^${opts[0].n}`) }).click(); }
       }
-    } else if (n?.type === "toggle_fn") {
-      expected = { path: "/api/actions/input.termination", body: "data=1" };
-      await el.getByRole("switch").click();
     } else if (n?.type === "adjust2d") {
       expected = { path: `/api/actions/${menu.adjust[n.adjust!].up}`, body: "" };
       await el.getByRole("button", { name: `${label} up` }).click();   // the arrows sit in the row

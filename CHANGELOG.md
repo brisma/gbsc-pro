@@ -8,6 +8,10 @@ refer to brisma/gbsc-pro.
 ## 3.0.0-beta2
 
 ### Changed
+- Input: **75 ohm sync** is a setting saved with the profile (it switched off at every restart and input change); it
+  is applied while a picture from RGB SCART is shown. The action `input.termination` of the HTTP API is gone: write
+  the setting `input.sync_75ohm`. (#69)
+
 - Menu: Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier
   versions. (#70)
 

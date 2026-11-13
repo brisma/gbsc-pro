@@ -73,14 +73,6 @@ bool FakeBackend::fn(uint8_t menuFn) {
     return true;
 }
 
-bool FakeBackend::toggleGet(uint8_t) { return termination; }
-
-void FakeBackend::toggleSet(uint8_t menuFn, bool on) {
-    termination = on;
-    char line[24]; snprintf(line, sizeof(line), "toggle %u %u", menuFn, on ? 1 : 0);
-    log.push_back(line);
-}
-
 int32_t FakeBackend::live(uint8_t lv) { return lv < LV_COUNT ? lives[lv] : 0; }
 
 void FakeBackend::text(uint8_t lt, char* out, size_t n) {

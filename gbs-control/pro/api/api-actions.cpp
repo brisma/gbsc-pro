@@ -43,7 +43,6 @@ bool actionsAvailable(const ActionDef& d, bool devmode) {
 // Byte parameter rules: exact count when minLen == maxLen; every byte <= maxValue
 struct ParamRule { uint8_t af; uint8_t minLen; uint8_t maxLen; uint8_t maxValue; };
 static const ParamRule kParamRules[] = {
-    {AF_TERMINATION, 1, 1, 1},     // 0 off, 1 on
     {AF_TV5725_READ, 1, 1, 5},     // segment
     {AF_ADV_READ, 4, 4, 0xFF},     // dev, map, reg, count: advRegReadReqUnpack decides
     {AF_CLOCKGEN, 1, 1, 1},        // 0 Si5351 output off, 1 on

@@ -19,7 +19,7 @@ export interface RowProps { row: Row; label: string; reason: string | null; head
 
 // Menu functions the web runs as device actions (pro/api/api-actions-table.h)
 export const FN_ACTIONS: Record<string, string> = {
-  picture_reset: "picture.reset", geometry_reset: "screen.reset", decoder_reset: "adv.decoder_reset", termination: "input.termination",
+  picture_reset: "picture.reset", geometry_reset: "screen.reset", decoder_reset: "adv.decoder_reset",
 };
 
 const num = (v: unknown) => Number(v ?? 0);
@@ -49,15 +49,13 @@ export function useLive(lv: string | undefined): unknown {
 export function ToggleRow({ row, label, reason }: RowProps) {
   const node = rowNode(row);
   const key = rowSetting(row);
-  const fn = node?.type === "toggle_fn" ? node.fn : undefined;
   // a device toggle action (Developer): its /api/live readback is the state, the action flips it
   const act = node?.type === "action" && node.live ? node.action : undefined;
   const lv = useLive(act ? node!.live : undefined);
-  const on = act ? Number(lv ?? 0) > 0 : fn === "termination" ? !!device.info.value?.input?.termination : num(device.values.value[key ?? ""]) !== 0;
+  const on = act ? Number(lv ?? 0) > 0 : num(device.values.value[key ?? ""]) !== 0;
   const flip = async () => {
     if (reason) return;
     if (act) { await runAction(act); return; }
-    if (fn && FN_ACTIONS[fn]) { if (await runAction(FN_ACTIONS[fn], on ? "0" : "1")) void device.client.info(0).then((i) => { device.info.value = i; }); return; }
     if (key) await write(key, on ? 0 : 1);
   };
   return (

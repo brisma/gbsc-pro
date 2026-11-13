@@ -87,7 +87,6 @@ void menuNodeRead(const MenuNode* pgm, MenuNode& out) { memcpy_P(&out, pgm, size
 #define HEAD(label) NODE(N_HEADER, 0, label, S_NONE, 0, 0, P_NONE, 0)
 #define ADJ(label, help, index, live, flags) NODE(N_ADJUST2D, flags, label, help, index, live, P_NONE, 0)
 #define CHO(label, help, index, pred, flags) NODE(N_CHOICE, flags, label, help, index, 0, pred, 0)
-#define TOG(label, help, fnId, pred, flags) NODE(N_TOGGLE_FN, (flags) | NF_FN, label, help, fnId, 0, pred, 0)
 
 // ---- Input ----
 static const MenuNode kAdc[] SET_PROGMEM = {
@@ -151,7 +150,7 @@ static const MenuNode kInput[] SET_PROGMEM = {
     SET(S_ADAPTIVE_SYNC, H_ADAPTIVE_SYNC, input_adaptive, P_NONE, 0, 0),
     SET(S_SYNC_STRIPPER, H_SYNC_STRIPPER, input_sync_strip, P_RGB_SYNC, 0, NF_REVERT),
     SET(S_RGBHV_SCALING, H_RGBHV_SCALING, pic_rgbhv_scale, P_VGA, 0, 0),
-    TOG(S_TERMINATION, H_TERMINATION, FN_TERMINATION, P_RGBS, NF_ADVANCED),
+    SET(S_TERMINATION, H_TERMINATION, input_sync_75, P_RGBS, 0, NF_ADVANCED),
     SUBF(S_ADC, H_ADC, P_NONE, kAdc, NF_ADVANCED),
     SUBF(S_DECODER, H_DECODER, P_SVAV, kDecoder, NF_ADVANCED),
 };

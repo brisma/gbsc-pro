@@ -204,7 +204,6 @@ export class Sim {
           this.later(this.advRestartMs, () => { st.advStatus = "ok"; });
         });
         return null;
-      case "input.termination": if (parsed) st.runtime.termination = parsed[0] === 1; return null;
       case "dev.screen_snapshot": st.snapshot = Buffer.alloc(2048); return null;
       case "dev.adv_i2c": {   // triplets; an ADV7280 0x0E write selects the map of the next ones (reset to 0 after)
         let map = 0;

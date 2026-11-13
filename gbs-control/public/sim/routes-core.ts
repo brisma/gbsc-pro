@@ -58,10 +58,6 @@ export function actionsPost(sim: Sim, ctx: Ctx): void {
   const c = validateAction(sim.gen.actionsAll, st.caps, st.devmode, name, arg(ctx, "data"));
   if (c.status === 404) return sendJson(ctx, 404, { error: "unknown" });
   if (c.status === 400) return sendJson(ctx, 400, { ok: 0, errors: { data: "invalid" } });
-  if (name === "input.termination" && st.runtime.activeInput !== 1) {
-    st.log("api", "info", `termination: refused, input ${st.runtime.activeInput}`);
-    return sendJson(ctx, 409, { error: "not_rgb_scart" });
-  }
   if (sim.faults.has("queueFull")) return sendJson(ctx, 409, { error: "busy" });
   const result = sim.runAction(name, c.parsed, c.text);
   sendJson(ctx, 200, result ?? { ok: 1 });

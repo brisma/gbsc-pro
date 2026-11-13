@@ -15,6 +15,7 @@ void advLinkSignalPollFast(bool on);                   // auto input scan: poll 
 // Input search identification: the decoder listens on pin 20 while the TV5725 stays on RGB SCART
 void advLinkSetListen(bool on);                        // STATE at once on a change (RGB SCART only, adv-state.cpp)
 bool advLinkListenRequested();
+bool advLinkTerminationOn();                           // 75 ohm sync is on the board now (input.sync_75ohm on a picture)
 uint32_t advLinkSwitchSentAt();                        // millis() of the STATE that changed listen or the termination, 0 never
 bool advLinkCanListen();                               // the ADV Controller answers and reports ADV_INFO_CAP_LISTEN
 bool advLinkChecking();                                // the boot check of the ADV Controller has not ended yet

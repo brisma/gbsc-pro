@@ -40,7 +40,7 @@ static const char* const kPredNames[] = {"none", "devmode", "svav", "sv", "av", 
     "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd", "update_manual"};
 static_assert(sizeof(kPredNames) / sizeof(kPredNames[0]) == P_COUNT, "a MenuPred has no name");
 static const char* const kFnNames[] = {"none", "open_info", "decoder_reset", "geometry_reset", "wifi_reset", "check_update",
-    "profile_save_active", "profile_load_list", "profile_manage_list", "termination", "edit_ota", "edit_hosts",
+    "profile_save_active", "profile_load_list", "profile_manage_list", "edit_ota", "edit_hosts",
     "profile_name_list", "geometry_keep", "adv_controller_skip", "geometry_undo", "picture_reset", "quick_profile",
     "tv_osd", "check_channel_stable", "check_channel_beta", "install_manual", "profile_discard"};
 static_assert(sizeof(kFnNames) / sizeof(kFnNames[0]) == FN_COUNT, "a MenuFn has no name");
@@ -53,7 +53,7 @@ static const char* const kTextNames[] = {"none", "wifi_mode", "wifi_ssid", "wifi
     "adv_controller_new", "profile_label", "profile_save", "fw_channel", "update_offer", "update_confirm",
     "manual_version", "manual_offer", "manual_confirm"};
 static_assert(sizeof(kTextNames) / sizeof(kTextNames[0]) == LT_COUNT, "a MenuText has no name");
-static const char* const kTypeNames[] = {"sub", "setting", "choice", "stepper", "action", "toggle_fn", "live", "adjust2d",
+static const char* const kTypeNames[] = {"sub", "setting", "choice", "stepper", "action", "live", "adjust2d",
                                          "header"};
 static const char* const kFlagNames[] = {"revert", "restart_note", "confirm", "fn", "commit", "percent", "advanced"};
 static const char* const kChoiceNames[] = {"filter", "scanlines", "resolution"};
@@ -339,7 +339,6 @@ static std::string nodeJson(const MenuNode& n, const std::string& id) {
             s += ",\"action\":" + q(actionName(n.ref)) + ",\"action_inc\":" + q(actionName(n.opts));
             if (n.ref2) s += ",\"live\":\"" + std::string(kLiveNames[n.ref2]) + "\"";
             break;
-        case N_TOGGLE_FN: s += ",\"fn\":\"" + std::string(kFnNames[n.ref]) + "\""; break;
         case N_LIVE: s += ",\"text\":\"" + std::string(kTextNames[n.ref]) + "\""; break;
         case N_CHOICE: s += ",\"choice\":\"" + std::string(kChoiceNames[n.ref]) + "\""; break;
         case N_ADJUST2D:
@@ -725,7 +724,7 @@ void test_actions_all_has_flags(void) {
     bool optBytes = false, dev = false;
     for (auto& e : a.a) {
         for (auto& f : e.get("flags")->a) { if (f.s == "opt_bytes") optBytes = true; if (f.s == "dev") dev = true; }
-        if (e.get("name")->s == "input.termination") TEST_ASSERT_EQUAL_STRING("bytes", e.get("params")->a[0].get("type")->s.c_str());
+        if (e.get("name")->s == "dev.tv5725_read") TEST_ASSERT_EQUAL_STRING("bytes", e.get("params")->a[0].get("type")->s.c_str());
     }
     TEST_ASSERT_TRUE(optBytes && dev);
 }

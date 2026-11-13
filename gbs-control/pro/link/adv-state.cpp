@@ -8,6 +8,10 @@ static uint8_t advLevel(uint8_t v) {
     return v <= 50 ? (uint8_t)(v * 128 / 50) : (uint8_t)(128 + (v - 50) * 126 / 50);
 }
 
+bool advTerminationWanted(const userOptions& u, bool picture, bool identifying) {
+    return u.sync75Ohm && u.activeInputType == InputTypeRGBs && picture && !identifying;
+}
+
 void advStateFromOptions(const userOptions& u, bool termination, bool listen, AdvState& s) {
     memset(&s, 0, sizeof(s));
     s.version = ADV_STATE_VERSION;

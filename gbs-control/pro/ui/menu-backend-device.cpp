@@ -175,8 +175,6 @@ bool DeviceMenuBackend::fn(uint8_t menuFn) {
     }
 }
 
-bool DeviceMenuBackend::toggleGet(uint8_t) { return advSyncTermination; }
-void DeviceMenuBackend::toggleSet(uint8_t, bool on) { ADV_setSyncTermination(on); }
 
 extern bool syncPolarityInverted;   // gbs-control.ino: serial '8' (Developer > Sync > Sync polarity)
 

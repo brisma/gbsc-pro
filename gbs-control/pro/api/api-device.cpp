@@ -285,11 +285,6 @@ static void runFunc(uint8_t id, const ActionRequest& r) {
         case AF_SCREEN_RESET:
             screenResetToPreset();
             break;
-        case AF_TERMINATION: {                                  // checked against the input by the web handler
-            bool ok = ADV_setSyncTermination(r.data[0] != 0);   // the input may have changed since
-            logPrintf(LC_API, LL_INFO, PSTR("termination: %s%s"), r.data[0] ? "on" : "off", ok ? "" : " refused (not RGB SCART)");
-            break;
-        }
         case AF_ADV_READ:                                       // dev, map, reg, count, then the gen of the handler
             advLinkRegRead(r.data[0], r.data[1], r.data[2], r.data[3], r.data[4]);
             break;

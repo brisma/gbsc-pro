@@ -69,6 +69,7 @@
     SETTING(input_auto_gain,   "input.auto_gain",       Bool, enableAutoGain,                0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_sync_strip,  "input.sync_stripper",   Bool, advSyncStripper,               1,      0, 1,      Profile, APPLY_SYNC,        nullptr,     0, CAP_ADV) \
     SETTING(input_adaptive,    "input.adaptive_sync",   Bool, adaptiveSync,                  1,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
+    SETTING(input_sync_75,     "input.sync_75ohm",      Bool, sync75Ohm,                     0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
     /* ---- Profile: picture ---- */ \
     SETTING(pic_scanlines,     "picture.scanlines",     Bool, wantScanlines,                 0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_scan_strength, "picture.scanline_strength", U8, scanlineStrength,            0x30,   0, 0x60,   Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \

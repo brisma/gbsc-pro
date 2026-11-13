@@ -35,7 +35,7 @@ export class DeviceState {
   private logSeq = 1;
   events: Event[] = [];
   private eventSeq = 1;
-  runtime = { activeInput: 1, termination: false, presetId: 0x11, noSignal: false, interlaced: false, scanlinesOk: true,
+  runtime = { activeInput: 1, presetId: 0x11, noSignal: false, interlaced: false, scanlinesOk: true,
               advNtsc: false, srcLines: 240, srcHz10: 600, outHz10: 600, std: 2, searching: false };
   // GET /api/live (api-live.cpp names): the menu readbacks; pairs as [h, v]
   live: Record<string, number | [number, number]> = { ...LIVE_DEFAULTS };
@@ -135,7 +135,6 @@ export class DeviceState {
   private afterChange(key: string, before: number, value: number): void {
     if (key === "input.source" && value >= 1 && value <= 6 && value !== before) {
       this.runtime.activeInput = value;
-      this.runtime.termination = false;
       this.event("input_changed", value, 1);
       this.log("input", "info", `manual: input ${value}`);
     }
@@ -198,7 +197,6 @@ export class DeviceState {
     this.started = Date.now();
     this.boot = 1 + Math.floor(Math.random() * 65534);
     this.logs = []; this.logSeq = 1; this.events = []; this.eventSeq = 1;
-    this.runtime.termination = false;
     this.runtime.activeInput = this.num("input.source") || this.num("input.last") || 1;
     this.upload = { state: "idle", error: null, received: 0, total: 0 };
     this.tvRegs = { state: "idle", seg: 0, gen: 0 };
@@ -233,7 +231,7 @@ export class DeviceState {
              reset: "Power On", exc: 0, epc1: "00000000", http: 1, low: this.netLow() ? 1 : 0, tcp_refused: 0, starve_max_ms: 0, starve_at: 0 },
       clockgen: { detected: 1, hz: 81000000, preset: rt.presetId },
       input: { choice, active: rt.activeInput, last: this.num("input.last"), state: choice ? "manual" : rt.searching ? "searching" : "found",
-               termination: rt.termination },
+               termination: this.num("input.sync_75ohm") === 1 && rt.activeInput === 1 && !rt.noSignal },   // on a picture only
       signal: { none: rt.noSignal ? 1 : 0, std: rt.std, lines: rt.srcLines, src_hz10: rt.srcHz10, out_hz10: rt.outHz10,
                 interlaced: rt.interlaced ? 1 : 0, scanlines_ok: rt.scanlinesOk ? 1 : 0, adv_ntsc: rt.advNtsc ? 1 : 0, preset: rt.presetId },
       crash: null,

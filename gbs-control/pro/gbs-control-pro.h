@@ -43,8 +43,8 @@ extern uint8_t isInfoDisplayActive;        // sync detection pauses while the no
 extern uint16_t horizontalBlankStart;
 extern uint16_t horizontalBlankStop;
 
-extern bool advSyncTermination;            // experimental 75R sync termination (RGB SCART, runtime only)
-bool ADV_setSyncTermination(bool enable);  // false when the input is not RGB SCART or there is no ADV Controller
+extern bool advListenTermination;          // the input search's 75 ohm termination on an ADV Controller image without listen
+bool ADV_setListenTermination(bool enable);   // false when the input is not RGB SCART or there is no ADV Controller
 
 void applySavedInputSource(void);                // setup(): the GBS side of the path in activeInputType, no link kick
 void switchInputPath(uint8_t type, bool save);   // type 1..6; save = false: no device.cfg write (auto scan)

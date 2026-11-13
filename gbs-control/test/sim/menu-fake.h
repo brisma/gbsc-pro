@@ -19,7 +19,6 @@ public:
     bool queueFull = false;
     int queueRoom = -1;                                       // >= 0: applyMany of more pairs fails (device queue)
     bool dev = false;
-    bool termination = false;
     ProfileList list;
     int active = -1;
     bool modified = false;
@@ -39,8 +38,6 @@ public:
     bool applyMany(const MenuWrite* w, uint8_t n) override;
     bool run(uint8_t aid) override;
     bool fn(uint8_t menuFn) override;
-    bool toggleGet(uint8_t menuFn) override;
-    void toggleSet(uint8_t menuFn, bool on) override;
     int32_t live(uint8_t lv) override;
     void text(uint8_t lt, char* out, size_t n) override;
     bool setText(uint8_t lt, const char* v) override;

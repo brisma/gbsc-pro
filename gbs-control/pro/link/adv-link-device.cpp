@@ -20,7 +20,8 @@
 
 extern userOptions* uopt;
 extern runTimeOptions* rto;
-extern bool advSyncTermination;
+extern bool advListenTermination;
+bool profileSignalPresent();
 #include "../log/log.h"
 #include "../input/input-auto-device.h"
 
@@ -271,6 +272,8 @@ static void updaterPass(uint32_t now) {
 }
 
 static bool gListen = false;                // the input search's listen request (RGB SCART only, adv-state.cpp)
+static bool gTermination = false;           // 75 ohm sync as the last state built has it (the setting, on a picture)
+bool advLinkTerminationOn() { return gTermination; }
 static uint32_t gSwitchSentAt = 0;          // millis() of the STATE that changed listen or the termination
 
 static void sendState(const AdvState& s) {
@@ -315,7 +318,12 @@ void advLinkLoop() {
     if (!gClient.stateBlocked()) {                       // incompatible ADV Controller: no STATE, the update is offered
         if (gClient.wantStateResend()) gSched.kickResend();
         AdvState s;
-        advStateFromOptions(*uopt, advSyncTermination, gListen, s);
+        bool term = advTerminationWanted(*uopt, profileSignalPresent(), inputAutoHoldsSyncWatcher());
+        if (term != gTermination) {
+            gTermination = term;
+            logPrintf(LC_SYNC, LL_INFO, PSTR("75 ohm sync: %s"), term ? "on (RGB SCART picture)" : "off");
+        }
+        advStateFromOptions(*uopt, term || advListenTermination, gListen, s);
         if (i2pInhibited(now)) s.i2p = 0;
         if (gSched.tick(s, now)) sendState(s);
     }

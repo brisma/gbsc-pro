@@ -2,7 +2,7 @@
 #pragma once
 #include <stdint.h>
 
-enum MenuNodeType : uint8_t { N_SUB, N_SETTING, N_CHOICE, N_STEPPER, N_ACTION, N_TOGGLE_FN, N_LIVE, N_ADJUST2D, N_HEADER };
+enum MenuNodeType : uint8_t { N_SUB, N_SETTING, N_CHOICE, N_STEPPER, N_ACTION, N_LIVE, N_ADJUST2D, N_HEADER };
 
 enum MenuNodeFlags : uint8_t {
     NF_REVERT = 1,         // revert countdown after a change
@@ -30,7 +30,7 @@ enum MenuPred : uint8_t {
 
 enum MenuFn : uint8_t {
     FN_NONE, FN_OPEN_INFO, FN_DECODER_RESET, FN_GEOMETRY_RESET, FN_WIFI_RESET, FN_CHECK_UPDATE,
-    FN_PROFILE_SAVE_ACTIVE, FN_PROFILE_LOAD_LIST, FN_PROFILE_MANAGE_LIST, FN_TERMINATION,
+    FN_PROFILE_SAVE_ACTIVE, FN_PROFILE_LOAD_LIST, FN_PROFILE_MANAGE_LIST,
     FN_EDIT_OTA, FN_EDIT_HOSTS, FN_PROFILE_NAME_LIST, FN_GEOMETRY_KEEP, FN_ADV_CONTROLLER_SKIP,
     FN_GEOMETRY_UNDO,     // adjust Back: reload the running mode's preset (no per-standard geometry settings)
     FN_PICTURE_RESET,     // every Picture page setting back to its default

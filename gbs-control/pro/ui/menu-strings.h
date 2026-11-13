@@ -316,7 +316,7 @@
     S(H_VIDEO_FORMAT, "Color system of S-Video and Composite. Auto finds it. Grey blacks on NTSC: Auto 7.5 IRE.") \
     S(H_SYNC_STRIPPER, "Cleans the RGB SCART and SoG sync with a separator chip. Off only if the picture rolls or drops.") \
     S(H_ADAPTIVE_SYNC, "Steadier picture on bright screens and video mode changes. Off is the original sync handling.") \
-    S(H_TERMINATION, "75 ohm load on the SCART sync for luma-sync cables. Resets at restart and input change.") \
+    S(H_TERMINATION, "75 ohm load on the SCART sync for cables that expect it. Saved with the profile.") \
     S(H_ADC, "How the scaler reads the input: gain/SOG level/black calibration.") \
     S(H_GAIN, "Input signal level. Too dark: raise it. Whites blown out or colors too strong: lower it.") \
     S(H_CALIBRATION, "Calibrates the input black level at every power-on. Keep it on.") \

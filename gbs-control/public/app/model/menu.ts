@@ -6,7 +6,7 @@ import { indexRegistry, type Registry, type RegOption } from "./registry.ts";
 
 export interface MenuNode {
   id: string;
-  type: string;   // sub, setting, choice, stepper, action, toggle_fn, live, adjust2d, header
+  type: string;   // sub, setting, choice, stepper, action, live, adjust2d, header
   label: string;
   help: string;
   flags: string[];

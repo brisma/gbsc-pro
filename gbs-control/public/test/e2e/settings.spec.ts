@@ -57,7 +57,7 @@ test("Wait before search only in Advanced, 2 s by default", async ({ page, sim }
   await expect.poll(() => posts(sim, "/api/settings")).toEqual(["input.lost_wait=5"]);
 });
 
-test("75 ohm sync greyed outside RGB SCART and refused text on 409", async ({ page, sim }) => {
+test("75 ohm sync greyed outside RGB SCART", async ({ page, sim }) => {
   await sim.post("/__sim/scenario", { name: "pro-vga" });
   await open(page, "#/settings/input", "advanced");
   const r = row(page, "menu:input/75-ohm-sync");
@@ -65,19 +65,14 @@ test("75 ohm sync greyed outside RGB SCART and refused text on 409", async ({ pa
   await expect(r.locator(".why")).toHaveText("RGB SCART input only");
   await sim.post("/__sim/scenario", { name: "pro-rgbs" });
   await expect(r).not.toHaveClass(/dis/, { timeout: 5000 });
-  // the input changed under the page before its next poll: the device refuses
-  expectConsoleError(page, /409/);
-  await page.route("**/api/actions/input.termination", (rt) => rt.fulfill({ status: 409, contentType: "application/json", body: '{"error":"not_rgb_scart"}' }));
-  await r.getByRole("switch").click();
-  await expect(page.locator(".toast")).toHaveText(/RGB SCART input only/);
 });
 
-test("75 ohm sync turns on with its readback", async ({ page, sim }) => {
+test("75 ohm sync is a saved setting", async ({ page, sim }) => {
   await open(page, "#/settings/input", "advanced");
   const sw = row(page, "menu:input/75-ohm-sync").getByRole("switch");
   await expect(sw).toHaveAttribute("aria-checked", "false");
   await sw.click();
-  await expect.poll(() => posts(sim, "/api/actions/input.termination")).toEqual(["data=1"]);
+  await expect.poll(() => posts(sim, "/api/settings")).toEqual(["input.sync_75ohm=1"]);
   await expect(sw).toHaveAttribute("aria-checked", "true");
 });
 
