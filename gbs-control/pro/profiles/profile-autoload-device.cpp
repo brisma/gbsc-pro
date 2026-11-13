@@ -21,6 +21,7 @@ static bool gPending = false;
 static bool gWasOn = false;
 static uint16_t gChoiceAtArm = 0;   // profileChoiceSeq() while the latch counts the new signal
 static AutoloadNotice gNotice;      // the queued load, announced on the web and in the log once it ran
+static RateWait gRateWait;          // a pending decision whose rate could not be measured
 
 // The pop-up gate reads the scaler on its own clock: a sample the latch has not seen yet (a format change) is
 // not decided, so the pop-up does not name the old profile for the 2 s the latch counts
@@ -137,7 +138,7 @@ void profileAutoloadTick()
     s.mode = profileSourceModeOf(reg, s.input, uopt->advI2P);
     s.lines = (s.signal && !s.stageBusy) ? profileSourceLines() : 0;   // no I2C read when it is not used
     bool wasFired = gLatch.fired();
-    if (gLatch.feed(s)) gPending = true;
+    if (gLatch.feed(s)) { gPending = true; gRateWait.reset(); }
     if (wasFired && !gLatch.fired()) {   // why a decided signal is decided again (a real change, or not)
         gChoiceAtArm = profileChoiceSeq();   // the signal changed: a Load or Defaults by hand from here wins
         logPrintf(LC_PROFILE, LL_DEBUG, PSTR("auto-load: re-armed (signal %u, input %u, mode %u, lines %u, stage %u)"),
@@ -152,7 +153,7 @@ void profileAutoloadTick()
 
     // Never while a menu or an overlay is open (OSD and OLED share one engine), nor on a sample of a preset still
     // being applied or of another signal than the anchor (a stale mode could decide Defaults)
-    if (menuUiBusy() || s.stageBusy || !gLatch.decidedFor(s)) return;
+    if (menuUiBusy() || s.stageBusy || !gLatch.decidedFor(s) || gRateWait.holds(millis())) return;
     if (profileChoiceSeq() != gChoiceAtArm) {   // Load or Defaults by hand since the signal changed: that choice wins
         logPrintf(LC_PROFILE, LL_INFO, PSTR("auto-load: a profile was chosen by hand for this signal, kept"));
         gPending = false;
@@ -164,6 +165,15 @@ void profileAutoloadTick()
     uint32_t rate = signalRate(s.input, s.mode, gLatch.anchorLines(), inter, true);   // measured for this decision
     AutoloadDecision d = profileAutoloadMatch(profileList(), s.input, s.mode, gLatch.anchorLines(), inter,
                                               profileActiveIndex(), profileModifiedNow(), &cand, reg, rate);
+    if (d == AL_WAIT_RATE) {   // a sync that jumps: a guess here loaded another console's profile
+        if (!gRateWait.tries())
+            logPrintf(LC_PROFILE, LL_INFO, PSTR("auto-load: the source rate cannot be measured now, the decision waits for it"));
+        if (gRateWait.again(millis())) return;   // still pending: measured again in a few seconds
+        logPrintf(LC_PROFILE, LL_INFO, PSTR("auto-load: no source rate after %u measurements, nothing loaded"),
+                  (unsigned)RateWait::kTries);
+        gPending = false;
+        return;
+    }
     char label[PROFILE_LABEL_BUF] = "";
     if (cand >= 0) profileLabel(profileList().at((uint8_t)cand).name, profileList().at((uint8_t)cand).region, label,
                                 sizeof(label));   // "Mega Drive PAL": two profiles may share a name across regions

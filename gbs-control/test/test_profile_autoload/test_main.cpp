@@ -277,6 +277,48 @@ void test_another_console_without_a_profile_gets_defaults(void) {
     TEST_ASSERT_EQUAL_UINT8(AL_ALREADY_ACTIVE, profileAutoloadMatch(l, 1, 1, 523, false, md, false, &cand, 1, 60099));
 }
 
+// A sync that jumps re-arms the decision at a moment the rate cannot be measured. 0 fitted every profile: a Mega
+// Drive got the PlayStation's profile and, once the rate was measured, Defaults
+void test_unmeasured_rate_waits_instead_of_loading(void) {
+    ProfileList l; l.clear();
+    int ps = fp(l, "PlayStation", 525, false, 9);
+    l.at((uint8_t)ps).fpMilliHz = 59826;
+    int cand = -1;
+    TEST_ASSERT_EQUAL_UINT8(AL_WAIT_RATE, profileAutoloadMatch(l, 1, 1, 525, false, -1, false, &cand, 1, 0));
+    TEST_ASSERT_EQUAL_UINT8(AL_LOAD, profileAutoloadMatch(l, 1, 1, 525, false, -1, false, &cand, 1, 59826));   // measured: its console
+    TEST_ASSERT_EQUAL_UINT8(AL_NONE, profileAutoloadMatch(l, 1, 1, 525, false, -1, false, &cand, 1, 59923));   // a Mega Drive
+    // nothing would load: nothing to wait for
+    TEST_ASSERT_EQUAL_UINT8(AL_ALREADY_ACTIVE, profileAutoloadMatch(l, 1, 1, 525, false, ps, false, &cand, 1, 0));
+    TEST_ASSERT_EQUAL_UINT8(AL_NONE, profileAutoloadMatch(l, 1, 1, 500, false, ps, false, &cand, 1, 0));
+    // the active profile is the Mega Drive's, the PlayStation's ranks first by last use: still a wait
+    int md = fp(l, "Mega Drive", 523, false, 1);
+    l.at((uint8_t)md).fpMilliHz = 59923;
+    TEST_ASSERT_EQUAL_UINT8(AL_WAIT_RATE, profileAutoloadMatch(l, 1, 1, 525, false, md, false, &cand, 1, 0));
+    // where the rate is not judged the profile loads as before: saved without a rate, 480p, through the decoder
+    l.at((uint8_t)ps).fpMilliHz = 0;
+    TEST_ASSERT_EQUAL_UINT8(AL_LOAD, profileAutoloadMatch(l, 1, 1, 525, false, -1, false, &cand, 1, 0));
+    l.at((uint8_t)ps).fpMilliHz = 59940; l.at((uint8_t)ps).fpMode = 3;
+    TEST_ASSERT_EQUAL_UINT8(AL_LOAD, profileAutoloadMatch(l, 1, 3, 525, false, -1, false, &cand, 3, 0));
+    l.at((uint8_t)ps).fpMode = 1; l.at((uint8_t)ps).fpInput = 6;
+    TEST_ASSERT_EQUAL_UINT8(AL_LOAD, profileAutoloadMatch(l, 6, 1, 525, false, -1, false, &cand, 1, 0));
+}
+
+// The wait: a new measurement every 3 s, five in all, then the decision is dropped (nothing loads)
+void test_rate_wait_tries_then_gives_up(void) {
+    RateWait w;
+    TEST_ASSERT_FALSE(w.holds(1000));                 // the first try runs at once
+    TEST_ASSERT_TRUE(w.again(1000));                  // it failed: another follows
+    TEST_ASSERT_EQUAL_UINT8(1, w.tries());
+    TEST_ASSERT_TRUE(w.holds(1000 + RateWait::kEveryMs - 1));
+    TEST_ASSERT_FALSE(w.holds(1000 + RateWait::kEveryMs));
+    uint32_t t = 1000;
+    for (uint8_t i = 2; i < RateWait::kTries; i++) { t += RateWait::kEveryMs; TEST_ASSERT_TRUE(w.again(t)); }
+    TEST_ASSERT_FALSE(w.again(t + RateWait::kEveryMs));   // the last try failed too
+    w.reset();
+    TEST_ASSERT_EQUAL_UINT8(0, w.tries());
+    TEST_ASSERT_FALSE(w.holds(t));
+}
+
 // The web and the log said "loaded" (and "unsaved changes of X discarded") when the load was only
 // queued; a failed load drops nothing, and a web Save queued before it runs first
 void test_notice_waits_for_the_result(void) {
@@ -345,6 +387,8 @@ int main(int, char**) {
     RUN_TEST(test_matches_keep_consoles_apart_by_rate);
     RUN_TEST(test_another_console_without_a_profile_gets_defaults);
     RUN_TEST(test_no_match_gives_defaults_only_off_the_profile_input);
+    RUN_TEST(test_unmeasured_rate_waits_instead_of_loading);
+    RUN_TEST(test_rate_wait_tries_then_gives_up);
     RUN_TEST(test_notice_waits_for_the_result);
     RUN_TEST(test_notice_failed_load_discards_nothing);
     RUN_TEST(test_notice_gives_up);

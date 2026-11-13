@@ -35,6 +35,8 @@ bool profileIsInterlaced(uint8_t gbsMode, uint16_t vperiodIf);
 // known, S-Video and Composite (the decoder's line doubling hides the scan type), 480p and up
 bool profileRateFits(uint8_t input, uint8_t mode, uint16_t fpLines, bool fpInterlaced, uint32_t fpMilliHz,
                      uint16_t lines, bool interlaced, uint32_t milliHz);
+// The rate tells consoles apart on this input and mode (15 kHz, not through the decoder)
+bool profileRateJudged(uint8_t input, uint8_t mode);
 // A measured field rate in mHz; 0 outside 47..86 Hz (a reading of a signal that is settling)
 uint32_t profileRateMilliHz(float hz);
 // One rate from up to three measurements (0 = failed): the mean of two that agree within 10 mHz, else 0

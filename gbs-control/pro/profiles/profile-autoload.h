@@ -49,13 +49,15 @@ bool autoloadStageBusy(uint8_t stage);
 uint8_t profileMatches(const ProfileList& list, uint8_t input, uint8_t mode, uint16_t lines, bool interlaced,
                        uint8_t* out, uint8_t max, uint32_t milliHz = 0);
 
-enum AutoloadDecision : uint8_t { AL_NONE, AL_LOAD, AL_ALREADY_ACTIVE, AL_DEFAULTS };
+enum AutoloadDecision : uint8_t { AL_NONE, AL_LOAD, AL_ALREADY_ACTIVE, AL_DEFAULTS, AL_WAIT_RATE };
 
 // Candidates: fingerprint with the same input and mode, lines within ±4; prefer equal interlace, then the
 // highest lastused, then the lowest index. The active profile matching is never reloaded (its unsaved changes stay);
 // another one loads even over unsaved changes (profiles of two consoles are never mixed)
 // No match: AL_DEFAULTS when the signal is on another input than the active profile's (see below),
 // else AL_NONE. regMode: the register mode running (profileRegModeOf); 0xFF skips the Defaults rule
+// AL_WAIT_RATE: a profile would load, its rate tells it from another console's and the signal's rate could not be
+// measured (milliHz 0 where profileRateJudged): measure again, a guess loads the wrong console's profile
 AutoloadDecision profileAutoloadMatch(const ProfileList& list, uint8_t input, uint8_t mode, uint16_t lines,
                                       bool interlaced, int activeIndex, bool activeModified, int* candidate,
                                       uint8_t regMode = 0xFF, uint32_t milliHz = 0);
@@ -64,6 +66,20 @@ AutoloadDecision profileAutoloadMatch(const ProfileList& list, uint8_t input, ui
 // one console drop to Defaults, the VGA one loops)
 bool profileKeepsWithoutMatch(const ProfileEntry& active, uint8_t input, uint8_t mode = 0, uint16_t lines = 0,
                               bool interlaced = false, uint32_t milliHz = 0);
+
+// The decision's wait for a measurable rate: a new measurement every kEveryMs, kTries in all
+class RateWait {
+public:
+    static const uint8_t kTries = 5;
+    static const uint16_t kEveryMs = 3000;
+    void reset() { tries_ = 0; }
+    bool holds(uint32_t now) const { return tries_ && (uint32_t)(now - at_) < kEveryMs; }   // too early for the next try
+    bool again(uint32_t now) { at_ = now; return ++tries_ < kTries; }                       // a try failed: another follows?
+    uint8_t tries() const { return tries_; }
+private:
+    uint8_t tries_ = 0;
+    uint32_t at_ = 0;
+};
 
 // Auto-load's announcement (web status and log line) waits for its operation's result: "loaded" and whose unsaved
 // changes went are said once the load ran, a failed load says why and dropped nothing

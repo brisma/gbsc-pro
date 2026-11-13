@@ -96,6 +96,7 @@ AutoloadDecision profileAutoloadMatch(const ProfileList& list, uint8_t input, ui
     }
     (void)activeModified;   // another profile's match loads over unsaved changes too
     if (best == activeIndex) return AL_ALREADY_ACTIVE;
+    if (!milliHz && list.at((uint8_t)best).fpMilliHz && profileRateJudged(input, mode)) return AL_WAIT_RATE;
     return AL_LOAD;
 }
 

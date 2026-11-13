@@ -12,6 +12,8 @@ refer to brisma/gbsc-pro.
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
 - Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
+- Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
+  be measured; it measures again before it decides. (#69)
 
 ### Source code
 - A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before

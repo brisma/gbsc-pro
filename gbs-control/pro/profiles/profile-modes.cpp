@@ -79,10 +79,12 @@ static uint16_t halfLinesPerField(uint8_t mode, uint16_t vperiodIf, bool interla
     return (vperiodIf & 1) ? (uint16_t)(vperiodIf + 1) : 0;
 }
 
+bool profileRateJudged(uint8_t input, uint8_t mode) { return (mode == 1 || mode == 2) && !inputIsDecoder(input); }
+
 bool profileRateFits(uint8_t input, uint8_t mode, uint16_t fpLines, bool fpInterlaced, uint32_t fpMilliHz,
                      uint16_t lines, bool interlaced, uint32_t milliHz) {
     if (!fpMilliHz || !milliHz) return true;
-    if ((mode != 1 && mode != 2) || inputIsDecoder(input)) return true;
+    if (!profileRateJudged(input, mode)) return true;
     uint16_t a = halfLinesPerField(mode, fpLines, fpInterlaced), b = halfLinesPerField(mode, lines, interlaced);
     if (!a || !b) return true;
     uint64_t la = (uint64_t)fpMilliHz * a, lb = (uint64_t)milliHz * b;   // twice the line rate, in mHz
