@@ -1,8 +1,8 @@
 #include "menu-catalog.h"
 #include "../settings/settings-pgm.h"
 
-// Alphabetical (case-insensitive), names up to 18 characters; profileNameWithRegion shortens the base when
-// "<name> <region>" exceeds 24
+// Alphabetical (case-insensitive), names up to 18 characters: with any region they fit a label whole
+// (PROFILE_LABEL_MAX)
 static const char kCatalog[] SET_PROGMEM =
     "3DO\0Amiga\0Atari 2600\0Atari 7800\0Atari Jaguar\0Atari ST\0C64\0CD-i\0ColecoVision\0Dreamcast\0"
     "GameCube\0Genesis/Mega Drive\0Intellivision\0Master System\0Mega CD\0MSX\0N64\0Neo Geo\0NES/Famicom\0"

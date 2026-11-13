@@ -100,7 +100,7 @@ static void noticeTick() {
     bool found = gNotice.waiting() && profileOpResultFor(gNotice.seq(), res, sizeof(res));
     switch (gNotice.poll(found, res, millis())) {
         case AutoloadNotice::AN_LOADED: {
-            char msg[2 * PROFILE_NAME_BUF + 2];
+            char msg[2 * PROFILE_LABEL_BUF + 2];
             const char* old = gNotice.discarded();
             if (old[0]) snprintf(msg, sizeof(msg), "%s|%s", gNotice.label(), old);   // '|' is never in a profile name
             settingsBroadcastStatusText("status.profile_autoload", old[0] ? msg : gNotice.label());
@@ -164,12 +164,12 @@ void profileAutoloadTick()
     uint32_t rate = signalRate(s.input, s.mode, gLatch.anchorLines(), inter, true);   // measured for this decision
     AutoloadDecision d = profileAutoloadMatch(profileList(), s.input, s.mode, gLatch.anchorLines(), inter,
                                               profileActiveIndex(), profileModifiedNow(), &cand, reg, rate);
-    char label[PROFILE_NAME_BUF] = "";
+    char label[PROFILE_LABEL_BUF] = "";
     if (cand >= 0) profileLabel(profileList().at((uint8_t)cand).name, profileList().at((uint8_t)cand).region, label,
                                 sizeof(label));   // "Mega Drive PAL": two profiles may share a name across regions
     if (d == AL_DEFAULTS) snprintf(label, sizeof(label), "Defaults");   // no profile for a signal foreign to the active one
     if (d == AL_LOAD || d == AL_DEFAULTS) {
-        char old[PROFILE_NAME_BUF] = "";                                // whose unsaved changes the load drops
+        char old[PROFILE_LABEL_BUF] = "";                               // whose unsaved changes the load drops
         int a = profileActiveIndex();
         if (a >= 0 && profileModifiedNow())
             profileLabel(profileList().at((uint8_t)a).name, profileList().at((uint8_t)a).region, old, sizeof(old));

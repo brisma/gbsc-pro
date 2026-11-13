@@ -99,9 +99,28 @@ void test_name_with_region(void) {
     TEST_ASSERT_EQUAL_STRING("Saturn NTSC-J", n);
     profileNameWithRegion("Saturn", PROFILE_REGION_NONE, n, sizeof(n));
     TEST_ASSERT_EQUAL_STRING("Saturn", n);
-    profileNameWithRegion("SNES/Super Famicom Long", PROFILE_REGION_NTSC_U, n, sizeof(n));   // suffix kept, within 24
-    TEST_ASSERT_EQUAL_STRING("SNES/Super Famico NTSC-U", n);
-    TEST_ASSERT_TRUE(strlen(n) <= 24);
+}
+
+// A label holds the longest console name of the catalog (18) with the longest region whole; a longer name gives way
+void test_label_keeps_a_catalog_name_whole(void) {
+    char l[PROFILE_LABEL_BUF];
+    profileLabel("SNES/Super Famicom", PROFILE_REGION_NTSC_U, l, sizeof(l));
+    TEST_ASSERT_EQUAL_STRING("SNES/Super Famicom NTSC-U", l);
+    profileLabel("Genesis/Mega Drive", PROFILE_REGION_NTSC_J, l, sizeof(l));
+    TEST_ASSERT_EQUAL_STRING("Genesis/Mega Drive NTSC-J", l);
+    profileLabel("SNES/Super Famicom Long", PROFILE_REGION_NTSC_U, l, sizeof(l));   // the suffix is kept
+    TEST_ASSERT_EQUAL_STRING("SNES/Super Famicom NTSC-U", l);
+    TEST_ASSERT_EQUAL(PROFILE_LABEL_MAX, strlen(l));
+}
+
+// A shorter buffer still ends with the region: the name is what gets shorter
+void test_label_in_a_short_buffer_keeps_the_region(void) {
+    char n[20];
+    profileLabel("SNES/Super Famicom", PROFILE_REGION_NTSC_U, n, sizeof(n));
+    TEST_ASSERT_EQUAL_STRING("SNES/Super F NTSC-U", n);
+    char tiny[5];
+    profileLabel("Saturn", PROFILE_REGION_NTSC_J, tiny, sizeof(tiny));               // no room for the region: no overflow
+    TEST_ASSERT_TRUE(strlen(tiny) < sizeof(tiny));
 }
 
 // Display: a trailing region word is shown as the row's value, so the name drops it (old names included)
@@ -151,6 +170,8 @@ int main(int, char**) {
     RUN_TEST(test_region_names_round_trip);
     RUN_TEST(test_region_labels_and_old_aliases);
     RUN_TEST(test_name_with_region);
+    RUN_TEST(test_label_keeps_a_catalog_name_whole);
+    RUN_TEST(test_label_in_a_short_buffer_keeps_the_region);
     RUN_TEST(test_name_without_region_suffix);
     RUN_TEST(test_default_region);
     RUN_TEST(test_replace_region);

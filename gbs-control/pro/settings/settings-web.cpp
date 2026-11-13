@@ -29,7 +29,7 @@ void settingsBroadcastChange(uint8_t index) {
 }
 
 void settingsBroadcastStatusText(const char* key, const char* value) {
-    char msg[96];   // s:status.profile_autoload=<label>|<label>: 26 + 2 x 24 + 1
+    char msg[96];   // s:status.profile_autoload=<label>|<label>: 26 + 2 x 25 + 1
     snprintf(msg, sizeof(msg), "s:%s=%s", key, value);
     webSocket.broadcastTXT(msg);
 }

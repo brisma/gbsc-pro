@@ -84,7 +84,7 @@ private:
     bool on_ = false;
     uint16_t seq_ = 0;
     uint32_t at_ = 0;
-    char label_[PROFILE_NAME_BUF] = {0};
-    char discarded_[PROFILE_NAME_BUF] = {0};
+    char label_[PROFILE_LABEL_BUF] = {0};
+    char discarded_[PROFILE_LABEL_BUF] = {0};
     char result_[24] = {0};
 };

@@ -5,6 +5,8 @@
 
 static const uint8_t PROFILE_NAME_MAX = 24;
 static const uint8_t PROFILE_NAME_BUF = PROFILE_NAME_MAX + 1;   // char buffer for a name
+static const uint8_t PROFILE_LABEL_MAX = 25;                     // "<name> <REGION>": the longest console name of the
+static const uint8_t PROFILE_LABEL_BUF = PROFILE_LABEL_MAX + 1;  // catalog (18) with the longest region (6), whole
 static const uint8_t PROFILE_BASE_NONE = 0xFF;                   // profile.base_preset not set
 // Regions (profile.region, stored by name): the order is the menu's cycle order
 static const uint8_t PROFILE_REGION_NTSC_U = 0;
@@ -15,12 +17,14 @@ static const uint8_t PROFILE_REGION_NONE = 4;
 static const uint8_t PROFILE_REGION_COUNT = 5;
 const char* profileRegionName(uint8_t r);              // out of range -> "None"
 uint8_t profileRegionIndex(const char* s);              // old "NTSC"/"JP" accepted; unknown -> PROFILE_REGION_NONE
-// "<base> <REGION>" within 24 characters (the base is shortened, the suffix kept); None adds nothing
+// "<base> <REGION>" within PROFILE_LABEL_MAX characters, or the buffer when it is shorter (the base is shortened,
+// the suffix kept); None adds nothing
 void profileNameWithRegion(const char* base, uint8_t region, char* out, size_t n);
 // The name without a trailing " <its own region>" word (or that region's old name: NTSC-U "NTSC", NTSC-J "JP"),
 // for rows that show the region apart; region None or a name that is only the region: unchanged
 void profileNameWithoutRegion(const char* name, uint8_t region, char* out, size_t n);
-// What messages name (toasts, pop-up, log, web status): the name with its own region once, within 24
+// What messages name (toasts, pop-up, log, web status): the name with its own region once, within
+// PROFILE_LABEL_MAX
 void profileLabel(const char* name, uint8_t region, char* out, size_t n);
 // Region of a new profile: PAL-60 when the decoder reports PAL60 (AD_RESULT 3), PAL on a
 // 50 Hz source, else NTSC-U

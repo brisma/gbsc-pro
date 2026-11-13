@@ -88,7 +88,7 @@ void test_oled_selected_long_name_scrolls(void) {
     e.used = true; strcpy(e.name, "Super Famicom Jr Turbo X"); e.region = PROFILE_REGION_NTSC_J;
     s.r.be.active = 0;                                            // the "Active" tag leaves no room: it scrolls
     s.r.openFull(); s.clickEnter("Profiles"); s.clickEnter("Load");
-    TEST_ASSERT_TRUE(s.r.select("Super Famicom Jr NTSC-J"));
+    TEST_ASSERT_TRUE(s.r.select("Super Famicom Jr T NTSC-J"));
     std::string a = s.shot();
     s.r.wait(3500);
     std::string b = s.shot();

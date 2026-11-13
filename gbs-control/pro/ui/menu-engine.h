@@ -175,9 +175,9 @@ private:
     char confirmText_[29] = {0};          // replaces confirmQuestion() when set (a row of its own: 28 cells)
     struct SaveNew { uint8_t kind; char name[PROFILE_NAME_BUF]; uint8_t region; int8_t target; } saveNew_ = {};
     uint8_t sameChoice_ = 0;              // OV_SAME_SIGNAL: 0 Keep both, 1 Replace it, 2 Cancel
-    char discarded_[PROFILE_NAME_BUF] = {0};            // auto-load discarded this profile's changes: third line
+    char discarded_[PROFILE_LABEL_BUF] = {0};           // auto-load discarded this profile's changes: third line
     bool noticePending_ = false;                        // discarded_ not shown yet (the pop-up takes it once)
-    char loaded_[PROFILE_NAME_BUF] = {0};               // auto-load's profile: a menu opened before the pop-up
+    char loaded_[PROFILE_LABEL_BUF] = {0};              // auto-load's profile: a menu opened before the pop-up
     uint32_t loadedAt_ = 0;                             // turns the pop-up into "Loaded X"
     static const uint32_t kLoadedNameMs = 10000;        // a pop-up gate that opens later names nothing old
     bool checkUpdate_ = false;
@@ -204,7 +204,7 @@ private:
     uint32_t kbMsgAt_ = 0;
     static const uint32_t kKbMsgMs = 2000;
     // A profile operation whose result becomes a toast: matched by its sequence number
-    struct Wait { bool on; uint16_t seq; uint32_t at; char name[PROFILE_NAME_BUF]; char discarded[PROFILE_NAME_BUF]; };
+    struct Wait { bool on; uint16_t seq; uint32_t at; char name[PROFILE_LABEL_BUF]; char discarded[PROFILE_LABEL_BUF]; };
     Wait userWait_ = {}, autoWait_ = {};
     static const uint32_t kWaitGiveUpMs = 5000;
     bool waitDone(Wait& w, bool autoload);    // true when the wait ended (toast shown or queued)

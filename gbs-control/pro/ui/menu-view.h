@@ -18,8 +18,8 @@ enum : uint8_t { ROWK_VALUE, ROWK_CYCLE, ROWK_ACTION, ROWK_SUB, ROWK_HEADER, ROW
 static const uint8_t MENU_VIEW_ROWS = 7;
 
 struct MenuViewRow {
-    char label[25];                     // profile names are up to 24 (scrolled when they do not fit)
-    char value[25];                     // a profile name as value (Save row) fits whole
+    char label[26];                     // a profile with its region is up to 25 (scrolled when it does not fit)
+    char value[26];                     // a profile as value (Save row) fits whole
     uint8_t flags;                      // ROWF_*
     int8_t slider;                      // 0..20 half cells, -1 none
     uint8_t kind;                       // ROWK_*: how the renderer draws the value column
@@ -28,7 +28,7 @@ struct MenuViewRow {
 struct MenuView {
     uint8_t mode;                       // VIEW_*
     uint16_t rev;                       // bumps on every visible change
-    char title[25];                     // a profile sub-menu shows the whole name (scrolls when too long)
+    char title[26];                     // a profile sub-menu shows the whole name (scrolls when too long)
     uint8_t rowCount;                   // <= window
     uint8_t cursorRow;                  // index in rows of the selected row
     uint8_t posIndex, posCount;         // 1-based position of the cursor among the selectable rows of the level

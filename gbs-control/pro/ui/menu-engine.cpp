@@ -763,7 +763,7 @@ void MenuEngine::activate(const Row& r, uint8_t k) {
     if (r.dyn == DYN_NONE && n.type == N_ACTION && (n.flags & NF_FN) && n.ref == FN_PROFILE_SAVE_ACTIVE) {
         int a = be_.profileActive();
         if (a < 0) { openNewProfile(); return; }        // nothing to save into: create one
-        char s[12], name[PROFILE_NAME_BUF], base[21];
+        char s[12], name[PROFILE_LABEL_BUF], base[21];
         menuStrCopy(S_T_SAVE_TO, s, sizeof(s));
         profileRowLabel((int8_t)a, name, sizeof(name));
         copyStr(base, sizeof(base), name);              // 20 characters: "Save to " + name fill the question's 28 cells
@@ -1297,7 +1297,7 @@ void MenuEngine::statusPopup(uint32_t now, bool due) {
     bool notice = noticePending_ && fresh;
     noticePending_ = false;                             // shown now (pop-up or toast) or dropped: once
     if (!notice) discarded_[0] = '\0';
-    char loaded[PROFILE_NAME_BUF];
+    char loaded[PROFILE_LABEL_BUF];
     copyStr(loaded, sizeof(loaded), fresh ? loaded_ : "");
     loaded_[0] = '\0';                                  // the pop-up names the active profile itself
     if (!statusEnabled() || (!due && !notice)) { discarded_[0] = '\0'; return; }
@@ -1317,7 +1317,7 @@ void MenuEngine::statusPopup(uint32_t now, bool due) {
         rebuild();                                      // the view shows the toast now, not at its expiry
         return;
     }
-    char keep[PROFILE_NAME_BUF];
+    char keep[PROFILE_LABEL_BUF];
     copyStr(keep, sizeof(keep), discarded_);            // a replaced toast must not clear it
     if (ov_ != OV_STATUS) leaveOverlay(ov_);
     copyStr(discarded_, sizeof(discarded_), keep);
@@ -1682,7 +1682,7 @@ static void sourceText(MenuBackend& be, char* out, size_t n) {
 void MenuEngine::buildStatus(MenuView& v) {
     const MenuSignal& s = be_.signal();
     uint8_t in = menuInput(be_);
-    char res[8], label[PROFILE_NAME_BUF];
+    char res[8], label[PROFILE_LABEL_BUF];
     sourceRes(s, res, sizeof(res));
     const char* std = s.advStandard >= 0 ? menuAdvStandardName(s.advStandard) : menuRateStandard(s.srcHzX10);
     snprintf(v.lines[0], sizeof(v.lines[0]), std[0] ? "%s %s %s" : "%s %s", inputLongName(in), res, std);

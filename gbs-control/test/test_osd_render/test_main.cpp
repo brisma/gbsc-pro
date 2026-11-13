@@ -532,7 +532,7 @@ void test_profile_row_keeps_the_tag_and_scrolls_the_name(void) {
     e.used = true; strcpy(e.name, "Super Famicom Jr Turbo X"); e.region = PROFILE_REGION_NTSC_J;   // 24 chars
     s.be.active = 0;
     s.key(K_MENU); s.enter("Profiles"); s.enter("Load");
-    TEST_ASSERT_TRUE(s.select("Super Famicom Jr NTSC-J"));
+    TEST_ASSERT_TRUE(s.select("Super Famicom Jr T NTSC-J"));
     std::string row = rowText(s, "Super");
     TEST_ASSERT_TRUE(row.find("Active") != std::string::npos);
     TEST_ASSERT_TRUE(row.find("Super Famicom") != std::string::npos);
@@ -552,7 +552,7 @@ void test_profiles_save_value_and_title_scroll(void) {
     s.be.active = 0;
     s.key(K_MENU); s.enter("Profiles");
     TEST_ASSERT_TRUE(s.select("Save changes"));
-    TEST_ASSERT_EQUAL_STRING("Super Famicom Jr NTSC-J", s.e.view().rows[s.e.view().cursorRow].value);   // whole label
+    TEST_ASSERT_EQUAL_STRING("Super Famicom Jr T NTSC-J", s.e.view().rows[s.e.view().cursorRow].value);   // whole label
     std::string a = s.screen();
     s.wait(2000);                                                 // past the 1.2 s hold, inside the first pass
     TEST_ASSERT_TRUE(a != s.screen());                            // the value scrolled

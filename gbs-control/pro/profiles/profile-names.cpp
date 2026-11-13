@@ -126,7 +126,9 @@ void profileNameWithRegion(const char* base, uint8_t region, char* out, size_t n
     if (!n) return;
     if (region >= PROFILE_REGION_NONE) { snprintf(out, n, "%s", base); return; }
     const char* suffix = kRegions[region];
-    size_t room = PROFILE_NAME_MAX - 1 - strlen(suffix);          // base characters that fit before " REGION"
+    size_t cap = n - 1 < PROFILE_LABEL_MAX ? n - 1 : PROFILE_LABEL_MAX, sl = strlen(suffix);
+    if (cap < sl + 2) { snprintf(out, n, "%s", base); return; }   // no room for "x REGION": what fits of the name
+    size_t room = cap - 1 - sl;                                   // base characters that fit before " REGION"
     char b[PROFILE_NAME_MAX + 1];
     snprintf(b, sizeof(b), "%s", base);
     if (strlen(b) > room) b[room] = '\0';

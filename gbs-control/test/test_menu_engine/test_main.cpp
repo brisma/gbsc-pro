@@ -658,7 +658,7 @@ void test_profile_rows_show_the_region_once(void) {
     r.key(K_MENU); r.enter("Profiles"); r.enter("Load");
     TEST_ASSERT_EQUAL_STRING("Arcade", r.label(1).c_str());
     TEST_ASSERT_EQUAL_STRING("", r.value(1).c_str());
-    TEST_ASSERT_EQUAL_STRING("Genesis/Mega Driv NTSC-U", r.label(2).c_str());   // 24: the name gives way
+    TEST_ASSERT_EQUAL_STRING("Genesis/Mega Drive NTSC-U", r.label(2).c_str());   // the longest catalog name, whole
     TEST_ASSERT_EQUAL_STRING("", r.value(2).c_str());
     TEST_ASSERT_EQUAL_STRING("Saturn NTSC-J", r.label(3).c_str());
     TEST_ASSERT_EQUAL_STRING("Active", r.value(3).c_str());
@@ -1476,7 +1476,12 @@ void test_catalog_sorted_and_fits(void) {
     char prev[32] = "", cur[32];
     for (uint8_t i = 0; i < menuCatalogCount(); i++) {
         menuCatalogName(i, cur, sizeof(cur));
-        TEST_ASSERT_TRUE_MESSAGE(strlen(cur) + 5 <= 24, cur);
+        for (uint8_t reg = 0; reg < PROFILE_REGION_NONE; reg++) {     // with any region the label is not shortened
+            char whole[40], label[PROFILE_LABEL_BUF];
+            snprintf(whole, sizeof(whole), "%s %s", cur, profileRegionName(reg));
+            profileLabel(cur, reg, label, sizeof(label));
+            TEST_ASSERT_EQUAL_STRING(whole, label);
+        }
         for (const char* c = cur; *c; c++) TEST_ASSERT_TRUE_MESSAGE(menuCharOk(*c), cur);
         if (i) TEST_ASSERT_TRUE_MESSAGE(strcasecmp(prev, cur) < 0, cur);
         strcpy(prev, cur);
