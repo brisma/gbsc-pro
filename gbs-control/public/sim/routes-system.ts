@@ -9,7 +9,8 @@ export function backupText(sim: Sim): string {
   const keys = (scope: string) => st.gen.registry.settings
     .filter((e) => e.scope === scope && !e.secret && !e.ro && st.values.has(e.key))
     .map((e) => `${e.key}=${st.values.get(e.key)}`).join("\n");
-  let t = `# gbsc-backup 1\n[file cfg/device.cfg]\nschema=1\n${keys("device")}\n[file cfg/current.cfg]\nschema=1\n${keys("profile")}\n[profiles]\n`;
+  const active = sim.profiles.active >= 0 ? `\nprofile.active=p${String(sim.profiles.active).padStart(2, "0")}` : "";   // read-only over HTTP, but in a backup
+  let t = `# gbsc-backup 1\n[file cfg/device.cfg]\nschema=1\n${keys("device")}${active}\n[file cfg/current.cfg]\nschema=1\n${keys("profile")}\n[profiles]\n`;
   sim.profiles.slots.forEach((p, i) => { if (p) t += `[profile p${String(i).padStart(2, "0")}]\n${sim.profiles.exportText(i)}`; });
   t += advBackupText(sim);
   if (sim.faults.has("bigBackup")) t += "# padding\n".repeat(70000);   // a device full of profiles and ADV files
@@ -30,15 +31,20 @@ export function restorePost(sim: Sim, ctx: Ctx): void {
   sim.later(sim.opDelayMs, () => {
     if (!text.startsWith("# gbsc-backup 1")) { sim.state.send("s:status.restore=error:header"); return; }
     if (sim.faults.has("restoreFail")) { sim.state.send("s:status.restore=error:write"); return; }
-    let section = "";
+    let section = "", active: string | null = null;
+    const profiles = new Map<number, string>();
     for (const line of text.split("\n")) {
       if (line.startsWith("[")) { section = line; continue; }
+      const pm = /^\[profile p(\d\d)\]$/.exec(section);
+      if (pm) { profiles.set(Number(pm[1]), (profiles.get(Number(pm[1])) ?? "") + line + "\n"); continue; }
       const m = /^([a-z0-9_.]+)=(.*)$/.exec(line);
       if (!m || !section.startsWith("[file ")) continue;
+      if (m[1] === "profile.active") { active = m[2]; continue; }
       const e = sim.state.entry(m[1]);
       if (!e || e.ro || e.secret) continue;
       sim.state.values.set(m[1], e.type === "str" ? m[2] : Number(m[2]));
     }
+    if (text.includes("\n[profiles]\n")) sim.profiles.restore(profiles, active);
     advRestore(sim, text);
     sim.state.send("s:status.restore=50");
     sim.state.send("s:status.restore=ok");

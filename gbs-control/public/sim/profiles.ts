@@ -67,6 +67,30 @@ export class ProfileStore {
 
   private freeSlot(): number { return this.slots.findIndex((p) => !p); }
 
+  // A profile file (exportText) back into a profile; null without a valid name
+  private parse(text: string): Profile | null {
+    const get = (k: string) => new RegExp(`^${k.replace(".", "\\.")}=(.*)$`, "m").exec(text)?.[1];
+    const nm = sanitizeName(get("profile.name") ?? null); if (!nm) return null;
+    const settings: Record<string, number> = {};
+    for (const line of text.split("\n")) {
+      const m = /^([a-z0-9_.]+)=(\d+)$/.exec(line.trim());
+      if (m && !m[1].startsWith("profile.") && this.state.entry(m[1])?.scope === "profile") settings[m[1]] = Number(m[2]);
+    }
+    return { name: nm, region: get("profile.region") ?? "None", hasFp: !!get("profile.fp.input"), fpInput: Number(get("profile.fp.input") ?? 0),
+             fpLines: Number(get("profile.fp.lines") ?? 0), lastused: this.clock++, modes: (get("profile.modes") ?? "ntsc").split(","), settings };
+  }
+
+  // A restore with the [profiles] marker: every profile is replaced by the backup's, and the active one is the
+  // backup's own (profile.active travels with it), with nothing unsaved
+  restore(files: Map<number, string>, active: string | null): void {
+    this.slots = new Array(PROFILE_MAX).fill(null);
+    for (const [i, text] of files) if (i >= 0 && i < PROFILE_MAX) this.slots[i] = this.parse(text);
+    const a = indexOfId(active);
+    this.active = a >= 0 && this.slots[a] ? a : -1;
+    this.modified = false;
+    this.rev++;
+  }
+
   // Called after every applied setting write: a profile-scope change marks the active profile modified
   settingChanged(key: string): void {
     const e = this.state.entry(key);
@@ -117,15 +141,8 @@ export class ProfileStore {
       }
       case "import": {
         const f = this.freeSlot(); if (f < 0) return "limit";
-        const get = (k: string) => new RegExp(`^${k.replace(".", "\\.")}=(.*)$`, "m").exec(text ?? "")?.[1];
-        const nm = sanitizeName(get("profile.name") ?? null); if (!nm) return "invalid";
-        const settings: Record<string, number> = {};
-        for (const line of (text ?? "").split("\n")) {
-          const m = /^([a-z0-9_.]+)=(\d+)$/.exec(line.trim());
-          if (m && !m[1].startsWith("profile.") && st.entry(m[1])?.scope === "profile") settings[m[1]] = Number(m[2]);
-        }
-        this.slots[f] = { name: nm, region: get("profile.region") ?? "None", hasFp: !!get("profile.fp.input"), fpInput: Number(get("profile.fp.input") ?? 0),
-                          fpLines: Number(get("profile.fp.lines") ?? 0), lastused: this.clock++, modes: (get("profile.modes") ?? "ntsc").split(","), settings };
+        const p = this.parse(text ?? ""); if (!p) return "invalid";
+        this.slots[f] = p;
         break;
       }
       default: return "unknown";

@@ -214,6 +214,21 @@ test("restore asks then reports", async ({ page, sim }) => {
   await expect(section(page, "backup")).toContainText("Restored");
 });
 
+// The backup names the profile that was active: a restore brings it back, whatever was loaded since
+test("a restore brings back the backup's active profile", async ({ page, sim }) => {
+  restarts(page);
+  await sim.post("/__sim/scenario", { name: "unsaved-profile" });   // Saturn is active
+  const backup = await (await page.request.get("/api/system/backup")).text();
+  expect((await page.request.post("/api/profiles/defaults", { headers: { "X-GBSC": "1" } })).ok()).toBe(true);
+  await open(page, "backup");
+  const chip = page.getByRole("link", { name: /^Profile: / });
+  await expect(chip).toHaveAccessibleName("Profile: Defaults");
+  await chooseFile(page, /^Choose a file to restore/, "gbsc-backup.txt", Buffer.from(backup));
+  await page.getByRole("dialog", { name: "Restore this backup?" }).getByRole("button", { name: "Restore" }).click();
+  await expect(section(page, "backup")).toContainText("Restored");
+  await expect(chip).toHaveAccessibleName("Profile: Saturn · NTSC-J");
+});
+
 test("download backup saves the device's file", async ({ page }) => {
   await open(page, "backup");
   const dl = page.waitForEvent("download");
