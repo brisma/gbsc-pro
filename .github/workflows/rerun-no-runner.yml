@@ -1,0 +1,32 @@
+# GitHub cancels a job when no runner takes it within 15 minutes ("The job was not acquired by Runner of type hosted
+# even after multiple attempts": seen with the macOS images when they are short). That says nothing about the code,
+# so the run is tried again: only its failed jobs, after a wait, a limited number of times (tools/ci_rerun.py). A
+# run with a real failure, or one somebody cancelled, is left as it is.
+name: rerun without a runner
+on:
+  workflow_run:
+    workflows: ["OTA beta", "OTA stable", "flasher", "test native", "test full"]
+    types: [completed]
+permissions:
+  actions: write   # run the failed jobs again
+  checks: read     # the reason GitHub gives for a cancelled job
+  contents: read
+jobs:
+  rerun:
+    if: contains(fromJSON('["failure", "cancelled"]'), github.event.workflow_run.conclusion)
+    runs-on: ubuntu-26.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN: ${{ github.event.workflow_run.id }}
+      ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Only a missing runner?
+        id: why
+        run: python3 tools/ci_rerun.py "$RUN" --repo "$GITHUB_REPOSITORY" --attempt "$ATTEMPT"
+      - name: Wait, then run the failed jobs again
+        if: steps.why.outputs.rerun == 'true'
+        run: |
+          sleep 600
+          gh run rerun "$RUN" --repo "$GITHUB_REPOSITORY" --failed ||
+            echo "::warning::run $RUN was not run again (somebody did it meanwhile?)"

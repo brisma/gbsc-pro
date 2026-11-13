@@ -72,10 +72,32 @@ class WorkflowRobustnessTest(WorkflowTest):
     # after a cancelled macOS flasher build, on its way to a release with two flashers
     def test_publish_needs_the_flashers_and_the_tests_to_have_succeeded(self):
         job = self.load("ota-publish.yml")["jobs"]["publish"]
-        self.assertEqual(sorted(job["needs"]), ["flashers", "full-tests"])
+        self.assertEqual(sorted(job["needs"]), ["flashers", "full-tests", "native-tests"])
         for need in job["needs"]:
             self.assertIn("""contains(fromJSON('["success", "skipped"]'), needs.%s.result)""" % need, job["if"])
         self.assertNotIn("!= 'failure'", job["if"])
+
+    # Windows, macOS and Linux run their suites before a release, not at every push (a push runs the container only)
+    def test_the_native_suites_run_before_a_release(self):
+        self.assertEqual(self.load("ota-publish.yml")["jobs"]["native-tests"]["uses"], "./.github/workflows/test-native.yml")
+        systems = " ".join(self.load("test-native.yml")["jobs"]["native"]["strategy"]["matrix"]["os"])
+        for name in ("windows", "macos", "ubuntu"):
+            self.assertIn(name, systems)
+        self.assertEqual(list(self.load("test.yml")["jobs"]), ["container"])
+
+    # A job GitHub cancels because no runner came is run again by rerun-no-runner.yml: it watches, by name, every
+    # workflow a release or a flasher build starts
+    def test_the_rerun_watches_the_workflows_that_wait_for_a_mac(self):
+        import glob
+        wf = self.load("rerun-no-runner.yml")
+        watched = wf[True]["workflow_run"]["workflows"]            # YAML reads the key "on" as True
+        for name in ("OTA beta", "OTA stable", "flasher", "test native"):
+            self.assertIn(name, watched)
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".github", "workflows")
+        names = [self.load(os.path.basename(f))["name"] for f in glob.glob(os.path.join(root, "*.yml"))]
+        for name in watched:
+            self.assertIn(name, names)                              # a renamed workflow would no longer be watched
+        self.assertIn("tools/ci_rerun.py", "\n".join(str(s.get("run", "")) for s in wf["jobs"]["rerun"]["steps"]))
 
     def test_nothing_is_uploaded_without_the_three_flashers(self):
         names = [s.get("name", "") for s in self.load("ota-publish.yml")["jobs"]["publish"]["steps"]]

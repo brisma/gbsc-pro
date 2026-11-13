@@ -1,8 +1,8 @@
 # Contributing to GBSC PRO
 
 Bug reports and ideas are welcome in the [issues](https://github.com/brisma/gbsc-pro/issues) and on the
-[Discord](https://discord.com/invite/2MMWRkVRbk). Pull requests go to `main`; every pull request runs the tests on
-Windows, macOS and Linux.
+[Discord](https://discord.com/invite/2MMWRkVRbk). Pull requests go to `main`; every pull request runs the tests in
+the development container.
 
 ## Repository layout
 
@@ -81,8 +81,11 @@ With the environment active, `python tools/dev.py doctor` tells what is still mi
 ### Continuous integration
 
 - Every push to `main` and every pull request (`.github/workflows/test.yml`): every suite in the container with the
-  quick web run, and every suite but the browsers natively on Windows, macOS and Linux.
-- Before a release, the full run (every browser and device, split into four parallel jobs: `test-full.yml`).
+  quick web run.
+- Before a release, the full run (every browser and device, split into four parallel jobs: `test-full.yml`) and
+  every suite but the browsers natively on Windows, macOS and Linux (`test-native.yml`). Both can be started by hand.
+- A job GitHub cancels because no runner took it (it happens with the macOS images) is run again by itself, a few
+  times (`rerun-no-runner.yml`); a real failure is not.
 - Line endings are LF in every checkout (`.gitattributes`); a Windows clone made before that file existed needs
   `git add --renormalize .` or a fresh clone.
 

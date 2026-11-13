@@ -29,11 +29,17 @@ jobs:
     if: ${{ !inputs.rollback }}
     uses: ./.github/workflows/test-full.yml
 
+  # Every suite but the browsers natively on Windows, macOS and Linux
+  native-tests:
+    if: ${{ !inputs.rollback }}
+    uses: ./.github/workflows/test-native.yml
+
   publish:
-    needs: [flashers, full-tests]
+    needs: [flashers, full-tests, native-tests]
     # also when they were skipped (a rollback), never after one that did not succeed: a failed job, and a job
-    # GitHub cancelled because no runner came (its result is "cancelled", not "failure")
-    if: ${{ !cancelled() && contains(fromJSON('["success", "skipped"]'), needs.flashers.result) && contains(fromJSON('["success", "skipped"]'), needs.full-tests.result) }}
+    # GitHub cancelled because no runner came (its result is "cancelled", not "failure": rerun-no-runner.yml runs
+    # it again, and this job with it)
+    if: ${{ !cancelled() && contains(fromJSON('["success", "skipped"]'), needs.flashers.result) && contains(fromJSON('["success", "skipped"]'), needs.full-tests.result) && contains(fromJSON('["success", "skipped"]'), needs.native-tests.result) }}
     runs-on: ubuntu-26.04
     env:
       CHANNEL: ${{ inputs.channel }}
