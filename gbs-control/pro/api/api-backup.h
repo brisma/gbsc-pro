@@ -54,6 +54,21 @@ private:
     size_t readLen_ = 0, readPos_ = 0;
 };
 
+// A backup asked while a change is not on the files yet: the answer is "busy" until it is saved, for at most
+// kGiveUpMs (a unit that cannot save still gives its backup); a wait nobody came back for is forgotten
+class BackupGate {
+public:
+    static const uint32_t kGiveUpMs = 3000, kForgetMs = 10000;
+    bool wait(bool unsaved, uint32_t now) {   // true: answer busy
+        if (!unsaved) { on_ = false; return false; }
+        if (!on_ || (uint32_t)(now - since_) > kForgetMs) { on_ = true; since_ = now; }
+        return (uint32_t)(now - since_) < kGiveUpMs;
+    }
+private:
+    bool on_ = false;
+    uint32_t since_ = 0;
+};
+
 struct RestorePlan { bool hasProfiles; uint8_t profileCount; uint32_t profileBlocks; bool hasAdv; uint8_t advCount; uint32_t advBlocks; };
 inline bool backupTooBig(size_t total) { return total > BACKUP_MAX_BYTES; }   // a restore would refuse it
 BackupError backupValidate(SettingsFs& fs, const char* path, RestorePlan* plan);

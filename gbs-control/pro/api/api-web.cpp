@@ -514,6 +514,22 @@ void liveGet(AsyncWebServerRequest* req, uint8_t) {
 }
 
 void backupGet(AsyncWebServerRequest* req, uint8_t) {
+    // The backup is read from the files: a change or a profile operation of the last moments is written first (the
+    // main loop does it at its next pass) and the client, told the unit is busy, asks again. Not in safe mode,
+    // which saves nothing
+    if (!safeModeActive()) {
+        static BackupGate gate;
+        bool saving = settingsSaveBeforeBackup(), unsaved = saving || profileOpsPending();
+        if (gate.wait(unsaved, millis())) {
+            logPrintf(LC_API, LL_DEBUG, PSTR("backup: %s first, asked to retry"), saving ? "settings are saved" : "a profile operation runs");
+            AsyncWebServerResponse* resp = req->beginResponse(503);
+            resp->addHeader("Retry-After", "1");
+            resp->addHeader("X-GBSC-Busy", "save");
+            req->send(resp);
+            return;
+        }
+        if (unsaved) logPrintf(LC_API, LL_INFO, PSTR("backup: the last changes are still not saved, sent without them"));
+    }
     // Chunked: the body (profiles included) never sits in RAM; the filler runs in the network context
     // and only reads LittleFS. Profile ids are snapshotted now.
     std::shared_ptr<BackupStreamer> st = std::make_shared<BackupStreamer>();

@@ -107,6 +107,33 @@ void test_saver_debounce(void) {
     TEST_ASSERT_FALSE(s.dirty());
 }
 
+// A backup reads the files: what is still waiting in the window is saved at once, unless a hold keeps it back
+// (a value waiting for its confirmation is not in the backup)
+void test_saver_hurry_skips_the_window(void) {
+    SettingsSaver s;
+    TEST_ASSERT_FALSE(s.pending());
+    s.hurry();                                  // nothing to save: no effect, and nothing left for later
+    s.markDirty(SettingScope::Profile, 1000);
+    TEST_ASSERT_TRUE(s.pending());
+    TEST_ASSERT_FALSE(s.due(1001));
+    s.hurry();
+    TEST_ASSERT_TRUE(s.due(1001));
+    TEST_ASSERT_EQUAL_UINT8(0x02, s.take());
+    s.markDirty(SettingScope::Device, 2000);    // the next change waits its window again
+    TEST_ASSERT_FALSE(s.due(2001));
+}
+
+void test_saver_hurry_respects_a_hold(void) {
+    SettingsSaver s;
+    s.markDirty(SettingScope::Profile, 0);
+    s.hold(SAVER_HOLD_MENU, true);
+    TEST_ASSERT_FALSE(s.pending());             // held: the files are what a backup should carry
+    s.hurry();
+    TEST_ASSERT_FALSE(s.due(1));
+    s.hold(SAVER_HOLD_MENU, false);
+    TEST_ASSERT_TRUE(s.pending());
+}
+
 // A failed append must poison the buffer: a truncated file must never replace a good one
 void test_textbuf_failure_is_sticky(void) {
     TextBuf b; textBufInit(b, 300);
@@ -204,6 +231,8 @@ int main(int, char**) {
     RUN_TEST(test_readlines_skips_overlong_line);
     RUN_TEST(test_textbuf_grows);
     RUN_TEST(test_saver_debounce);
+    RUN_TEST(test_saver_hurry_skips_the_window);
+    RUN_TEST(test_saver_hurry_respects_a_hold);
     RUN_TEST(test_writer_commit_and_failure);
     RUN_TEST(test_read_at);
     RUN_TEST(test_atomic_write_never_removes_the_target);

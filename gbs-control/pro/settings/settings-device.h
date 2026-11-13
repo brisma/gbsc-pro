@@ -18,6 +18,9 @@ void settingsSaverPause(uint8_t reason, bool on);   // SAVER_HOLD_*: no debounce
 // spliced file). Each piece refreshes it; it lapses kBackupHoldMs after the last one (a stalled client)
 void settingsBackupStreaming(bool on);
 bool settingsBackupBusy();
+// A backup carries the files: true while a change still waits for its save, which then runs at the next pass
+// (the caller answers busy and the client asks again). A value held back for a confirmation does not count
+bool settingsSaveBeforeBackup();
 SettingsFs& settingsFs();
 void settingsApply(uint16_t mask);
 uint16_t settingsRevision();   // bumped on every change, lets the web UI detect stale data

@@ -318,6 +318,24 @@ void test_backup_adv_file_without_final_newline(void) {
     TEST_ASSERT_EQUAL_STRING("name: Second\ncommands:\n  - w 42 08 80\n", fs.files["/adv/macros/m06.yaml"].c_str());
 }
 
+// A backup asked while something is not on the files yet waits for it, but only for a while: a unit that cannot
+// save still gives its backup
+void test_backup_gate_waits_then_gives_up(void) {
+    BackupGate g;
+    TEST_ASSERT_FALSE(g.wait(false, 1000));                 // nothing unsaved: served at once
+    TEST_ASSERT_TRUE(g.wait(true, 2000));
+    TEST_ASSERT_TRUE(g.wait(true, 2000 + BackupGate::kGiveUpMs - 1));
+    TEST_ASSERT_FALSE(g.wait(true, 2000 + BackupGate::kGiveUpMs));   // still unsaved: sent as it is
+    TEST_ASSERT_FALSE(g.wait(false, 9000));
+    TEST_ASSERT_TRUE(g.wait(true, 9500));                   // a later change gets its own wait
+}
+
+void test_backup_gate_forgets_an_abandoned_wait(void) {
+    BackupGate g;
+    TEST_ASSERT_TRUE(g.wait(true, 1000));                   // the client never came back
+    TEST_ASSERT_TRUE(g.wait(true, 1000 + BackupGate::kForgetMs + 1));   // minutes later: a new wait, not "gave up"
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_streamer_output_is_independent_of_buffer_size);
@@ -337,5 +355,7 @@ int main(int, char**) {
     RUN_TEST(test_backup_adv_section_rejects_bad_yaml);
     RUN_TEST(test_oversized_backup_is_flagged);
     RUN_TEST(test_backup_adv_file_without_final_newline);
+    RUN_TEST(test_backup_gate_waits_then_gives_up);
+    RUN_TEST(test_backup_gate_forgets_an_abandoned_wait);
     return UNITY_END();
 }

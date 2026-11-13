@@ -184,6 +184,11 @@ static bool gBackupOn = false;
 static const uint32_t kBackupHoldMs = 5000;
 void settingsBackupStreaming(bool on) { gBackupOn = on; gBackupAt = millis(); }
 bool settingsBackupBusy() { return gBackupOn && millis() - gBackupAt < kBackupHoldMs; }
+bool settingsSaveBeforeBackup() {
+    if (!gSaver.pending()) return false;
+    gSaver.hurry();
+    return true;
+}
 
 void settingsLoop() {
     if (gSettingsPresetPending) {

@@ -16,9 +16,12 @@ public:
         last_ = now;
     }
     bool dirty() const { return mask_ != 0; }
-    bool due(uint32_t now) const { return mask_ && !holds_ && (uint32_t)(now - last_) >= kDelayMs; }
-    uint8_t take() { uint8_t m = mask_; mask_ = 0; return m; }
+    bool pending() const { return mask_ && !holds_; }   // a save would write something now
+    void hurry() { if (mask_) hurry_ = true; }           // the pending save runs at once, not at the end of the window
+    bool due(uint32_t now) const { return mask_ && !holds_ && (hurry_ || (uint32_t)(now - last_) >= kDelayMs); }
+    uint8_t take() { uint8_t m = mask_; mask_ = 0; hurry_ = false; return m; }
 private:
+    bool hurry_ = false;
     uint8_t mask_ = 0;
     uint8_t holds_ = 0;
     uint32_t last_ = 0;
