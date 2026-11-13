@@ -372,10 +372,10 @@ void test_sog_row_in_sampling(void) {
         FakeBackend& be = easy(in, false, true);
         be.apply(SID_sys_menu_mode, 1);
         be.settle();
-        bool sog = rows(be, "Input/Sampling").find("SOG level") != std::string::npos;
+        bool sog = rows(be, "Input/ADC calibration").find("SOG level") != std::string::npos;
         TEST_ASSERT_EQUAL_MESSAGE(in == 2 || in == 4, sog, "input");
     }
-    FakeBackend& be = easy(2, false, true);                         // Easy: the whole Sampling page is Advanced
+    FakeBackend& be = easy(2, false, true);                         // Easy: the whole ADC calibration page is Advanced
     TEST_ASSERT_EQUAL_STRING("Source, Auto search, Adaptive Sync, Sync cleanup", rows(be, "Input").c_str());
 }
 

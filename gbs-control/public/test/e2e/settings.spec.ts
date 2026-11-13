@@ -103,11 +103,11 @@ test("scanlines cards: Easy four, Advanced seven", async ({ page }) => {
 
 test("gain stepper shows the live value", async ({ page, sim }) => {
   await open(page, "#/settings/input", "advanced");
-  const g = row(page, "menu:input/sampling/gain");
+  const g = row(page, "menu:input/adc-calibration/adc-gain");
   await expect(g.locator(".stp b")).toHaveText("132");
   await sim.post("/__sim/live", { name: "adc_gain", value: 140 });
   await expect(g.locator(".stp b")).toHaveText("140", { timeout: 4000 });
-  await g.getByRole("button", { name: "Increase Gain" }).click();
+  await g.getByRole("button", { name: "Increase ADC gain" }).click();
   await expect.poll(() => posts(sim, "/api/actions/input.gain_up")).toHaveLength(1);
 });
 

@@ -31,11 +31,11 @@ const INPUT: Section = { id: "input", title: "Input", icon: "cable", hint: "The 
     { kind: "toggle", ref: m("input/75-ohm-sync"), icon: "electrical_services" },
     DECODER_NOTE,
   ] },
-  { title: "Sampling", rows: [
-    { kind: "toggle", ref: m("input/sampling/auto-gain"), icon: "brightness_auto" },
-    { kind: "stepper", ref: m("input/sampling/gain"), icon: "exposure" },
-    { kind: "stepper", ref: m("input/sampling/sog-level"), icon: "vertical_align_center" },
-    { kind: "toggle", ref: m("input/sampling/boot-calibration"), icon: "rule" },
+  { title: "ADC calibration", rows: [
+    { kind: "toggle", ref: m("input/adc-calibration/auto-gain"), icon: "brightness_auto" },
+    { kind: "stepper", ref: m("input/adc-calibration/adc-gain"), icon: "exposure" },
+    { kind: "stepper", ref: m("input/adc-calibration/sog-level"), icon: "vertical_align_center" },
+    { kind: "toggle", ref: m("input/adc-calibration/boot-calibration"), icon: "rule" },
   ] },
   { title: "Decoder", rows: [
     { kind: "stepper", ref: m("input/decoder/brightness"), icon: "brightness_6" },

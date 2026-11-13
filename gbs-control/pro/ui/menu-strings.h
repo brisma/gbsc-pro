@@ -21,7 +21,7 @@
     S(S_ADAPTIVE_SYNC, "Adaptive Sync") \
     S(S_LOST_WAIT, "Wait before search") \
     S(S_TERMINATION, "75 ohm sync") \
-    S(S_ADC, "Sampling") \
+    S(S_ADC, "ADC calibration") \
     S(S_AUTO_SEARCH, "Auto search") \
     S(S_IN_VGA, "VGA") \
     S(S_IN_RGBS, "RGB SCART") \
@@ -30,7 +30,7 @@
     S(S_IN_SV, "S-Video") \
     S(S_IN_AV, "Composite") \
     S(S_AUTO_GAIN, "Auto gain") \
-    S(S_GAIN, "Gain") \
+    S(S_GAIN, "ADC gain") \
     S(S_CALIBRATION, "Boot calibration") \
     S(S_DECODER, "Decoder") \
     S(S_BRIGHTNESS, "Brightness") \

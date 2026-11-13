@@ -11,7 +11,7 @@ import type { Group } from "../layout/types.ts";
 const GROUPS: Group[] = [
   { title: "Steppers", rows: [
     { kind: "stepper", ref: "menu:picture/brightness", icon: "wb_sunny" },
-    { kind: "stepper", ref: "menu:input/sampling/gain", icon: "tune" },
+    { kind: "stepper", ref: "menu:input/adc-calibration/adc-gain", icon: "tune" },
     { kind: "stepper", ref: "menu:developer/sync/hsync-position", icon: "straighten" },
   ] },
   { title: "Choices", rows: [

@@ -129,7 +129,7 @@ static void drainSettings() {
 
 void saveUserPrefs();
 void screenBorderMoveBy(int16_t dx, int16_t dy);   // gbs-control.ino: Screen > Border position
-void sogLevelStep(int8_t dir);                     // gbs-control.ino: Input > Sampling > SOG level, clamped 0..31
+void sogLevelStep(int8_t dir);                     // gbs-control.ino: Input > ADC calibration > SOG level, clamped 0..31
 void disableScanlines();
 
 static RingQueue<ActionRequest, 9> gActionQueue;

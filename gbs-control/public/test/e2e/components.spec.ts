@@ -45,7 +45,7 @@ test("stepper without readback shows only the arrows", async ({ page, sim }) => 
   await expect(r.locator(".stp b")).toHaveCount(0);
   await r.getByRole("button", { name: "Increase HSync position" }).click();
   await expect.poll(() => posts(sim, "/api/actions/dev.hs_right")).toHaveLength(1);
-  const gain = row(page, "menu:input/sampling/gain");   // with a readback: the live value between the arrows
+  const gain = row(page, "menu:input/adc-calibration/adc-gain");   // with a readback: the live value between the arrows
   await expect(gain.locator(".stp b")).toHaveText("132");
 });
 

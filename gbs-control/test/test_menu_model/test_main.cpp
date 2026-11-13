@@ -233,7 +233,7 @@ void test_developer_readbacks(void) {
     TEST_ASSERT_EQUAL_STRING("On", fmt(menuFind("Developer/Arduino upload"), be).c_str());
     be.apply(SID_input_source, 2); be.settle();
     be.lives[LV_SOG] = 7;
-    TEST_ASSERT_EQUAL_STRING("7", fmt(menuFind("Input/Sampling/SOG level"), be).c_str());
+    TEST_ASSERT_EQUAL_STRING("7", fmt(menuFind("Input/ADC calibration/SOG level"), be).c_str());
 }
 
 void test_step_values(void) {

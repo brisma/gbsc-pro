@@ -7,6 +7,10 @@ refer to brisma/gbsc-pro.
 
 ## 3.0.0-beta2
 
+### Changed
+- Menu: Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier
+  versions. (#70)
+
 ### Fixed
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).

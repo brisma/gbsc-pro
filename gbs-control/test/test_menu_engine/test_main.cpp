@@ -73,7 +73,7 @@ void test_menu_key_closes_everything(void) {
     MenuRig r;
     r.key(K_MENU);
     r.enter("Input");
-    r.enter("Sampling");
+    r.enter("ADC calibration");
     r.key(K_MENU);
     TEST_ASSERT_FALSE(r.e.busy());
     r.key(K_MENU);
@@ -111,17 +111,17 @@ void test_hidden_submenu_pops_to_visible_parent(void) {
     r.setInput(1);
     r.e.onSignalChange();
     TEST_ASSERT_EQUAL_STRING("Input", r.title().c_str());
-    TEST_ASSERT_EQUAL_STRING("Sampling", r.selected().c_str());
+    TEST_ASSERT_EQUAL_STRING("ADC calibration", r.selected().c_str());
 }
 
 void test_cursor_keeps_child_when_rows_change(void) {
     MenuRig r;
     r.key(K_MENU);
     r.enter("Input");
-    r.select("Sampling");
+    r.select("ADC calibration");
     r.setInput(5);                          // "Video standard" and 2X appear above
     r.e.onSignalChange();
-    TEST_ASSERT_EQUAL_STRING("Sampling", r.selected().c_str());
+    TEST_ASSERT_EQUAL_STRING("ADC calibration", r.selected().c_str());
 }
 
 void test_window_size_five(void) {
@@ -228,7 +228,7 @@ void test_choice_is_atomic(void) {
 
 void test_stepper_runs_actions(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("Input"); r.enter("Sampling"); TEST_ASSERT_TRUE(r.select("Gain"));
+    r.key(K_MENU); r.enter("Input"); r.enter("ADC calibration"); TEST_ASSERT_TRUE(r.select("ADC gain"));
     r.key(K_LEFT);
     TEST_ASSERT_EQUAL_STRING("run input.gain_down", r.lastLog().c_str());
     r.key(K_RIGHT, true);
@@ -1088,8 +1088,8 @@ void test_back_row_enters_the_right_child_at_depth_two(void) {
     r.e.setEncoderBackRow(true);
     r.openFull();
     clickEnter(r, "Input");
-    clickEnter(r, "Sampling");
-    TEST_ASSERT_EQUAL_STRING("Sampling", r.title().c_str());
+    clickEnter(r, "ADC calibration");
+    TEST_ASSERT_EQUAL_STRING("ADC calibration", r.title().c_str());
     TEST_ASSERT_EQUAL_STRING("Back", r.label(0).c_str());
     r.key(K_LONG); r.key(K_LONG); r.key(K_LONG);
     r.setInput(5);                                        // S-Video: Input > Decoder (last child) visible

@@ -17,7 +17,7 @@ export const HELP: Record<string, [string, string]> = {
   "quick/profile": ["Profile", "A profile keeps every picture setting for one console or game. With Auto-load on, the right profile loads by itself when its signal comes back."],
   "profiles/auto-load": ["Auto-load", "Loads the profile whose signal matches the one coming in (input, lines and timing). When another profile matches, unsaved changes of the one in use are discarded and a message says so; the profile already in use is never reloaded. With no profile for the signal, Defaults load when the profile in use was saved on another input."],
   "quick/tv-osd": ["TV OSD", "On the standard board there is no menu chip: small icons on the TV show what you change."],
-  "input/sampling/gain": ["Gain", "Signal level of the RGB inputs. If the picture is dark, raise it; if it looks washed out, lower it. Hold − or + to keep going."],
+  "input/adc-calibration/adc-gain": ["ADC gain", "Signal level of the RGB inputs. If the picture is dark, raise it; if it looks washed out, lower it. Hold − or + to keep going."],
   "input/decoder/brightness": ["Brightness (decoder)", "Brightness of the S-Video and Composite decoder, applied before Picture › Brightness (which acts on every input). Use one of the two."],
   "input/decoder/contrast": ["Contrast (decoder)", "Contrast of the S-Video and Composite decoder, applied before Picture › Contrast (which acts on every input)."],
   "input/decoder/saturation": ["Saturation (decoder)", "Colour of the S-Video and Composite decoder, applied before Picture › Saturation (which acts on every input)."],
