@@ -626,6 +626,92 @@ void test_decoder_rate_change_is_a_new_source(void) {
     TEST_ASSERT_FALSE(m.takeScanStarted());
 }
 
+// A detection pass on the RGB ADC input, HS stable, VS waited for: is composite sync looked for? The Pro's VGA
+// connector carries RGBS on its HS pin too (HD15 cables with csync): chosen by hand, without a VS, it was "lost" on
+// every pass. In Auto it stays so: a switched-off device on the VGA connector turns a SCART console's picture into
+// pulses on its HS wire
+void test_detection_looks_for_csync_on_vga_chosen_by_hand(void) {
+    // vsync, rgbHvAllowed, anyRgb (standard board in Auto), vgaByHand (Pro, Source = VGA), input
+    TEST_ASSERT_TRUE(inputDetectChecksRgbs(false, true, false, true, InputTypeVGA));    // by hand, no VS: csync
+    TEST_ASSERT_FALSE(inputDetectChecksRgbs(true, true, false, true, InputTypeVGA));    // a VS: RGBHV, as before
+    TEST_ASSERT_FALSE(inputDetectChecksRgbs(false, true, false, false, InputTypeVGA));  // Auto, or the standard board
+    TEST_ASSERT_TRUE(inputDetectChecksRgbs(false, false, false, false, InputTypeRGBs)); // RGB SCART: always csync
+    TEST_ASSERT_TRUE(inputDetectChecksRgbs(true, false, false, false, InputTypeRGBs));  // a stray VS there is ignored
+    TEST_ASSERT_TRUE(inputDetectChecksRgbs(false, false, false, false, InputTypeRGsB));
+    TEST_ASSERT_TRUE(inputDetectChecksRgbs(false, true, true, false, InputTypeRGBs));   // standard board in Auto
+    TEST_ASSERT_FALSE(inputDetectChecksRgbs(true, true, true, false, InputTypeRGBs));
+    TEST_ASSERT_FALSE(inputDetectChecksRgbs(false, true, false, true, InputTypeYUV));
+}
+
+// The Pro's VGA HS pin shares a wire with the LM1881: a source on the VGA connector shows a sync on RGB SCART and
+// RGB SoG too (a Dreamcast switched on while those were probed stayed there, without a picture). The glue looks at
+// the VGA path; a sync still there sends the scan to VGA at once
+void test_sync_seen_on_vga_sends_the_scan_there(void) {
+    InputAutoBoard b = {true, true, 0};
+    InputAuto a;
+    a.begin(b, InputTypeRGBs, 0);                       // the hint: RGB SCART first, VGA second
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGBs, a.want());
+    TEST_ASSERT_TRUE(a.vgaLookWanted());
+    TEST_ASSERT_TRUE(a.syncOnVga(100));
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.want());
+    TEST_ASSERT_EQUAL_UINT8(IA_SCANNING, a.state());     // probed there like any path: a find comes from its detection
+    TEST_ASSERT_FALSE(a.vgaLookWanted());                // on VGA already
+    a.tick(true, 2000);
+    TEST_ASSERT_EQUAL_UINT8(IA_FOUND, a.state());
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.found());
+}
+
+void test_vga_look_from_rgb_sog_and_from_the_rgb_scart_confirm_look(void) {
+    InputAutoBoard b = {true, true, 0};
+    InputAuto a;
+    a.begin(b, 0, 0);                                    // VGA, RGB SCART, RGB SoG, ...
+    a.pathResult(InputTypeVGA, false, 100);
+    a.pathResult(InputTypeRGBs, false, 200);
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGsB, a.want());
+    TEST_ASSERT_TRUE(a.vgaLookWanted());
+    a.pathResult(InputTypeRGsB, true, 300);              // a SoG find first gets its look at RGB SCART
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGBs, a.want());
+    TEST_ASSERT_TRUE(a.vgaLookWanted());
+    TEST_ASSERT_TRUE(a.syncOnVga(400));                  // the look says VGA: the pending SoG find is dropped
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.want());
+    a.pathResult(InputTypeVGA, false, 500);              // nothing there after all: the scan goes on after VGA
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGBs, a.want());
+    TEST_ASSERT_EQUAL_UINT8(IA_SCANNING, a.state());
+}
+
+void test_no_vga_look_where_it_does_not_apply(void) {
+    InputAuto a;
+    InputAutoBoard noVga = {true, true, 1 << 2};         // VGA left out of Auto search
+    a.begin(noVga, InputTypeRGBs, 0);
+    TEST_ASSERT_FALSE(a.vgaLookWanted());
+    TEST_ASSERT_FALSE(a.syncOnVga(100));
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGBs, a.want());
+    InputAutoBoard standard = {false, false, 0};         // one RGB header: nothing to tell apart
+    a.begin(standard, 0, 0);
+    TEST_ASSERT_FALSE(a.vgaLookWanted());
+    InputAutoBoard pro = {true, true, 0};
+    a.begin(pro, InputTypeYUV, 0);                       // Component: the VGA sync is not on that path
+    TEST_ASSERT_EQUAL_UINT8(InputTypeYUV, a.want());
+    TEST_ASSERT_FALSE(a.vgaLookWanted());
+    a.begin(pro, InputTypeRGBs, 0);
+    a.choose(InputTypeRGBs, 100);                        // chosen by hand: the user's input, no look
+    TEST_ASSERT_FALSE(a.vgaLookWanted());
+    TEST_ASSERT_FALSE(a.syncOnVga(200));
+    a.choose(0, 300);
+    a.tick(true, 400);                                   // found: nothing is probed any more
+    TEST_ASSERT_EQUAL_UINT8(IA_FOUND, a.state());
+    TEST_ASSERT_FALSE(a.vgaLookWanted());
+}
+
+// A probed TV5725 path with a sync that never becomes a picture: upstream keeps recovering for about 50 s (seen: 81 s
+// on RGB SCART with a VGA source); the scan gives the path up after kNoPictureMs
+void test_sync_without_a_picture_gives_the_path_up(void) {
+    TEST_ASSERT_FALSE(inputTvPathNoPicture(true, false, 60000));                              // no sync: the SOG sweep rules
+    TEST_ASSERT_FALSE(inputTvPathNoPicture(false, true, 60000));                              // a source is shown
+    TEST_ASSERT_FALSE(inputTvPathNoPicture(false, false, InputAuto::kNoPictureMs - 1));
+    TEST_ASSERT_TRUE(inputTvPathNoPicture(false, false, InputAuto::kNoPictureMs));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_paths_pro_order);
@@ -671,5 +757,10 @@ int main(int, char**) {
     RUN_TEST(test_decoder_rate_change_is_a_new_source);
     RUN_TEST(test_absence_right_after_a_fallback_find_is_not_a_return);
     RUN_TEST(test_decoder_return_needs_two_seconds);
+    RUN_TEST(test_detection_looks_for_csync_on_vga_chosen_by_hand);
+    RUN_TEST(test_sync_seen_on_vga_sends_the_scan_there);
+    RUN_TEST(test_vga_look_from_rgb_sog_and_from_the_rgb_scart_confirm_look);
+    RUN_TEST(test_no_vga_look_where_it_does_not_apply);
+    RUN_TEST(test_sync_without_a_picture_gives_the_path_up);
     return UNITY_END();
 }

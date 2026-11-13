@@ -22,6 +22,15 @@ inline uint8_t inputPathAdc(uint8_t t) { return t >= InputTypeRGBs && t <= Input
 inline uint8_t getInputSourceFromType(uint8_t t) {
     return t == InputTypeRGBs || t == InputTypeRGsB ? InputSourceRGBs : t == InputTypeVGA ? InputSourceVGA : InputSourceYUV;
 }
+// A detection pass on the RGB ADC input found a stable HS and waited for a VS: is composite sync looked for? Without
+// a VS (or on a path that never carries one) where csync may arrive: the standard board in Auto (anyRgb), RGB SCART
+// and RGB SoG, and the Pro's VGA connector when VGA was chosen by hand (vgaByHand: its HS pin also takes RGBS, HD15
+// cables with csync). Not in Auto: a switched-off device left on the VGA connector returns the picture of a SCART
+// console (the R/G/B wires are shared) as pulses on its HS wire, which read as composite sync
+inline bool inputDetectChecksRgbs(bool vsync, bool rgbHvAllowed, bool anyRgb, bool vgaByHand, uint8_t t) {
+    uint8_t src = getInputSourceFromType(t);
+    return (!vsync || !rgbHvAllowed) && (anyRgb || src == InputSourceRGBs || (vgaByHand && src == InputSourceVGA));
+}
 
 const char* inputLongName(uint8_t t);    // "RGB SCART" .. "Composite"; "-" for anything else
 const char* inputShortName(uint8_t t);   // "RGB", "SoG", "VGA", "YPbPr", "S-Vid", "CVBS" (OLED home box); "-"

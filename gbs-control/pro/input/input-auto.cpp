@@ -48,6 +48,10 @@ bool inputTvPathPresent(bool boardPower, bool disconnected, uint8_t videoMode, u
 
 bool inputVgaLineRate(uint16_t hperiodIf) { return hperiodIf != 0 && hperiodIf <= 330; }
 
+bool inputTvPathNoPicture(bool disconnected, bool present, uint32_t sinceSyncMs) {
+    return !disconnected && !present && sinceSyncMs >= InputAuto::kNoPictureMs;
+}
+
 static const uint8_t kSogSweepTop = 6, kSogSweepBottom = 2;
 
 uint8_t inputSogSweepNext(uint8_t level) { return level > kSogSweepBottom && level <= kSogSweepTop ? level - 1 : kSogSweepTop; }
@@ -218,6 +222,25 @@ bool InputAuto::lowRateVga(uint32_t now) {
     confirm_ = true;
     confirmFrom_ = InputTypeVGA;
     return true;
+}
+
+bool InputAuto::vgaLookWanted() const {
+    if (state_ != IA_SCANNING || choice_ != 0 || !board_.proPaths || !(inputAutoScanned(board_) & pathBit(InputTypeVGA)))
+        return false;
+    uint8_t w = want();
+    return w == InputTypeRGBs || w == InputTypeRGsB;
+}
+
+bool InputAuto::syncOnVga(uint32_t now) {
+    (void)now;
+    if (!vgaLookWanted()) return false;
+    for (uint8_t i = 0; i < count_; i++) {
+        if (paths_[i] != InputTypeVGA) continue;
+        cursor_ = i;
+        confirm_ = false;                            // a find waiting for its RGB SCART look was this same sync
+        return true;
+    }
+    return false;
 }
 
 void InputAuto::setBoard(const InputAutoBoard& b, uint32_t now) {

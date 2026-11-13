@@ -41,6 +41,10 @@ uint8_t inputSogSweepNext(uint8_t level);
 // got the same levels), VGA (H/V sync) after 3 detection passes; never for the decoder paths (the ADV report times them)
 bool inputTvPathDone(uint8_t path, uint8_t passes, uint8_t sogSeen);
 
+// A probed TV5725 path has a sync (the detection left its low power wait) that does not become a source: upstream
+// would keep it in its sync recovery for about 50 s; the scan gives the path up after InputAuto::kNoPictureMs
+bool inputTvPathNoPicture(bool disconnected, bool present, uint32_t sinceSyncMs);
+
 // A source shown on the active input counts for the machine only when that is the input it wants: right after a new
 // scan starts or an input is chosen by hand the hardware is still on the previous input for a few passes, and its
 // source would be taken for a find on the probed path (a false VGA) or for "seen" on the chosen one (S-Video
@@ -63,6 +67,7 @@ class InputAuto {
 public:
     static const uint32_t kAbsentMs = 5000, kNeverSeenMs = 60000;
     static const uint16_t kNoSyncLost = 60;
+    static const uint32_t kNoPictureMs = 5000;           // a console's mode is read within a second of its sync
     // A found source back after this much absence is searched again (a console swapped inside input.lost_wait).
     // TV5725 paths: absence starts ~1.7 s after the sync went (kNoSyncLost), so 0.3 s more makes a ~2 s gap;
     // S-Video/Composite: the decoder report drops at once, so 2 s. Only after the found path showed the source once
@@ -77,6 +82,11 @@ public:
     // The VGA path being probed shows a 15 kHz source; true while that find waits for the RGB SCART look (false with
     // RGB SCART left out of Auto search: the source on VGA is a find)
     bool lowRateVga(uint32_t now);
+    // The Pro's VGA HS pin is on the wire the LM1881 drives, so a source on the VGA connector shows a sync on RGB
+    // SCART and RGB SoG too. While one of the two is probed in a scan (Auto, VGA searched) the glue looks at the VGA
+    // path (vgaLookWanted); a sync still there (syncOnVga) sends the scan to VGA, where it is probed as usual
+    bool vgaLookWanted() const;
+    bool syncOnVga(uint32_t now);                        // true: want() is VGA now
     void setBoard(const InputAutoBoard& b, uint32_t now);   // Auto search changed: a running scan restarts
     void setAbsentMs(uint32_t ms) { absentMs_ = ms; }   // input.lost_wait: absence before a new scan / back to Auto
     uint8_t want() const;                                // the input the hardware should be on (1..6)

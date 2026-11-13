@@ -276,6 +276,8 @@ static bool gTermination = false;           // 75 ohm sync as the last state bui
 bool advLinkTerminationOn() { return gTermination; }
 static uint32_t gSwitchSentAt = 0;          // millis() of the STATE that changed listen or the termination
 
+static uint16_t gSentHash = 0;              // advStateHash of the last STATE sent
+
 static void sendState(const AdvState& s) {
     static uint8_t lastListen = 0, lastTermination = 0;
     if (s.listen != lastListen || s.termination != lastTermination) gSwitchSentAt = millis();
@@ -284,6 +286,7 @@ static void sendState(const AdvState& s) {
     advStatePack(&s, b);
     sendFrame(ADV_CMD_STATE, b, ADV_STATE_BYTES);
     uint16_t hash = advStateHash(&s);
+    gSentHash = hash;
     gStateAt = millis();
     gStateInput = s.input;
     static uint16_t lastHash = 0;
@@ -340,6 +343,27 @@ void advLinkLoop() {
     logNoReply(0, millis(), true);
     logController();
     logSignal();
+}
+
+// The state of the current options sent now and confirmed: INFO is asked until the ADV Controller reports that state
+// applied (its hash), the frame sent again while it does not; at most maxMs. For a caller that must know the
+// switches moved before it looks at the result (the input search's look at the VGA path): a STATE sent while the
+// controller still shuts the decoder down was applied seconds later
+bool advLinkStateConfirmed(uint32_t maxMs) {
+    if (!platformLinkHardware() || !gSwReady || gUpd.active() || gClient.stateBlocked()) return false;
+    uint32_t t0 = millis();
+    advLinkKick();
+    advLinkLoop();                                       // the scheduler sends the state (gSentHash)
+    while (millis() - t0 < maxMs) {
+        delay(6);                                        // a STATE is applied from the controller's main loop
+        exchange(ADV_CMD_INFO, nullptr, 0);
+        AdvInfo in;
+        if (!gReply.got || !advInfoUnpack(gReply.payload, gReply.len, &in)) continue;
+        if (in.stateHash == gSentHash) return true;
+        gSched.kickResend();
+        advLinkLoop();
+    }
+    return false;
 }
 
 void advLinkI2c(const uint8_t* bytes, uint8_t len) {

@@ -1484,10 +1484,17 @@ uint8_t detectAndSwitchToActiveInput()
                 rto->currentLevelSOG = 13; // test startup with MD and MS separately!
                 setAndUpdateSogLevel(rto->currentLevelSOG);
 
+                // Pro, RGB SCART / RGB SoG in a scan: the look at the VGA path takes the place of the VSync wait (a VSync
+                // is ignored on these two paths)
+                bool vgaLooked = false;
+                if (inputAutoVgaLookDue()) {
+                    if (inputAutoLookAtVga()) return 0;   // the VGA connector's sync: the scan probes VGA now
+                    vgaLooked = true;
+                }
                 unsigned long timeOutStart = millis();
                 // vsync test
                 // 360ms good up to 5_34 SP_V_TIMER_VAL = 0x0b
-                while (!vsyncActive && ((millis() - timeOutStart) < 360)) {
+                while (!vsyncActive && !vgaLooked && ((millis() - timeOutStart) < 360)) {
                     vsyncActive = GBS::STATUS_SYNC_PROC_VSACT::read();
                     handleWiFi(0); // wifi stack
                     delay(1);
@@ -1568,7 +1575,9 @@ uint8_t detectAndSwitchToActiveInput()
                     }
                 }
 
-                if (((!vsyncActive || !inputRgbHvAllowed()) && isInfoDisplayActive == 0) && (inputDetectAnyRgb() || getInputSourceFromType(uopt->activeInputType) == InputSourceRGBs)) { // then do RGBS check
+                if (isInfoDisplayActive == 0 && inputDetectChecksRgbs(vsyncActive, inputRgbHvAllowed(), inputDetectAnyRgb(), platformLinkHardware() && uopt->inputChoice == InputTypeVGA, uopt->activeInputType)) { // then do RGBS check
+                    if (!repeat && getInputSourceFromType(uopt->activeInputType) == InputSourceVGA && !inputDetectAnyRgb())
+                        logPrintf(LC_INPUT, LL_INFO, PSTR("VGA: no VSync, checked as composite sync on the HS pin"));
                     rto->syncTypeCsync = true;
                     GBS::MD_SEL_VGA60::write(0); // EDTV60 more likely than VGA60
                     uint16_t testCycle = 0, quiet = 0;

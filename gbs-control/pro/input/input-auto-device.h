@@ -16,6 +16,9 @@ bool inputAutoHoldsSyncWatcher();      // the input search identifies the RGB SC
 void inputAutoDetectPass(uint8_t sog); // loop(): one TV5725 detection pass ran on the current path at this SOG level
                                        // (>= 8: the pass moved the ADC input to the path first, no level tried)
 bool inputAutoTakePathSwitched();      // true once after a path switch: the next detection pass waits its 500 ms
+// Pro, a scan on RGB SCART / RGB SoG that found a sync: is it the VGA connector's (the HS pin shares the wire)?
+bool inputAutoVgaLookDue();            // the look applies to this detection pass
+bool inputAutoLookAtVga();             // true: the sync is on the VGA path, the scan moved there (the pass ends)
 bool inputDetectMayToggle();           // standard board: the detection alternates its two ADC inputs itself
 bool inputDetectAnyRgb();              // standard board in Auto: RGBS, RGsB and RGBHV all accepted (upstream)
 // Pro: only the VGA path can be RGBHV. RGB SCART and RGB SoG carry composite sync only, but the TV5725 may see a

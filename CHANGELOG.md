@@ -16,6 +16,12 @@ refer to brisma/gbsc-pro.
   versions. (#70)
 
 ### Fixed
+- Input: with Source = VGA chosen by hand, the VGA connector also takes composite sync on its HS pin (RGBS cables on
+  HD15); it gave "No signal". (#69)
+- Auto input: a source on the VGA connector (a Dreamcast, a PC) switched on while Auto was looking at RGB SCART or RGB
+  SoG is found on VGA in about three seconds; it was taken for a SCART console and never shown.
+- Auto input: a sync that does not become a picture no longer holds the search for over a minute; after 5 seconds the
+  other inputs are tried.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).

@@ -38,6 +38,7 @@ static uint8_t gSogSeen = 0;            // ... and the SOG levels they sampled, 
 static uint8_t gPassSog = 0;            // the SOG level of the last pass (a find: the level that detected it)
 static uint32_t gScanAt = 0;            // the scan the counts belong to: a new scan on the same path starts them again
 static bool gPathSwitched = false;      // the next detection pass waits its 500 ms after the switch
+static uint32_t gSyncSince = 0;         // the probed TV5725 path has a sync and no source since then (0: not so)
 static bool gNeedDecoderOff = false;    // Component after S-Video/Composite: the ADV7391 drives bars on J4 while on
 
 // Identification: a sync on RGB SCART in a
@@ -210,6 +211,7 @@ static void logTransitions(bool link, uint32_t now) {
 uint8_t inputAutoBootInput(uint8_t hint) { return inputAutoBootPath(board(), hint); }
 
 static void passesRestart() {
+    gSyncSince = 0;
     gPasses = 0;
     gSogSeen = 0;
     gPassSog = 0;
@@ -250,7 +252,7 @@ void inputAutoChoose(uint8_t choice) {
 // disconnected source is normally in low power detection already; force: the identification's own moves (to
 // Composite, a lost sync, a release with the termination still on), which a stale mode detector made wait the full 6 s
 // of upstream's YPbPr loop (N64 PAL on the AV jack)
-static void tvRedetect(bool force = false) {
+static void tvRedetect(bool force) {
     if (!rto->boardHasPower || (rto->sourceDisconnected && !force)) return;
     logPrintf(LC_SCAN, LL_DEBUG, force ? PSTR("TV5725 detects again (identification)")
                                        : PSTR("TV5725 detects again (the old source would stay in its sync recovery)"));
@@ -276,6 +278,60 @@ static void switchTo(uint8_t want, uint32_t now) {
     passesRestart();
 }
 
+// A sync on RGB SCART / RGB SoG during a scan may be the VGA connector's: its HS pin is on the wire the LM1881 drives
+// (a Dreamcast switched on while those paths were probed was taken for a SCART console and never shown). With the
+// switches in the VGA position the LM1881 is off the HS and VS wires: a horizontal and a vertical sync still there
+// are a source on the VGA connector, and the scan goes to VGA. Both are asked for: a switched-off device on the VGA
+// connector returns a SCART console's bright picture (shared R/G/B wires) as line-rate pulses on its HS wire, with
+// no VS. The detection runs this in place of the VSync wait those two paths ignore on the Pro
+static const uint32_t kVgaLookConfirmMs = 200, kVgaLookSettleMs = 60, kVgaLookSampleMs = 160, kVgaLookBackMs = 60;
+static const uint8_t kVgaLookRun = 6, kVgaLookNoHs = 8;         // 5 ms samples: H and V 6 in a row; no H in the first 8
+
+bool inputAutoVgaLookDue() {
+    return gBegun && platformLinkHardware() && gAuto.vgaLookWanted() && uopt->activeInputType == gAuto.want() &&
+           !advLinkChecking() && advLinkController().status == ADV_CONTROLLER_OK;
+}
+
+bool inputAutoLookAtVga() {
+    uint8_t was = uopt->activeInputType;
+    uint32_t t0 = millis();
+    uopt->activeInputType = InputTypeVGA;                        // the switches only: the TV5725 stays as it is
+    bool moved = advLinkStateConfirmed(kVgaLookConfirmMs);       // never read before the switches are there
+    uint8_t n = 0, hs = 0, vs = 0, run = 0;
+    bool onVga = false;
+    if (moved) {
+        uint8_t ext = GBS::SP_EXT_SYNC_SEL::read();
+        GBS::SP_EXT_SYNC_SEL::write(0);                          // the VS pin connected, only now: never the LM1881's VS
+        delay(kVgaLookSettleMs);
+        // The VS detector answers some tens of ms after the HS one (a Dreamcast: V in 10 of the first 15 samples). Ends
+        // early on a run of both (a source) and on no HS at all (a SCART console: the common case costs least)
+        for (uint32_t t = millis(); millis() - t < kVgaLookSampleMs; delay(5)) {
+            uint8_t st = GBS::STATUS_16::read();
+            n++;
+            if (st & 0x02) hs++;
+            if (st & 0x08) vs++;
+            run = (st & 0x0A) == 0x0A ? (uint8_t)(run + 1) : 0;
+            if (run >= kVgaLookRun) { onVga = true; break; }
+            if (n >= kVgaLookNoHs && !hs) break;
+        }
+        GBS::SP_EXT_SYNC_SEL::write(ext);
+    }
+    uopt->activeInputType = was;
+    if (onVga && gAuto.syncOnVga(millis())) {
+        logPrintf(LC_SCAN, LL_INFO, PSTR("the sync on %s comes from the VGA connector (H %u/%u, V %u/%u, %lu ms): probing VGA"),
+                  inputLongName(was), hs, n, vs, n, (unsigned long)(millis() - t0));
+        gJudgeMoved = true;                                      // the TV5725 detects from scratch there, as at boot
+        switchTo(InputTypeVGA, millis());
+        return true;
+    }
+    bool back = advLinkStateConfirmed(kVgaLookConfirmMs);        // back to this path's switches
+    delay(kVgaLookBackMs);
+    logPrintf(LC_SCAN, hs ? LL_INFO : LL_DEBUG, PSTR("look at VGA from %s: no source there (H %u/%u, V %u/%u, %lu ms%s%s)"),
+              inputLongName(was), hs, n, vs, n, (unsigned long)(millis() - t0), moved ? "" : ", switches not confirmed",
+              back ? "" : ", return not confirmed");
+    return false;
+}
+
 void inputAutoDetectPass(uint8_t sog) {
     if (gPasses < 255) gPasses++;
     if (sog >= 8) return;                      // the pass had to move the ADC input first: its level was not tried
@@ -296,14 +352,15 @@ static void decoderOffStep(uint32_t now) {
     }
 }
 
-// VGA path showing a 15 kHz source or composite sync: a SCART console on the shared RGB wires (the TV5725 takes it
-// as "RGB/HV (CSync)", where the line period reading is not reliable), or a real 15 kHz / csync RGBHV source on the
-// VGA connector (Amiga, arcade board); the scan asks RGB SCART first (InputAuto::lowRateVga)
+// VGA path showing a source read as RGBHV (mode 14 / 15) with composite sync or at 15 kHz (the bypass cannot show
+// 15 kHz): the scan asks RGB SCART first (InputAuto::lowRateVga). A source the detection read as RGBS there (no
+// VSync, composite sync on the HS pin: modes below 14) is scaled as on RGB SCART and stays on VGA
 static bool vgaPathLooksScart() {
-    return uopt->activeInputType == InputTypeVGA &&
+    return uopt->activeInputType == InputTypeVGA && rto->videoStandardInput >= 14 &&
            (rto->syncTypeCsync || !inputVgaLineRate((uint16_t)GBS::HPERIOD_IF::read()));
 }
 
+static void passesRestart();
 static void nothingOn(uint8_t want, uint32_t now) {
     uint32_t ms = now - gSwitchAt;
     if (gAuto.firstRound())                                      // later rounds repeat it: left out
@@ -312,12 +369,29 @@ static void nothingOn(uint8_t want, uint32_t now) {
     gAuto.pathResult(want, false, now);
 }
 
+static void tvRedetect(bool force);
+
 static void probe(uint8_t want, uint32_t now) {
     uint32_t since = now - gSwitchAt;
     if (!inputIsDecoder(want)) {
+        bool present = inputTvPathPresent(rto->boardHasPower, rto->sourceDisconnected, rto->videoStandardInput, rto->noSyncCounter);
+        if (rto->sourceDisconnected || present) gSyncSince = 0;
+        else if (!gSyncSince) gSyncSince = now ? now : 1;
         if (want == InputTypeVGA && !rto->sourceDisconnected && vgaPathLooksScart()) logVgaLook(gAuto.lowRateVga(now));
         else if (rto->sourceDisconnected && (inputTvPathDone(want, gPasses, gSogSeen) || since >= kTvPathCapMs))
             nothingOn(want, now);
+        else if (gSyncSince && inputTvPathNoPicture(rto->sourceDisconnected, present, now - gSyncSince)) {
+            // upstream would keep this sync in its recovery for about 50 s, the other inputs unsearched meanwhile
+            logPrintf(LC_SCAN, LL_INFO, PSTR("%s: a sync and no picture for %lu s, searching on"), inputLongName(want),
+                      (unsigned long)((now - gSyncSince) / 1000));
+            gSyncSince = 0;
+            nothingOn(want, now);
+            if (gAuto.want() == want) {                          // the only input searched: detect on it from scratch
+                tvRedetect(false);
+                gSwitchAt = now;
+                passesRestart();
+            }
+        }
         return;
     }
     const AdvSignal* g = freshReport();
@@ -596,7 +670,7 @@ void inputAutoLoop() {
     if (!judging && (present || !gTickHold)) gAuto.tick(present, now);   // the hold only delays absence
     rateWatch(link, active, now);
     if (link && was != IA_SCANNING && gAuto.state() == IA_SCANNING) {    // the source went: search from scratch
-        tvRedetect();
+        tvRedetect(false);
         gSwitchAt = now;
     }
     if (gAuto.state() == IA_SCANNING && gAuto.scanStartedAt() != gScanAt) {   // any new scan, also on the same path
@@ -612,7 +686,7 @@ void inputAutoLoop() {
     }
     uint8_t want = gAuto.want();
     if (judging) {
-        // the identification owns the input: no path switch, no absence
+        gSyncSince = 0;   // the identification owns the input: no path switch, no absence, its own time limits
     } else if (link) {
         if (want != active) switchTo(want, now);
         else if (gNeedDecoderOff) decoderOffStep(now);           // Component after S-Video/Composite, scan or manual
