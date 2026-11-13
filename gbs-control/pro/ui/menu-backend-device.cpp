@@ -66,7 +66,7 @@ void DeviceMenuBackend::refreshSignal() {
     sig_.advFreeRun = advIn && g && (g->flags & ADV_SIG_POWERED) && (g->flags & ADV_SIG_FREERUN) &&
                       !(g->flags & ADV_SIG_PRESENT);
     sig_.presetId = rto->presetID;
-    uint16_t vperiod = GBS::VPERIOD_IF::read();
+    uint16_t vperiod = profileSourceLines();             // the IF's period; the sync processor's count on RGBHV
     vperiod_ = vperiod;
     static MenuLineFilter lineFilter;                    // an unstable count reads "--", not "1220L"
     sig_.srcLines = lineFilter.feed(sig_.noSignal ? 0 : menuSourceLines(rto->videoStandardInput, vperiod), millis());

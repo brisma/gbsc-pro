@@ -229,8 +229,20 @@ void test_rate_pick(void) {
     TEST_ASSERT_EQUAL_UINT32(0, profileRatePick(0, 0, 0));
 }
 
+// Scaled RGBHV (mode 14, a Dreamcast on VGA) is its base preset plus the adjustments made when the bypass switches
+// to scaling. A plain reload of "14" (a profile, Defaults by auto-load after another console) kept half of them and
+// the picture rolled: the reload goes back to the bypass (15) and the sync watcher sets the scaling up again
+void test_reload_of_scaled_rgbhv_goes_through_the_bypass(void) {
+    TEST_ASSERT_EQUAL_UINT8(15, profileReloadModeOf(14, false));
+    TEST_ASSERT_EQUAL_UINT8(15, profileReloadModeOf(15, false));
+    TEST_ASSERT_EQUAL_UINT8(1, profileReloadModeOf(1, false));
+    TEST_ASSERT_EQUAL_UINT8(2, profileReloadModeOf(1, true));     // Force 60Hz on a PAL source, as profileRegModeOf
+    TEST_ASSERT_EQUAL_UINT8(0, profileReloadModeOf(0, false));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_reload_of_scaled_rgbhv_goes_through_the_bypass);
     RUN_TEST(test_profile_store_rules);
     RUN_TEST(test_mode_table);
     RUN_TEST(test_reg_mode_undoes_pal_force60_only);

@@ -7377,7 +7377,14 @@ void profileApplyAdcGain(uint8_t adcGain)
 }
 
 
-uint16_t profileSourceLines() { return GBS::VPERIOD_IF::read(); }
+// The source's lines as the scaler counts them: the IF's vertical period, except in the RGBHV modes (14, 15), where the
+// IF does not follow the source (75, 429, 1108 read for one 525-line source, so the menus showed "494L" and a profile
+// never matched again): the sync processor's own count there
+uint16_t profileSourceLines()
+{
+    if (rto->videoStandardInput >= 14) return (uint16_t)(GBS::STATUS_SYNC_PROC_VTOTAL::read() + 1);
+    return GBS::VPERIOD_IF::read();
+}
 
 // Field rate of the source for the profile fingerprint, in mHz: two measurements that agree (a third when they do
 // not). 0: no pulse to time (VGA pass-through), a failed or out of range measurement, or readings that differ

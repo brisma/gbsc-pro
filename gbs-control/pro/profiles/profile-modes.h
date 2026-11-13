@@ -12,6 +12,10 @@ uint8_t profileModeAt(uint8_t index);
 // Register mode: the mode the GBS runs, with only the PalForce60 remap undone (1->2, 3->4)
 uint8_t profileRegModeOf(uint8_t videoStandardInput, bool palForce60Active);
 // Output > Force 60Hz changed: the register mode it remaps (PAL 2, 4) needs a preset reload to apply now
+// The mode a reload of the running preset applies (a profile, Defaults, a setting that reloads). Scaled RGBHV (14)
+// is a base preset plus the adjustments of the switch from the bypass: it goes back to the bypass (15), from where
+// the sync watcher sets the scaling up again with the new settings
+uint8_t profileReloadModeOf(uint8_t mode, bool palForce60Active);
 bool profileForce60Reloads(uint8_t regMode);
 // Force 60Hz: IF_VB_SP for a PAL source in a 60 Hz preset, the preset's own value + 56 (the middle 240 of 288 lines)
 uint16_t profileForce60VbStop(uint16_t presetStop);

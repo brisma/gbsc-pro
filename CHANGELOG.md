@@ -22,6 +22,10 @@ refer to brisma/gbsc-pro.
   SoG is found on VGA in about three seconds; it was taken for a SCART console and never shown.
 - Auto input: a sync that does not become a picture no longer holds the search for over a minute; after 5 seconds the
   other inputs are tried.
+- VGA: loading a profile or Defaults (also by auto-load, after another console) with a scaled VGA source no longer
+  leaves the picture rolling.
+- VGA: the menus show the source's real line count (it read values such as "494L"), and a profile saved for a VGA
+  source is recognised again.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).

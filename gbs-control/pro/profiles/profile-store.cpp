@@ -273,7 +273,7 @@ void profileReloadList() {
 }
 
 void profileApplyPresetsKeepMode() {
-    uint8_t mode = profileRegModeOf(rto->videoStandardInput, rto->presetIsPalForce60);
+    uint8_t mode = profileReloadModeOf(rto->videoStandardInput, rto->presetIsPalForce60);
     applyPresets(mode);
     if (mode) rto->videoStandardInput = mode;   // 0 (no source): applyPresets may have loaded the 480p fallback (3)
 }
