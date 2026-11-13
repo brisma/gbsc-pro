@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """The CHANGELOG.md sections a release reads and writes.
 
-  changelog.py section X.Y.Z          print the body of a version's section (the GitHub release notes)
-  changelog.py beta X.Y.Z             "## Unreleased" becomes "## X.Y.Z - beta" (a later beta adds the new entries)
-                                      and goes away until the next change puts it back
+  changelog.py section X.Y.Z[-betaN]  print the body of a version's section (the GitHub release notes)
+  changelog.py beta X.Y.Z-betaN [--date YYYY-MM-DD]
+                                      "## X.Y.Z-betaN" becomes "## X.Y.Z-betaN - <date>" (default: today)
   changelog.py stable X.Y.Z [--date YYYY-MM-DD]
-                                      "## X.Y.Z - beta" becomes "## X.Y.Z - <date>" (default: today)
+                                      the sections of its betas become one "## X.Y.Z - <date>", oldest first
   changelog.py check vX.Y.Z-betaN | vX.Y.Z
                                       exits 1 with the reason when the tag has no matching section
 
-Sections: "## Unreleased" on top while there are changes not yet released (every change for users adds a line there,
-and the heading when it is not there), "## X.Y.Z - beta" while that version is in beta, "## X.Y.Z - YYYY-MM-DD" once
-it is Stable.
+Sections, newest on top: "## X.Y.Z-betaN" without a date is the next beta, where every change for users adds a line
+(what changed since the release before it); "## X.Y.Z-betaN - YYYY-MM-DD" is a published beta; "## X.Y.Z -
+YYYY-MM-DD" a Stable, which holds what its betas held.
 """
 import argparse
 import datetime
@@ -20,9 +20,10 @@ import re
 import sys
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "CHANGELOG.md")
-UNRELEASED = "## Unreleased"
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 TAG = re.compile(r"^v(\d+\.\d+\.\d+)(-beta\d+)?$")
+BETA = re.compile(r"^(\d+\.\d+\.\d+)-beta(\d+)$")
+HEADING = re.compile(r"^## (\S+)(?: - (\d{4}-\d{2}-\d{2}))?$")
 
 
 class ChangelogError(Exception):
@@ -42,46 +43,58 @@ def _join(preamble, sections):
     return out.rstrip() + "\n"
 
 
-def _find(sections, version, suffix=None):
-    """Index of "## <version> - <suffix>" (any suffix when None), else -1."""
+def _find(sections, version):
+    """(index, date or None) of the section of a version, else (-1, None)."""
     for i, (heading, _) in enumerate(sections):
-        m = re.match(r"^## (\S+) - (.+)$", heading)
-        if m and m.group(1) == version and (suffix is None or re.fullmatch(suffix, m.group(2))):
-            return i
-    return -1
+        m = HEADING.match(heading)
+        if m and m.group(1) == version:
+            return i, m.group(2)
+    return -1, None
+
+
+def _date(date):
+    if not DATE.match(date):
+        raise ChangelogError(f"date {date!r}: YYYY-MM-DD")
 
 
 def section(doc, version):
     _, sections = _parse(doc)
-    i = _find(sections, version)
+    i, _ = _find(sections, version)
     return sections[i][1] if i >= 0 else None
 
 
-def beta(doc, version):
+def beta(doc, version, date):
+    _date(date)
+    if not BETA.match(version):
+        raise ChangelogError(f"{version}: not a beta version (X.Y.Z-betaN)")
     preamble, sections = _parse(doc)
-    if not sections or sections[0][0] != UNRELEASED or not sections[0][1]:
-        raise ChangelogError(f'no "{UNRELEASED}" section with entries on top: nothing to release')
-    entries = sections[0][1]
-    if _find(sections, version, r"\d{4}-\d{2}-\d{2}") >= 0:
-        raise ChangelogError(f"{version} is already released")
-    i = _find(sections, version, "beta")
-    if i >= 0:
-        sections[i][1] = sections[i][1] + "\n\n" + entries
-    else:
-        sections.insert(1, [f"## {version} - beta", entries])
-    del sections[0]   # no empty heading left on top: it reads as "this version is not out"
+    i, dated = _find(sections, version)
+    if i < 0 or not sections[i][1]:
+        raise ChangelogError(f'no "## {version}" section with entries: nothing to release')
+    if dated:
+        raise ChangelogError(f"{version} is already released ({dated})")
+    sections[i][0] = f"## {version} - {date}"
     return _join(preamble, sections)
 
 
 def stable(doc, version, date):
-    if not DATE.match(date):
-        raise ChangelogError(f"date {date!r}: YYYY-MM-DD")
+    _date(date)
     preamble, sections = _parse(doc)
-    i = _find(sections, version, "beta")
-    if i < 0:
-        raise ChangelogError(f'no "## {version} - beta" section: a Stable is the promotion of a beta')
-    sections[i][0] = f"## {version} - {date}"
-    return _join(preamble, sections)
+    betas = []                                          # (N, index), the sections of this version's betas
+    for i, (heading, _) in enumerate(sections):
+        m = HEADING.match(heading)
+        b = BETA.match(m.group(1)) if m else None
+        if b and b.group(1) == version:
+            if not m.group(2):
+                raise ChangelogError(f"{m.group(1)} is still in the works: release it, or move its entries")
+            betas.append((int(b.group(2)), i))
+    if not betas:
+        raise ChangelogError(f"no section of a {version} beta: a Stable is the promotion of a beta")
+    body = "\n\n".join(sections[i][1] for _, i in sorted(betas) if sections[i][1])
+    first = min(i for _, i in betas)
+    sections[first] = [f"## {version} - {date}", body]
+    drop = {i for _, i in betas} - {first}
+    return _join(preamble, [s for i, s in enumerate(sections) if i not in drop])
 
 
 def check(doc, tag):
@@ -89,13 +102,10 @@ def check(doc, tag):
     m = TAG.match(tag)
     if not m:
         return f"{tag}: not a release tag (vX.Y.Z-betaN or vX.Y.Z)"
-    version, is_beta = m.group(1), bool(m.group(2))
+    version = tag[1:]
     _, sections = _parse(doc)
-    if is_beta:
-        i = _find(sections, version, "beta")
-        return "" if i >= 0 and sections[i][1] else f'CHANGELOG.md has no "## {version} - beta" section with entries'
-    i = _find(sections, version, r"\d{4}-\d{2}-\d{2}")
-    return "" if i >= 0 and sections[i][1] else f'CHANGELOG.md has no "## {version} - <date>" section with entries'
+    i, dated = _find(sections, version)
+    return "" if i >= 0 and dated and sections[i][1] else f'CHANGELOG.md has no "## {version} - <date>" section with entries'
 
 
 def main(argv):
@@ -103,7 +113,8 @@ def main(argv):
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("section", "beta", "stable"):
         sub.add_parser(name).add_argument("version")
-    sub.choices["stable"].add_argument("--date", default=datetime.date.today().isoformat())
+    for name in ("beta", "stable"):
+        sub.choices[name].add_argument("--date", default=datetime.date.today().isoformat())
     sub.add_parser("check").add_argument("tag")
     ap.add_argument("--file", default=PATH)
     a = ap.parse_args(argv)
@@ -120,7 +131,7 @@ def main(argv):
                 raise ChangelogError(why)
             print(f"CHANGELOG.md is ready for {a.tag}")
         else:
-            out = beta(doc, a.version) if a.cmd == "beta" else stable(doc, a.version, a.date)
+            out = (beta if a.cmd == "beta" else stable)(doc, a.version, a.date)
             with open(a.file, "w", encoding="utf-8") as f:
                 f.write(out)
             print(f"CHANGELOG.md: {a.version} {a.cmd}")

@@ -101,8 +101,9 @@ With the environment active, `python tools/dev.py doctor` tells what is still mi
   `options-pro.h`); the web app reads it from the API, nothing else to sync.
 - A new menu item is a string in `pro/ui/menu-strings.h` and a node in `pro/ui/menu-tree.cpp`; the tests check that
   it fits the TV and the OLED.
-- Every change for users adds a line to the `## Unreleased` section of [CHANGELOG.md](CHANGELOG.md), in the same
-  commit. A release empties that section and removes its heading: put it back on top, above the newest version.
+- Every change for users adds a line to the section of the next beta on top of [CHANGELOG.md](CHANGELOG.md)
+  (`## X.Y.Z-betaN`, without a date until it is released), in the same commit: what changed since the release before
+  it. When the newest section has a date, start the next one above it.
 
 ## Releases
 

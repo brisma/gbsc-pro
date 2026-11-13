@@ -228,7 +228,12 @@ jobs:
           cp "rel/gbsc-pro-$V.zip" rel/gbsc-pro-adv-controller-*.bin flasher-assets/GBSC-PRO-Flasher-*.zip rel/assets/
           FILES="Everything in gbsc-pro-$V.zip: GBS-Control (.bin for USB, .bin.gz for WiFi), the ADV Controller image"
           FILES="$FILES and the GBSC PRO Flasher for macOS, Windows and Linux (also one zip per system)."
-          NOTES="$(python3 tools/changelog.py section "${V%%-*}")"$'\n\n---\n\n'"$FILES"
+          NOTES="$(python3 tools/changelog.py section "$V")"
+          case "$V" in   # a later beta lists what changed since the one before it
+            *-beta1) ;;
+            *-beta*) NOTES="$NOTES"$'\n\n'"Everything else in ${V%%-*}: [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/$TAG/CHANGELOG.md)." ;;
+          esac
+          NOTES="$NOTES"$'\n\n---\n\n'"$FILES"
           # a draft until every file is there: never an incomplete release on the page, and it works with
           # immutable releases (no asset may be added once a release is published)
           gh release view "$TAG" > /dev/null 2>&1 ||

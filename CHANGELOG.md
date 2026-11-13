@@ -5,7 +5,14 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
-## 3.0.0 - beta
+## 3.0.0-beta2
+
+### Fixed
+- Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
+  NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
+- Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
+
+## 3.0.0-beta1 - 2026-11-12
 
 A rewrite of GBS-Control and the ADV Controller firmware on top of upstream gbs-control: one new menu for the TV OSD and
 the OLED, automatic input search, named profiles, a new web app, updates over the air by channel and a new flasher. The
