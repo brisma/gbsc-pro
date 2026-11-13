@@ -144,8 +144,10 @@ test("delete a preset and a macro after asking", async ({ page, sim }) => {
     await page.getByRole("dialog", { name: `Edit ${kind}` }).getByRole("button", { name: "Delete" }).click();
     await page.getByRole("dialog", { name: `Delete ${name}?` }).getByRole("button", { name: "Delete" }).click();
     await expect.poll(async () => (await posts(sim, `/api/adv/${kind}/delete`)).length).toBe(1);
+    // the row goes when the device answers and the rows under it move up: a click aimed at one of them before
+    // that lands on the row that took its place
+    await expect(sec(page).getByRole("button", { name: `Edit ${name}`, exact: true })).toHaveCount(0);
   }
-  await expect(sec(page).getByRole("button", { name: /^Edit Gone/ })).toHaveCount(0);
 });
 
 test("preset apply without a reply is not shown as applied", async ({ page, sim }) => {
