@@ -628,8 +628,7 @@ void test_decoder_rate_change_is_a_new_source(void) {
 
 // A detection pass on the RGB ADC input, HS stable, VS waited for: is composite sync looked for? The Pro's VGA
 // connector carries RGBS on its HS pin too (HD15 cables with csync): chosen by hand, without a VS, it was "lost" on
-// every pass. In Auto it stays so: a switched-off device on the VGA connector turns a SCART console's picture into
-// pulses on its HS wire
+// every pass. In Auto it stays so: on the VGA path a SCART console's bright picture can read as an HS with no VS
 void test_detection_looks_for_csync_on_vga_chosen_by_hand(void) {
     // vsync, rgbHvAllowed, anyRgb (standard board in Auto), vgaByHand (Pro, Source = VGA), input
     TEST_ASSERT_TRUE(inputDetectChecksRgbs(false, true, false, true, InputTypeVGA));    // by hand, no VS: csync

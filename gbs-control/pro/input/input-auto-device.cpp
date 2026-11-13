@@ -281,9 +281,9 @@ static void switchTo(uint8_t want, uint32_t now) {
 // A sync on RGB SCART / RGB SoG during a scan may be the VGA connector's: its HS pin is on the wire the LM1881 drives
 // (a Dreamcast switched on while those paths were probed was taken for a SCART console and never shown). With the
 // switches in the VGA position the LM1881 is off the HS and VS wires: a horizontal and a vertical sync still there
-// are a source on the VGA connector, and the scan goes to VGA. Both are asked for: a switched-off device on the VGA
-// connector returns a SCART console's bright picture (shared R/G/B wires) as line-rate pulses on its HS wire, with
-// no VS. The detection runs this in place of the VSync wait those two paths ignore on the Pro
+// are a source on the VGA connector, and the scan goes to VGA. Both are asked for: a SCART console's bright picture
+// (shared R/G/B wires) can read there as an HS with no VS, with or without a device on the VGA connector. The
+// detection runs this in place of the VSync wait those two paths ignore on the Pro
 static const uint32_t kVgaLookConfirmMs = 200, kVgaLookSettleMs = 60, kVgaLookSampleMs = 160, kVgaLookBackMs = 60;
 static const uint8_t kVgaLookRun = 6, kVgaLookNoHs = 8;         // 5 ms samples: H and V 6 in a row; no H in the first 8
 
@@ -326,9 +326,28 @@ bool inputAutoLookAtVga() {
     }
     bool back = advLinkStateConfirmed(kVgaLookConfirmMs);        // back to this path's switches
     delay(kVgaLookBackMs);
-    logPrintf(LC_SCAN, hs ? LL_INFO : LL_DEBUG, PSTR("look at VGA from %s: no source there (H %u/%u, V %u/%u, %lu ms%s%s)"),
+    // An HS and no VS on the VGA path: a SCART console's bright picture read as sync, or a cable with composite sync
+    // on the VGA connector. The two differ in the sync on SCART pin 20: the LM1881's VS (Sync cleanup on) says
+    // whether there is one. Measured and logged only, for reports from such cables
+    uint8_t m = 0, sv = 0, first = 0;
+    if (hs && back) {
+        uint8_t ext = GBS::SP_EXT_SYNC_SEL::read();
+        GBS::SP_EXT_SYNC_SEL::write(0);
+        delay(kVgaLookSettleMs);
+        // the VS detector answers about 120 ms after it is connected (0/12 in the first 120 ms with a console on)
+        for (uint32_t t = millis(); millis() - t < 260; delay(5)) {
+            m++;
+            if (GBS::STATUS_SYNC_PROC_VSACT::read()) { sv++; if (!first) first = m; }
+            if (sv >= 12) break;
+        }
+        GBS::SP_EXT_SYNC_SEL::write(ext);
+    }
+    char pin20[56] = "";
+    if (m) snprintf_P(pin20, sizeof(pin20), PSTR("; VS from this path %u/%u from sample %u, cleanup %s"), sv, m, first,
+                      uopt->advSyncStripper ? "on" : "off");
+    logPrintf(LC_SCAN, hs ? LL_INFO : LL_DEBUG, PSTR("look at VGA from %s: no source there (H %u/%u, V %u/%u, %lu ms%s%s%s)"),
               inputLongName(was), hs, n, vs, n, (unsigned long)(millis() - t0), moved ? "" : ", switches not confirmed",
-              back ? "" : ", return not confirmed");
+              back ? "" : ", return not confirmed", pin20);
     return false;
 }
 
