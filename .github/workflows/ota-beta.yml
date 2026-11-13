@@ -24,7 +24,7 @@ jobs:
     if: vars.OTA_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-beta')
     permissions:
       id-token: write
-      contents: write   # the Beta pre-release on GitHub (firmware, ADV Controller, flashers)
+      contents: write   # the Beta release on GitHub (firmware, ADV Controller, flashers)
     uses: ./.github/workflows/ota-publish.yml
     with:
       channel: beta

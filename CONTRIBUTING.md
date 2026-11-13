@@ -104,8 +104,8 @@ With the environment active, `python tools/dev.py doctor` tells what is still mi
 ## Releases
 
 Releases are tags on `main`, and the GitHub Actions workflows build and publish them:
-- `vX.Y.Z-betaN`: a Beta, a release candidate already tested, waiting for users' feedback (GitHub pre-release and
-  the Beta update channel);
+- `vX.Y.Z-betaN`: a Beta, a release candidate already tested, waiting for users' feedback (GitHub release, shown as the
+  latest one, and the Beta update channel);
 - `vX.Y.Z`: the promotion of the last Beta to Stable (GitHub release and the Stable channel), on the commit that only
   dates the version's CHANGELOG section: the code is the Beta's.
 

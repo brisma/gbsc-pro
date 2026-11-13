@@ -205,7 +205,7 @@ jobs:
           REUSE: ${{ needs.flashers.outputs.reuse }}
         run: |
           set -euo pipefail
-          TAG="$GITHUB_REF_NAME"; if [ "$CHANNEL" = stable ]; then PRE=""; else PRE="--prerelease"; fi
+          TAG="$GITHUB_REF_NAME"
           NAMES=$(gh release view "$TAG" --json assets,isDraft -q 'select(.isDraft | not) | .assets[].name' 2>/dev/null || true)
           if printf '%s\n' "$NAMES" | grep -x artifacts.json > /dev/null; then
             echo "$TAG is published with its assets (artifacts.json is uploaded last): nothing to do"; exit 0
@@ -226,8 +226,8 @@ jobs:
           # a draft until every file is there: never an incomplete release on the page, and it works with
           # immutable releases (no asset may be added once a release is published)
           gh release view "$TAG" > /dev/null 2>&1 ||
-            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "GBSC PRO $V" $PRE --notes "$NOTES"
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "GBSC PRO $V" --notes "$NOTES"
           gh release upload "$TAG" rel/assets/* --clobber
           gh release upload "$TAG" rel/artifacts.json --clobber   # last: it marks the release complete
-          if [ "$CHANNEL" = stable ]; then LATEST="--latest"; else LATEST=""; fi   # a Stable is the release users see first
-          gh release edit "$TAG" --draft=false $LATEST
+          # Stable or Beta, the newest release is the one the repository page shows: a Beta says so in its name
+          gh release edit "$TAG" --draft=false --latest
