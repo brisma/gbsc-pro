@@ -48,6 +48,8 @@ class WebSocketsServerCore : protected WebSockets {
 #endif
 
     void onEvent(WebSocketServerEvent cbEvent);
+
+    volatile uint16_t turnedAway = 0;   // gbs-control: connections closed because every slot was taken (wraps)
     void onValidateHttpHeader(
         WebSocketServerHttpHeaderValFunc validationFunc,
         const char * mandatoryHttpHeaders[],

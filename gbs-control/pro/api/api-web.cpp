@@ -80,6 +80,13 @@ void apiWebSocketWatch(uint32_t now) {
                       (unsigned long)(slots[i].openForMs() / 1000));
         }
     }
+    static uint16_t turnedAway = 0;   // closed at once by the server: every slot taken
+    uint16_t n = webSocket.turnedAway;
+    if (n != turnedAway) {
+        logPrintf(LC_API, LL_INFO, PSTR("web socket: %u more turned away (all %u slots taken)"), (unsigned)(uint16_t)(n - turnedAway),
+                  (unsigned)WEBSOCKETS_SERVER_CLIENT_MAX);
+        turnedAway = n;
+    }
 }
 
 static void addGuard(AsyncWebServer& server) {

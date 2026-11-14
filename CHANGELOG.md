@@ -40,6 +40,8 @@ refer to brisma/gbsc-pro.
   cut), the GBSC no longer stays an access point until a restart: every minute that nobody is joined to the access
   point it tries the saved network again for 15 seconds.
 - Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
+- Web app: with two pages already connected, a third one is answered at once and retries, instead of waiting about 7
+  seconds while the GBSC held memory for it.
 - Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board
   does not show. (#72)
 - Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot

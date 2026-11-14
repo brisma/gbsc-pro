@@ -56,7 +56,14 @@ WebSocketsServer::WebSocketsServer(uint16_t port, const String & origin, const S
 
 #if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
     _server->onClient([](void * s, AsyncClient * c) {
-        ((WebSocketsServerCore *)s)->newClient(new AsyncTCPbuffer(c));
+        // gbs-control: with every slot taken the connection is closed at once (its buffers freed when it closes),
+        // not left open with no reply until the browser gives up; counted for the log (SDK context: no printing here)
+        WebSocketsServerCore * server = (WebSocketsServerCore *)s;
+        AsyncTCPbuffer * b            = new AsyncTCPbuffer(c);
+        if(!server->newClient(b)) {
+            server->turnedAway++;
+            b->stop();
+        }
     },
         this);
 #endif
