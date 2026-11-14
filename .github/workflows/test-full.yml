@@ -1,4 +1,4 @@
-# The full run before a Beta or Stable release (called by ota-publish.yml) or by hand: every suite in the development
+# The full run before a Stable release (called by ota-publish.yml) or by hand: every suite in the development
 # container, and Playwright on every project split into 4 parallel jobs (~3300 tests: one job would take ~40 minutes).
 name: test full
 on:

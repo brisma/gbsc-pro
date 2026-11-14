@@ -24,9 +24,22 @@ jobs:
     if: ${{ !inputs.rollback }}
     uses: ./.github/workflows/flashers.yml
 
-  # The full test run first (Playwright on every project, four parallel jobs)
+  # A Beta: what every push runs (every suite in the development container, the quick browser run on Android, iPhone
+  # and desktop)
+  quick-tests:
+    if: ${{ !inputs.rollback && inputs.channel != 'stable' }}
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
+      - run: mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
+      - run: docker compose run --rm -T dev check --strict
+
+  # A Stable (the commit of the last Beta, its CHANGELOG section dated): the full run, Playwright on every project in
+  # four parallel jobs
   full-tests:
-    if: ${{ !inputs.rollback }}
+    if: ${{ !inputs.rollback && inputs.channel == 'stable' }}
     uses: ./.github/workflows/test-full.yml
 
   # Every suite but the browsers natively on Windows, macOS and Linux
@@ -35,11 +48,11 @@ jobs:
     uses: ./.github/workflows/test-native.yml
 
   publish:
-    needs: [flashers, full-tests, native-tests]
-    # also when they were skipped (a rollback), never after one that did not succeed: a failed job, and a job
-    # GitHub cancelled because no runner came (its result is "cancelled", not "failure": rerun-no-runner.yml runs
-    # it again, and this job with it)
-    if: ${{ !cancelled() && contains(fromJSON('["success", "skipped"]'), needs.flashers.result) && contains(fromJSON('["success", "skipped"]'), needs.full-tests.result) && contains(fromJSON('["success", "skipped"]'), needs.native-tests.result) }}
+    needs: [flashers, quick-tests, full-tests, native-tests]
+    # also when they were skipped (a rollback; one of the two browser runs), never after one that did not succeed: a
+    # failed job, and a job GitHub cancelled because no runner came (its result is "cancelled", not "failure":
+    # rerun-no-runner.yml runs it again, and this job with it); outside a rollback one browser run must have passed
+    if: ${{ !cancelled() && contains(fromJSON('["success", "skipped"]'), needs.flashers.result) && contains(fromJSON('["success", "skipped"]'), needs.quick-tests.result) && contains(fromJSON('["success", "skipped"]'), needs.full-tests.result) && contains(fromJSON('["success", "skipped"]'), needs.native-tests.result) && (inputs.rollback || needs.quick-tests.result == 'success' || needs.full-tests.result == 'success') }}
     runs-on: ubuntu-26.04
     env:
       CHANNEL: ${{ inputs.channel }}
@@ -133,13 +146,13 @@ jobs:
           echo "$MODE (live $CHANNEL: ${LIVE:-none})"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
 
-      # Tests and the build run in the development image (compose.yaml), the same toolchains anyone builds with
-      - name: Native tests
+      # The build runs in the development image (compose.yaml), the same toolchains anyone builds with; the suites
+      # already ran in the test jobs above
+      - name: Development image
         if: ${{ !inputs.rollback }}
         run: |
           docker compose pull dev || { echo "::warning::the image tag is not published (or not public): building it here"; docker compose build dev; }
           mkdir -p gbs-control/public/node_modules gbsc-pro-flasher/ui/node_modules
-          docker compose run --rm -T dev check esp adv tools --strict
 
       - name: Flashers (Stable and Beta)
         if: ${{ !inputs.rollback }}

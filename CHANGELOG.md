@@ -48,6 +48,8 @@ refer to brisma/gbsc-pro.
 ### Source code
 - A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before
   each release (it was at every push).
+- A Beta release runs the tests of a push (every suite, browsers on Android, iPhone and desktop); a Stable, the same
+  commit as its last Beta, the full browser run on 8 projects. The suites no longer run a second time while publishing.
 
 ## 3.0.0-beta1 - 2026-11-12
 

@@ -72,10 +72,25 @@ class WorkflowRobustnessTest(WorkflowTest):
     # after a cancelled macOS flasher build, on its way to a release with two flashers
     def test_publish_needs_the_flashers_and_the_tests_to_have_succeeded(self):
         job = self.load("ota-publish.yml")["jobs"]["publish"]
-        self.assertEqual(sorted(job["needs"]), ["flashers", "full-tests", "native-tests"])
+        self.assertEqual(sorted(job["needs"]), ["flashers", "full-tests", "native-tests", "quick-tests"])
         for need in job["needs"]:
             self.assertIn("""contains(fromJSON('["success", "skipped"]'), needs.%s.result)""" % need, job["if"])
         self.assertNotIn("!= 'failure'", job["if"])
+        # one of the two browser runs really ran: two skipped test jobs never let a release through
+        self.assertIn("(inputs.rollback || needs.quick-tests.result == 'success' || needs.full-tests.result == 'success')",
+                      job["if"])
+
+    # A Beta runs what a push runs (every suite, the quick browser run); a Stable, the same commit as the last Beta,
+    # the full run on 8 projects. The publish job does not run the suites a third time
+    def test_quick_tests_on_a_beta_the_full_run_on_stable(self):
+        jobs = self.load("ota-publish.yml")["jobs"]
+        self.assertIn("inputs.channel != 'stable'", jobs["quick-tests"]["if"])
+        self.assertIn("inputs.channel == 'stable'", jobs["full-tests"]["if"])
+        self.assertEqual(jobs["full-tests"]["uses"], "./.github/workflows/test-full.yml")
+        quick = "\n".join(str(st.get("run", "")) for st in jobs["quick-tests"]["steps"])
+        self.assertIn("dev check --strict", quick)
+        self.assertNotIn("--full", quick)
+        self.assertNotIn("dev check", "\n".join(self.steps().values()))
 
     # Windows, macOS and Linux run their suites before a release, not at every push (a push runs the container only)
     def test_the_native_suites_run_before_a_release(self):

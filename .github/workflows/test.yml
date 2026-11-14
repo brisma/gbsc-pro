@@ -1,6 +1,7 @@
 # Every push to main and every pull request: all suites in the development container with the quick Playwright run
-# (Android, iPhone, desktop), with the same tools/dev.py a contributor runs. Windows, macOS and Linux run their own
-# suites before a release (test-native.yml), the full Playwright run too (test-full.yml); both also by hand.
+# (Android, iPhone, desktop), with the same tools/dev.py a contributor runs; a Beta release runs the same. Windows,
+# macOS and Linux run their own suites before a release (test-native.yml), a Stable also the full Playwright run
+# (test-full.yml); both also by hand.
 name: test
 on:
   push:
