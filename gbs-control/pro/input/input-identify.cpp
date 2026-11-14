@@ -20,7 +20,7 @@ void InputIdentify::newAcquisition() {
     phase_ = ID_IDLE;
     why_ = IW_NONE;
     high_ = low_ = syncLost_ = 0;
-    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = burst_ = peeked_ = levelSincePeek_ = wires_ = false;
+    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = burst_ = peeked_ = levelSincePeek_ = wires_ = seen_ = false;
 }
 
 // RGB SCART after listen: listen goes off first; the syncwatcher stays held until the termination is off (RELEASING)
@@ -77,11 +77,13 @@ uint8_t InputIdentify::step(const IdSample& s, uint32_t now) {
     if ((s.levelMeasured && s.blueContent) || (s.peekMeasured && s.peekWires == RW_BLUE)) return verdictRgb(IW_PICTURE_LISTENING, now);
     if (s.peekMeasured) {
         if (s.peekWires == RW_CONTENT) wires_ = true;    // the console's own picture, its blue uniform or absent
-        if (s.peekContent && s.peekWires == RW_FLAT) {   // a picture on pin 20, nothing on R/G/B: composite only
+        bool only = s.peekContent && s.peekWires == RW_FLAT;   // a picture on pin 20, nothing on R/G/B
+        if (only && seen_) {                             // at two looks in a row: composite only
             why_ = IW_COMPOSITE;
             phase_ = ID_DONE;                            // listen_ stays on: the decoder keeps its lock into Composite
             return IA_MOVE_COMPOSITE;
         }
+        seen_ = only;                                    // once: a decoder that just locked reads like a dim picture
     }
     if (s.levelMeasured) {
         levelSincePeek_ = true;
@@ -99,15 +101,16 @@ uint8_t InputIdentify::step(const IdSample& s, uint32_t now) {
             return IA_MOVE_COMPOSITE;
         }
         if (haveReport_ && lock_ && !freeRun_) {         // the decoder present on pin 20, black on both so far
-            if (!burst_ && since >= kCompositeMinMs) return verdictRgb(IW_NO_BURST, now);   // a sync, not a picture
-            if (since >= kBlackCapMs) {
+            // a look that saw a picture waits for the one that confirms it; else: a sync, not a picture
+            if (!seen_ && !burst_ && since >= kCompositeMinMs) return verdictRgb(IW_NO_BURST, now);
+            if (!seen_ && since >= kBlackCapMs) {
                 if (wires_) return verdictRgb(IW_WIRES, now);
                 if (!lastComposite_) return verdictRgb(IW_BLACK, now);
                 why_ = IW_COMPOSITE_LAST;
                 phase_ = ID_DONE;
                 return IA_MOVE_COMPOSITE;
             }
-            if (since < kPeekLastMs && (!peeked_ || (levelSincePeek_ && now - peekAt_ >= kPeekEveryMs))) {
+            if ((since < kPeekLastMs || seen_) && (!peeked_ || (levelSincePeek_ && now - peekAt_ >= kPeekEveryMs))) {
                 peeked_ = true;
                 levelSincePeek_ = false;
                 peekAt_ = now;

@@ -5,8 +5,8 @@
 // Composite is decided on what pin 20 shows, not on time: every SCART RGB cable carries composite video or composite
 // sync there, so an RGB console on a black screen locks the decoder too. With the G level low and the decoder present
 // the composite picture is looked at (the encoder already drives the TV5725's YPbPr input while the decoder listens:
-// one ADC input change, no ADV switch): a picture there with nothing on the G and B wires right after is a
-// composite-only source; content on B is the console's own picture coming up meanwhile; content on G alone (a white
+// one ADC input change, no ADV switch): a picture there with nothing on the G and B wires right after, at two looks
+// in a row (a decoder that locked 0.3 s ago reads Y 26/24/15 for a moment), is a composite-only source; content on B is the console's own picture coming up meanwhile; content on G alone (a white
 // screen: the blue uniform) or something faint decides nothing at that look, and the G level goes on. Black on both
 // decides nothing either: looked at again every kPeekEveryMs. At the end a sync without colour burst is RGB SCART
 // (an RGB cable wired with composite sync) at kCompositeMinMs; at kBlackCapMs a look that saw content on the wires
@@ -46,7 +46,7 @@ public:
     static const uint8_t kRgbWiredMin = 32, kLevelNoise = 8, kSyncLostPasses = 3;
     static const uint32_t kDecoderReadyMs = 1800, kDecoderCapMs = 3000, kIdentifyCapMs = 5000, kReleaseCapMs = 1200,
                           kDecoderInitMs = 800, kSwitchSettleMs = 200,
-                          kAbsoluteCapMs = 6000;   // from begin(), whatever the glue's stamps say: never a hang
+                          kAbsoluteCapMs = 7000;   // from begin(), whatever the glue's stamps say: never a hang
     // From begin(). kCompositeMinMs: a sync without colour and no picture is RGB SCART (and the legacy time rule of
     // an ADV Controller that cannot listen: a booting console keeps R/G/B flat, MD 3.4 s). Looks kPeekEveryMs apart,
     // none after kPeekLastMs; still black on both at kBlackCapMs: the last source decides
@@ -71,6 +71,6 @@ private:
     uint8_t phase_ = ID_IDLE, why_ = IW_NONE, high_ = 0, low_ = 0, syncLost_ = 0;
     bool listen_ = false, decoderListens_ = true, rgbDone_ = false, haveReport_ = false, lock_ = false, freeRun_ = false,
          forced_ = false, burst_ = false, compositeSearched_ = true, lastComposite_ = false, peeked_ = false,
-         levelSincePeek_ = false, wires_ = false;
+         levelSincePeek_ = false, wires_ = false, seen_ = false;
     uint32_t listenAt_ = 0, releaseFrom_ = 0, beginAt_ = 0, peekAt_ = 0;
 };

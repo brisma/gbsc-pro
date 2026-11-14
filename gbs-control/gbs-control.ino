@@ -6978,6 +6978,46 @@ void si5351Lab(const uint8_t* d, uint8_t n)
 // Mode 7: the look at the composite picture from the listening state (dev.listen 1 first, RGB SCART): detection
 // state, then per sample the YPbPr ADC input alone (no ADV switch: the encoder already drives it under listen) for
 // data[4] ms (default 20) before the live sample there, the RGB input back and a live sample on it.
+// One channel as tv5725LiveSample takes it (ADC clock, resetDigital, matrix bypassed), the 256 samples sorted
+static void tv5725LiveSorted(uint8_t c, uint16_t smp[256])
+{
+    uint8_t pll = GBS::PLL648_CONTROL_01::read(), adc0 = GBS::ADC_5_00::read();
+    uint8_t r46 = GBS::RESET_CONTROL_0x46::read(), r47 = GBS::RESET_CONTROL_0x47::read();
+    uint8_t busSel = GBS::TEST_BUS_SEL::read(), busEn = GBS::TEST_BUS_EN::read(), decEn = GBS::DEC_TEST_ENABLE::read();
+    uint8_t decSel = GBS::DEC_TEST_SEL::read(), byps = GBS::DEC_MATRIX_BYPS::read();
+    GBS::PLL648_CONTROL_01::write(0xA5);
+    GBS::ADC_CLK_PA::write(2);
+    resetDigital();
+    delay(20);
+    GBS::DEC_MATRIX_BYPS::write(1);
+    GBS::DEC_TEST_ENABLE::write(1);
+    GBS::TEST_BUS_SEL::write(0x0b);
+    GBS::TEST_BUS_EN::write(1);
+    static const uint8_t kSel[3] = {2, 1, 3};   // R, G, B
+    GBS::DEC_TEST_SEL::write(kSel[c]);
+    delay(2);
+    for (uint16_t i = 0; i < 256; i++) smp[i] = rjBusLevel(GBS::TEST_BUS::read());
+    std::sort(smp, smp + 256);
+    GBS::DEC_TEST_SEL::write(decSel);
+    GBS::DEC_TEST_ENABLE::write(decEn);
+    GBS::DEC_MATRIX_BYPS::write(byps);
+    GBS::TEST_BUS_SEL::write(busSel);
+    GBS::TEST_BUS_EN::write(busEn);
+    GBS::RESET_CONTROL_0x47::write(r47);
+    GBS::RESET_CONTROL_0x46::write(r46);
+    GBS::ADC_5_00::write(adc0);
+    GBS::PLL648_CONTROL_01::write(pll);
+    handleWiFi(0);
+}
+
+static void probeDistLine(uint8_t pass, char name, const uint16_t* s)
+{
+    uint16_t over8 = 0, over24 = 0;
+    for (uint16_t i = 0; i < 256; i++) { if (s[i] >= s[128] + 8) over8++; if (s[i] >= s[128] + 24) over24++; }
+    logPrintf(LC_INPUT, LL_INFO, PSTR("dist %u %c: p15 %u p50 %u p95 %u p99 %u max %u | over +8: %u, +24: %u of 256"), pass, name,
+              s[38], s[128], s[243], s[253], s[255], over8, over24);
+}
+
 void contentProbe(const uint8_t* d, uint8_t n)
 {
     uint8_t count = n > 1 && d[1] ? d[1] : 10, mask = n > 2 && d[2] ? d[2] : 7, gap = n > 3 && d[3] ? d[3] : 20;
@@ -7059,6 +7099,25 @@ void contentProbe(const uint8_t* d, uint8_t n)
             tv5725ChannelContentLive(7, rc);
             logPrintf(LC_INPUT, LL_INFO, PSTR("look %u: composite content Pr %u Y %u Pb %u level Y %u | RGB after %u/%u/%u | hs %u -> %u, adc %u, %lu ms"),
                       i, yc[0], yc[1], yc[2], yl[1], rc[0], rc[1], rc[2], hsBefore, hsBack, sel, (unsigned long)(millis() - t));
+            for (uint8_t k = 0; k < gap; k++) { delay(10); handleWiFi(0); }
+        }
+        return;   // no reset: the detection takes over from the state it was in
+    }
+    if (n > 0 && d[0] == 9) {   // the look's two measures as distributions: where a sparse picture hides
+        uint8_t settle = n > 4 && d[4] ? d[4] : 20;
+        uint32_t w = millis();
+        while (!getStatus16SpHsStable() && millis() - w < 1000) { delay(10); handleWiFi(0); }
+        uint16_t smp[256];
+        for (uint8_t i = 0; i < count; i++) {
+            uint8_t sel = GBS::ADC_INPUT_SEL::read();
+            GBS::ADC_INPUT_SEL::write(0);
+            delay(settle);
+            tv5725LiveSorted(1, smp); probeDistLine(i, 'Y', smp);
+            GBS::ADC_INPUT_SEL::write(sel);
+            delay(settle);
+            tv5725LiveSorted(0, smp); probeDistLine(i, 'R', smp);
+            tv5725LiveSorted(1, smp); probeDistLine(i, 'G', smp);
+            tv5725LiveSorted(2, smp); probeDistLine(i, 'B', smp);
             for (uint8_t k = 0; k < gap; k++) { delay(10); handleWiFi(0); }
         }
         return;   // no reset: the detection takes over from the state it was in

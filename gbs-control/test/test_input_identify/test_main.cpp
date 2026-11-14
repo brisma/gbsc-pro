@@ -43,6 +43,16 @@ static void toFirstLook(InputIdentify& id, bool burst = true, bool lastComposite
     TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(report(level(0, 600, 500), true, false, burst), 900));
 }
 
+// From a look asked at 900 and answered "a picture, wires flat" at 1200: G level samples, then the look that confirms
+// it, asked at 2100 (kPeekEveryMs after the first)
+static void toSecondLook(InputIdentify& id) {
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true), 1200));   // one look is not enough
+    TEST_ASSERT_EQUAL_UINT8(ID_IDENTIFY, id.phase());
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1200, 1100), 1500));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1500, 1400), 1800));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 1800, 1700), 2100));
+}
+
 // begin, then the flat R/G/B pass: listen goes on
 static void toListening(InputIdentify& id, bool decoderListens = true) {
     id.begin(0, decoderListens);
@@ -81,11 +91,13 @@ void test_identify_rgb_only_cable_on_black(void) {      // SNES csync: G 76-80
     expectRgbWired(id, 77);
 }
 
-// N64 (composite only): G 0, the decoder locked on pin 20, and a picture seen there at the first look: Composite
-// at once, well before kCompositeMinMs
+// N64 (composite only): G 0, the decoder locked on pin 20, and a picture seen there at two looks in a row with
+// the RGB wires flat: Composite, before kCompositeMinMs
 void test_identify_composite_only(void) {
     InputIdentify id; toFirstLook(id);
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
+    toSecondLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 2400));
+    TEST_ASSERT_TRUE(2400 < InputIdentify::kCompositeMinMs);
     TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
     TEST_ASSERT_EQUAL_UINT8(ID_DONE, id.phase());
     TEST_ASSERT_TRUE(id.listenWanted());                 // kept until the glue switched to Composite
@@ -97,7 +109,59 @@ void test_identify_composite_only(void) {
 // The picture is what tells a composite source, not its colour: a black-and-white one is Composite too
 void test_identify_composite_picture_without_burst(void) {
     InputIdentify id; toFirstLook(id, false);
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
+    toSecondLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 2400));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
+}
+
+// Mega Drive, 50/60 Hz switched on a black screen: 0.3 s after the decoder locked, the look read Y 26/24/15 with the
+// wires at 0/1/0, a settling that is gone a second later. One look that sees a picture is not a composite source
+void test_identify_a_settling_decoder_is_not_a_composite_picture(void) {
+    InputIdentify id; toFirstLook(id);
+    toSecondLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), false), 2400));  // black now: it was a settling
+    uint32_t t = 2700;
+    bool afterPeek = false;
+    blackUntil(id, t, InputIdentify::kBlackCapMs, afterPeek);
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(0, t, t), InputIdentify::kBlackCapMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_BLACK, id.why());
+}
+
+// The two looks must follow each other: a look with something on the wires in between starts the count again
+void test_identify_composite_needs_two_looks_in_a_row(void) {
+    InputIdentify id; toFirstLook(id);
+    toSecondLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true, RW_FAINT), 2400));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2400, 2300), 2700));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2700, 2600), 3000));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 3000, 2900), 3300));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true), 3600));   // the first of a new pair
+    TEST_ASSERT_EQUAL_UINT8(ID_IDENTIFY, id.phase());
+}
+
+// A picture that comes late (a composite console after a long black start), seen by the last regular look: the look
+// that confirms it is still made, after kPeekLastMs, and the black cap waits for it
+void test_identify_a_late_picture_gets_its_second_look(void) {
+    InputIdentify id; toFirstLook(id);                                                // asked at 900
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), false), 1200));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1200, 1100), 1500));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1500, 1400), 1800));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 1800, 1700), 2100));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), false), 2400));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2400, 2300), 2700));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2700, 2600), 3000));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 3000, 2900), 3300));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), false), 3600));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 3600, 3500), 3900));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 3900, 3800), 4100));
+    TEST_ASSERT_TRUE(4350 < InputIdentify::kPeekLastMs);
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 4100, 4000), 4350));  // the last regular look
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true), 4700));    // the picture is there, once
+    TEST_ASSERT_TRUE(5050 > InputIdentify::kBlackCapMs);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 4700, 4600), 5050));    // no black verdict meanwhile
+    TEST_ASSERT_EQUAL_UINT8(ID_IDENTIFY, id.phase());
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 5050, 4950), 5350));  // past kPeekLastMs
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 5700));
     TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
 }
 
@@ -169,7 +233,11 @@ void test_identify_faint_wires_wait_for_a_flat_look(void) {
     TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1200, 1100), 1500));
     TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1500, 1400), 1800));
     TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 1800, 1700), 2100));
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 2400));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true), 2400));   // flat now: the first of two
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2400, 2300), 2700));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2700, 2600), 3000));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 3000, 2900), 3300));
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 3600));
     TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
 }
 
@@ -234,7 +302,8 @@ void test_identify_composite_keeps_an_earlier_fresh_report(void) {   // reports 
     InputIdentify id; toListening(id);
     TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 300, 200), true, false), 600));
     TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 600, 500), 900));
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
+    toSecondLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 2400));
 }
 
 // A lock without a colour burst and no picture on pin 20 is a sync: an RGB cable wired with composite sync (csync),
@@ -437,6 +506,9 @@ int main(int, char**) {
     RUN_TEST(test_identify_rgb_only_cable_on_black);
     RUN_TEST(test_identify_composite_only);
     RUN_TEST(test_identify_composite_picture_without_burst);
+    RUN_TEST(test_identify_a_settling_decoder_is_not_a_composite_picture);
+    RUN_TEST(test_identify_composite_needs_two_looks_in_a_row);
+    RUN_TEST(test_identify_a_late_picture_gets_its_second_look);
     RUN_TEST(test_identify_looks_are_spaced);
     RUN_TEST(test_identify_black_on_both_is_rgb);
     RUN_TEST(test_identify_black_on_both_follows_the_last_source);

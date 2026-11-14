@@ -21,6 +21,26 @@ void test_content_ignores_sync_and_blanking(void) {
     TEST_ASSERT_TRUE(rjContent(s, 256) >= RgbScartJudge::kYMin);
 }
 
+// Thin bright parts on black (the text screens of the 240p Test Suite on a Mega Drive): of 256 samples of the G wire
+// 10 to 13 read 190 and more and the rest 0, so p95 - p15 says 1 and the wires looked flat. Measured next to it:
+// empty wires beside a bright composite picture on pin 20 (N64) reach 16 at most, a black screen reads 0 everywhere
+void test_content_sees_thin_bright_parts(void) {
+    uint16_t s[256];
+    for (uint16_t i = 0; i < 256; i++) s[i] = i % 25 == 0 ? 196 : 0;        // G: 11 bright samples
+    TEST_ASSERT_TRUE(rjContent(s, 256) >= RgbScartJudge::kRgbMin);
+    for (uint16_t i = 0; i < 256; i++) s[i] = i % 64 == 0 ? 198 : 0;        // B: 4
+    TEST_ASSERT_TRUE(rjContent(s, 256) >= RgbScartJudge::kRgbMin);
+    for (uint16_t i = 0; i < 256; i++) s[i] = i % 128 == 0 ? 198 : 0;       // 2: not told from a glitch
+    TEST_ASSERT_TRUE(rjContent(s, 256) < RgbScartJudge::kWiresFlatMax);
+    for (uint16_t i = 0; i < 256; i++) s[i] = i == 7 ? 16 : i % 60 == 0 ? 10 : i % 40 == 0 ? 6 : 0;   // empty wires
+    TEST_ASSERT_TRUE(rjContent(s, 256) < RgbScartJudge::kWiresFlatMax);
+    for (uint16_t i = 0; i < 256; i++) s[i] = 0;                            // a black screen
+    TEST_ASSERT_EQUAL_UINT16(0, rjContent(s, 256));
+    // the composite picture of a black screen, read through the decoder: p15 17, p50 21, p99 25, max 31
+    for (uint16_t i = 0; i < 256; i++) s[i] = i < 2 ? 31 : i < 12 ? 25 : i < 128 ? 21 : 17;
+    TEST_ASSERT_TRUE(rjContent(s, 256) < RgbScartJudge::kPeekYMin);
+}
+
 void test_content_order_does_not_matter(void) {
     uint16_t a[256], b[256];
     line(a, 256, 50, 180);
@@ -59,7 +79,16 @@ void test_judge_wires_after_a_look(void) {
     uint16_t noise[3] = {7, 7, 7};
     TEST_ASSERT_EQUAL_UINT8(RW_FLAT, rjWiresAfterLook(noise));
     uint16_t white[3] = {0, 129, 0};                         // Mega Drive, a white first screen: blue uniform
-    TEST_ASSERT_EQUAL_UINT8(RW_CONTENT, rjWiresAfterLook(white));
+    TEST_ASSERT_EQUAL_UINT8(RW_BLUE, rjWiresAfterLook(white));  // far above what pin 20 couples into G (16 at most)
+    uint16_t text[3] = {58, 196, 0};                         // thin text on black: G alone
+    TEST_ASSERT_EQUAL_UINT8(RW_BLUE, rjWiresAfterLook(text));
+    TEST_ASSERT_TRUE(rjPictureContentListening(text));
+    uint16_t some[3] = {0, 30, 0};                           // G over kRgbMin, not clear of the coupling: no verdict
+    TEST_ASSERT_EQUAL_UINT8(RW_CONTENT, rjWiresAfterLook(some));
+    TEST_ASSERT_FALSE(rjPictureContentListening(some));
+    uint16_t coupled[3] = {6, 16, 4};                        // empty wires beside a bright composite picture (N64)
+    TEST_ASSERT_EQUAL_UINT8(RW_FAINT, rjWiresAfterLook(coupled));
+    TEST_ASSERT_FALSE(rjPictureContentListening(coupled));
     uint16_t snes[3] = {0, 14, 63};
     TEST_ASSERT_EQUAL_UINT8(RW_BLUE, rjWiresAfterLook(snes));
     uint16_t faint[3] = {0, RgbScartJudge::kWiresFlatMax, 0};
@@ -137,6 +166,7 @@ void test_hint_once_per_acquisition(void) {
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_content_ignores_sync_and_blanking);
+    RUN_TEST(test_content_sees_thin_bright_parts);
     RUN_TEST(test_content_order_does_not_matter);
     RUN_TEST(test_bus_level_is_eight_bits);
     RUN_TEST(test_judge_r_only_is_not_rgb);

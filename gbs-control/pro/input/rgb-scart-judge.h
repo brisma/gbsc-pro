@@ -8,6 +8,13 @@ struct RgbScartJudge {
     // 8-bit levels (rjBusLevel). Measured: black RGB and floating R/G/B 0-1, a Sonic 2 screen 94-255 per
     // channel, N64 PAL composite Y 61-76
     static const uint16_t kRgbMin = 24, kYMin = 24;
+    // Thin bright parts on black (text screens): at least three samples this far above the median count as content.
+    // Measured: text on black 190 and more on 10-13 of 256 samples; empty wires beside a bright composite picture
+    // 16 at most; a black screen 0
+    static const uint16_t kSparkStep = 48;
+    // While the decoder listens the termination couples some of pin 20 into G: 16 at most beside a full-scale
+    // composite picture (N64). G content from here up is the console's own picture
+    static const uint16_t kGListenMin = 48;
     // The identification's look at the composite picture (the YPbPr ADC input while the decoder listens, before any
     // preset). Measured: a black picture 4-7 (Mega Drive without a cartridge), a game screen 46-93
     static const uint16_t kPeekYMin = 12;
@@ -20,17 +27,19 @@ struct RgbScartJudge {
 uint16_t rjBusLevel(uint16_t raw);
 
 // Content of one channel: 95th minus 15th percentile of the samples (the sync tip and blanking fall below the 15th,
-// so a black picture reads about 0 whatever the clamp). Sorts `s` in place.
+// so a black picture reads about 0 whatever the clamp), or the height of the third highest sample over the median
+// when that is kSparkStep or more: a picture of thin bright parts on black. Sorts `s` in place.
 uint16_t rjContent(uint16_t* s, uint16_t n);
 // R, G, B contents: any channel with content, except R alone (chroma of S-Video over SCART lands on pin 15)
 bool rjRgbContent(const uint16_t content[3]);
-// The same while the decoder listens on pin 20: B alone decides (G takes what the termination couples in from pin 20,
-// R the chroma of S-Video over SCART). A scene of bright parts on black has content and a median level of 0.
+// The same while the decoder listens on pin 20: B, or G well above what the termination couples in from pin 20
+// (kGListenMin); R is the chroma of S-Video over SCART. A scene of bright parts on black has content and a median
+// level of 0.
 bool rjPictureContentListening(const uint16_t content[3]);
 // R, G, B contents right after a look at the composite picture. FLAT: nothing on G and B (what a composite-only
-// source gives; R may carry the chroma of S-Video over SCART). BLUE: content on B, the console's own picture.
-// CONTENT: content on G only, a picture whose blue is uniform (a white screen) or absent. FAINT: something below
-// kRgbMin on G or B
+// source gives; R may carry the chroma of S-Video over SCART). BLUE: the console's own picture
+// (rjPictureContentListening: content on B, or plenty on G). CONTENT: some content on G only, not clear of the
+// coupling. FAINT: something below kRgbMin on G or B
 enum : uint8_t { RW_FLAT, RW_FAINT, RW_CONTENT, RW_BLUE };
 uint8_t rjWiresAfterLook(const uint16_t content[3]);
 // The test bus carries the picture only on a scaled path: RGBHV bypass (mode 15, the first step when the LM1881
