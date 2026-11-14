@@ -711,6 +711,15 @@ void test_sync_without_a_picture_gives_the_path_up(void) {
     TEST_ASSERT_TRUE(inputTvPathNoPicture(false, false, InputAuto::kNoPictureMs));
 }
 
+// A sync on RGB SCART / RGB SoG that the mode detector does not read gets the look at the VGA path again: a source on
+// the VGA connector can show its horizontal sync before the vertical one (a Dreamcast just switched on: H 30/30 and
+// V 0/30 at the first look, then 6 s in the composite sync wait and 16 s to its picture)
+void test_unread_sync_is_looked_at_on_vga_again(void) {
+    TEST_ASSERT_FALSE(inputVgaLookAgain(false, 60000));                           // no look on this pass: none later
+    TEST_ASSERT_FALSE(inputVgaLookAgain(true, InputAuto::kVgaLookAgainMs - 1));   // a SCART console is read well before
+    TEST_ASSERT_TRUE(inputVgaLookAgain(true, InputAuto::kVgaLookAgainMs));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_paths_pro_order);
@@ -761,5 +770,6 @@ int main(int, char**) {
     RUN_TEST(test_vga_look_from_rgb_sog_and_from_the_rgb_scart_confirm_look);
     RUN_TEST(test_no_vga_look_where_it_does_not_apply);
     RUN_TEST(test_sync_without_a_picture_gives_the_path_up);
+    RUN_TEST(test_unread_sync_is_looked_at_on_vga_again);
     return UNITY_END();
 }

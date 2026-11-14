@@ -44,6 +44,10 @@ bool inputTvPathDone(uint8_t path, uint8_t passes, uint8_t sogSeen);
 // A probed TV5725 path has a sync (the detection left its low power wait) that does not become a source: upstream
 // would keep it in its sync recovery for about 50 s; the scan gives the path up after InputAuto::kNoPictureMs
 bool inputTvPathNoPicture(bool disconnected, bool present, uint32_t sinceSyncMs);
+// The detection's composite sync wait after a look at the VGA path that found no source there (looked): the sync is
+// looked at there again every InputAuto::kVgaLookAgainMs it stays unread. A source on the VGA connector can show its
+// horizontal sync before the vertical one, and this wait would hold it for 6 s
+bool inputVgaLookAgain(bool looked, uint32_t sinceLookMs);
 
 // A source shown on the active input counts for the machine only when that is the input it wants: right after a new
 // scan starts or an input is chosen by hand the hardware is still on the previous input for a few passes, and its
@@ -68,6 +72,7 @@ public:
     static const uint32_t kAbsentMs = 5000, kNeverSeenMs = 60000;
     static const uint16_t kNoSyncLost = 60;
     static const uint32_t kNoPictureMs = 5000;           // a console's mode is read within a second of its sync
+    static const uint32_t kVgaLookAgainMs = 1500;        // ... a SCART console's within 0.3 s: it never pays a second look
     // A found source back after this much absence is searched again (a console swapped inside input.lost_wait).
     // TV5725 paths: absence starts ~1.7 s after the sync went (kNoSyncLost), so 0.3 s more makes a ~2 s gap;
     // S-Video/Composite: the decoder report drops at once, so 2 s. Only after the found path showed the source once

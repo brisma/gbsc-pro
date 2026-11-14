@@ -52,6 +52,8 @@ bool inputTvPathNoPicture(bool disconnected, bool present, uint32_t sinceSyncMs)
     return !disconnected && !present && sinceSyncMs >= InputAuto::kNoPictureMs;
 }
 
+bool inputVgaLookAgain(bool looked, uint32_t sinceLookMs) { return looked && sinceLookMs >= InputAuto::kVgaLookAgainMs; }
+
 static const uint8_t kSogSweepTop = 6, kSogSweepBottom = 2;
 
 uint8_t inputSogSweepNext(uint8_t level) { return level > kSogSweepBottom && level <= kSogSweepTop ? level - 1 : kSogSweepTop; }

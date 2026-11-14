@@ -1583,12 +1583,18 @@ uint8_t detectAndSwitchToActiveInput()
                     uint16_t testCycle = 0, quiet = 0;
                     bool gone = false;   // no HS activity on any SOG level: leave
                     timeOutStart = millis();
+                    uint32_t lookedAt = timeOutStart;
                     while ((millis() - timeOutStart) < 6000) {
                         delay(2);
                         if (getVideoMode() > 0) {
                             if (getVideoMode() != 8) { // if it's mode 8, need to set stuff first
                                 return 1;
                             }
+                        }
+                        // Pro, in a scan: a sync still unread may be the VGA connector's after all (its VSync came later)
+                        if (inputVgaLookAgain(vgaLooked, millis() - lookedAt)) {
+                            if (inputAutoVgaLookDue() && inputAutoLookAtVga()) return 0;
+                            lookedAt = millis();
                         }
                         testCycle++;
                         if ((testCycle % 10) == 0) {   // WiFi served; a whole SOG cycle (9 levels x 150) without activity
