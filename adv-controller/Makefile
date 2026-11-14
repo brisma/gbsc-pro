@@ -68,6 +68,7 @@ C_SOURCES = \
     $(SRC_DIR)/link_hal_adv.c \
     ../shared/adv-link/adv-link.c \
     $(SRC_DIR)/fault_handler.c \
+    $(SRC_DIR)/syscalls.c \
     $(SRC_DIR)/fw_header.c \
     $(SRC_DIR)/fw_copy.c \
     $(LIB_DIR)/hc32_ll_driver/src/hc32_ll.c \
@@ -139,6 +140,8 @@ LDSCRIPT = linker/hc32f460-app.ld
 LDFLAGS = $(CPU_FLAGS)
 LDFLAGS += -T$(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections
+# One RAM region holds data and the RAM-resident flash routines (RWX by design on a Cortex-M4 without an MPU setup)
+LDFLAGS += -Wl,--no-warn-rwx-segments
 LDFLAGS += -Wl,-Map=$(BUILD_DIR)/$(PROJECT).map,--cref
 LDFLAGS += --specs=nano.specs
 LDFLAGS += --specs=nosys.specs
@@ -216,21 +219,21 @@ HOSTCC ?= cc
 HOST_BUILD = build/host
 test:
 	@mkdir -p $(HOST_BUILD)
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) -I../shared/adv-link -Itest \
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) -I../shared/adv-link -Itest \
 		test/test_link.c test/stub_hal.c $(SRC_DIR)/link.c ../shared/adv-link/adv-link.c -o $(HOST_BUILD)/test_link
 	@$(HOST_BUILD)/test_link
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) test/test_console.c $(SRC_DIR)/console.c -o $(HOST_BUILD)/test_console
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) test/test_console.c $(SRC_DIR)/console.c -o $(HOST_BUILD)/test_console
 	@$(HOST_BUILD)/test_console
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) test/test_cdc_ring.c $(SRC_DIR)/cdc_ring.c -o $(HOST_BUILD)/test_cdc_ring
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) test/test_cdc_ring.c $(SRC_DIR)/cdc_ring.c -o $(HOST_BUILD)/test_cdc_ring
 	@$(HOST_BUILD)/test_cdc_ring
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) -I../shared/adv-link test/test_console_fmt.c $(SRC_DIR)/console_fmt.c -o $(HOST_BUILD)/test_console_fmt
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) -I../shared/adv-link test/test_console_fmt.c $(SRC_DIR)/console_fmt.c -o $(HOST_BUILD)/test_console_fmt
 	@$(HOST_BUILD)/test_console_fmt
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) test/test_usb_guard.c $(SRC_DIR)/usb_guard.c -o $(HOST_BUILD)/test_usb_guard
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) test/test_usb_guard.c $(SRC_DIR)/usb_guard.c -o $(HOST_BUILD)/test_usb_guard
 	@$(HOST_BUILD)/test_usb_guard
 	@"$(PYTHON)" -I tools/test_check_ramfunc.py
-	@$(HOSTCC) -std=c99 -Wall -Wextra -I$(SRC_DIR) -I../shared/adv-link test/test_signal.c $(SRC_DIR)/signal.c ../shared/adv-link/adv-link.c -o $(HOST_BUILD)/test_signal
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -I$(SRC_DIR) -I../shared/adv-link test/test_signal.c $(SRC_DIR)/signal.c ../shared/adv-link/adv-link.c -o $(HOST_BUILD)/test_signal
 	@$(HOST_BUILD)/test_signal
-	@$(HOSTCC) -std=c99 -Wall -Wextra -Wno-unused-parameter -Itest/shim -I$(SRC_DIR) -I../shared/adv-link -DGOLDEN_HOST \
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -Wno-unused-parameter -Itest/shim -I$(SRC_DIR) -I../shared/adv-link -DGOLDEN_HOST \
 		-DI2C_HOST_TEST test/test_i2c.c $(SRC_DIR)/i2c.c -o $(HOST_BUILD)/test_i2c
 	@$(HOST_BUILD)/test_i2c
 	@$(MAKE) --no-print-directory golden
@@ -238,7 +241,7 @@ test:
 # Golden I2C traces: the firmware's own ADV code on the host with DDL shims (test/shim); GOLDEN_UPDATE=1 rewrites
 golden:
 	@mkdir -p $(HOST_BUILD)
-	@$(HOSTCC) -std=c99 -Wall -Wextra -Wno-unused-parameter -Itest/shim -I$(SRC_DIR) -I../shared/adv-link -Itest \
+	@$(HOSTCC) -std=c99 -Wall -Wextra -fno-common -Wno-unused-parameter -Itest/shim -I$(SRC_DIR) -I../shared/adv-link -Itest \
 		-DGOLDEN_HOST test/test_golden.c test/golden_trace.c $(SRC_DIR)/adv7280.c $(SRC_DIR)/adv7391.c $(SRC_DIR)/board.c \
 		$(SRC_DIR)/led.c $(SRC_DIR)/signal.c $(SRC_DIR)/link_hal_adv.c $(SRC_DIR)/link.c \
 		../shared/adv-link/adv-link.c -o $(HOST_BUILD)/test_golden

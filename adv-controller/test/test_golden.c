@@ -53,7 +53,7 @@ static int updateRequested(void) {   /* only GOLDEN_UPDATE=1: GOLDEN_UPDATE=0 us
 }
 
 static void check(const char* name) {
-    char st[40]; snprintf(st, sizeof(st), "end c_state %u led %u input %u adv %u", c_state, led_state, Input_signal, ADV_Powered());
+    char st[64]; snprintf(st, sizeof(st), "end c_state %u led %u input %u adv %u", c_state, led_state, Input_signal, ADV_Powered());
     GOLDEN_Note(st);
     char path[160]; snprintf(path, sizeof(path), "test/golden/%s.txt", name);
     files++;

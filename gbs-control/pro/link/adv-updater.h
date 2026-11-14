@@ -18,6 +18,7 @@ public:
     uint8_t percent() const;
     AuState state() const { return st_; }
     const char* error() const { return err_; }
+    uint8_t restarts() const { return restarts_; }   // transfers started over (0 or 1)
     void finish() { st_ = AU_IDLE; }                 // after the outcome was reported
 
     static const uint32_t kStatusEveryMs = 50, kEraseTimeoutMs = 5000, kRebootDelayMs = 1000,

@@ -20,7 +20,7 @@ void GOLDEN_Gpio(const char* op, uint8_t port, uint16_t pins) {
     char b[40]; snprintf(b, sizeof(b), "gpio %s %c %04X", op, 'A' + port, pins); add(b);
 }
 void GOLDEN_GpioInit(uint8_t port, uint16_t pins, uint16_t dir, uint16_t state, uint16_t pullUp) {
-    char b[40]; snprintf(b, sizeof(b), "gpio init %c %04X dir%u st%u pu%u", 'A' + port, pins, dir, state, pullUp); add(b);
+    char b[64]; snprintf(b, sizeof(b), "gpio init %c %04X dir%u st%u pu%u", 'A' + port, pins, dir, state, pullUp); add(b);
 }
 void GOLDEN_Delay(uint32_t ms) { char b[40]; snprintf(b, sizeof(b), "delay %u", (unsigned)ms); add(b); }
 void GOLDEN_Note(const char* s) { char b[40]; snprintf(b, sizeof(b), "# %s", s); add(b); }

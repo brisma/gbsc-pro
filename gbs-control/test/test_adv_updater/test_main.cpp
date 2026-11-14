@@ -103,12 +103,15 @@ void test_too_big(void) {
 void test_no_session_restarts_once(void) {
     AdvUpdater u; t = 1000;
     toSend(u, 200);
+    TEST_ASSERT_EQUAL_UINT8(0, u.restarts());
     nextReq(u, ++t); rep(u, ADV_CMD_UPD_DATA, ADV_UPD_NO_SESSION, 0, t);
+    TEST_ASSERT_EQUAL_UINT8(1, u.restarts());                                      // reported in the log line
     Step s = nextReq(u, ++t); TEST_ASSERT_EQUAL_HEX8(ADV_CMD_UPD_BEGIN, s.cmd);   // restart
     rep(u, ADV_CMD_UPD_BEGIN, ADV_UPD_OK, 0, t);
     t += 50; nextReq(u, t); rep(u, ADV_CMD_UPD_STATUS, ADV_UST_READY, 0, t);
     nextReq(u, ++t); rep(u, ADV_CMD_UPD_DATA, ADV_UPD_NO_SESSION, 0, t);
     TEST_ASSERT_EQUAL_UINT8(AU_FAILED, u.state());
+    TEST_ASSERT_EQUAL_UINT8(1, u.restarts());                                      // one restart, then the failure
 }
 
 void test_erase_timeout(void) {

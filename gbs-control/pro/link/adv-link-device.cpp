@@ -81,11 +81,6 @@ static const char* statusName(uint8_t st) {
     }
 }
 
-static const char* reqName(uint8_t req) {
-    return req == ADV_CMD_PING ? "PING" : req == ADV_CMD_INFO ? "INFO" : req == ADV_CMD_SIGNAL ? "SIGNAL" :
-           req == ADV_CMD_REG_READ ? "REG_READ" : "request";
-}
-
 static void logController() {
     static uint8_t lastStatus = 0xFF;
     static bool lastInfo = false, lastNotApplied = false;
@@ -247,6 +242,8 @@ static void exchange(uint8_t req, const uint8_t* payload, uint8_t plen) {
 
 static void readImage(uint32_t offset, uint8_t* out, uint8_t n, void*) { advControllerImageRead(offset, out, n); }
 
+static uint32_t gUpdStartedAt = 0;   // for the outcome line: how long the update took
+
 // While the updater runs it owns the link: no STATE, no client requests, one exchange per pass
 static void updaterPass(uint32_t now) {
     uint8_t cmd, len, payload[ADV_MAX_PAYLOAD];
@@ -260,8 +257,13 @@ static void updaterPass(uint32_t now) {
         gUpd.result(gReply.got, gReply.cmd, gReply.payload, gReply.len, millis());
     }
     if (gUpd.state() == AU_DONE || gUpd.state() == AU_FAILED) {
-        if (gUpd.state() == AU_DONE) logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: done"));
-        else logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: failed at %s"), gUpd.error());
+        unsigned long secs = (unsigned long)((millis() - gUpdStartedAt) / 1000);
+        if (gUpd.state() == AU_DONE)
+            logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: done in %lu s, build %08lX, restarts %u"), secs,
+                      (unsigned long)advControllerImageCrc(), (unsigned)gUpd.restarts());
+        else
+            logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: failed at %s after %lu s, restarts %u"), gUpd.error(),
+                      secs, (unsigned)gUpd.restarts());
         gUpdResult = gUpd.state() == AU_DONE ? 1 : 2;
         if (gUpd.state() == AU_DONE) snprintf(gUpdStatus, sizeof(gUpdStatus), "done");
         else snprintf(gUpdStatus, sizeof(gUpdStatus), "failed:%s", gUpd.error());
@@ -419,8 +421,13 @@ bool advLinkUpdateStart() {
         snprintf(gUpdStatus, sizeof(gUpdStatus), "failed:busy");
         return false;
     }
-    gUpd.start(advControllerImageSize(), advControllerImageCrc(), advControllerImageVersion(), millis());
-    logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: started (%u KB)"), (unsigned)(advControllerImageSize() / 1024));
+    const AdvControllerInfo& h = gClient.advController();
+    gUpdStartedAt = millis();
+    gUpd.start(advControllerImageSize(), advControllerImageCrc(), advControllerImageVersion(), gUpdStartedAt);
+    logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: started (%u KB, %s build %08lX -> %s build %08lX)"),
+              (unsigned)(advControllerImageSize() / 1024), h.haveInfo ? h.info.fw : "?",
+              (unsigned long)(h.haveInfo ? h.info.buildId : 0), advControllerImageVersion(),
+              (unsigned long)advControllerImageCrc());
     return true;
 }
 

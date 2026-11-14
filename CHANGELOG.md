@@ -12,6 +12,10 @@ refer to brisma/gbsc-pro.
   is applied while a picture from RGB SCART is shown. The action `input.termination` of the HTTP API is gone: write
   the setting `input.sync_75ohm`. (#69)
 
+- ADV Controller: still 3.0.0, in a new build (6BAAF3C4) that behaves the same, so the GBSC PRO offers to update it.
+  Please install it: if it fails, an issue with the report helps, since the log now says from which build to which,
+  how long it took and whether it had to start over.
+
 - Menu: Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier
   versions. (#70)
 

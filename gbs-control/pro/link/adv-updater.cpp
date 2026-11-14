@@ -17,7 +17,8 @@ bool AdvUpdater::missed(uint32_t now) {
 }
 
 void AdvUpdater::restartOrFail() {
-    if (restarts_++ >= 1) { fail("transfer"); return; }
+    if (restarts_ >= 1) { fail("transfer"); return; }
+    restarts_++;
     offset_ = 0;
     stall_ = 0;
     st_ = AU_BEGIN;
