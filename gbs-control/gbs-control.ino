@@ -52,6 +52,7 @@ extern bool gSettingsPresetPending;   // pro/settings/settings-apply.cpp: preset
 #include "pro/net/wifi-tune.h"
 #include "pro/net/wifi-tune-device.h"
 #include "pro/net/channel-guard-device.h"
+#include "pro/net/ap-retry.h"
 #include "pro/input/sync-pulse.h"
 #include "pro/input/rgb-scart-judge.h"
 #include "pro/picture/picture-color.h"
@@ -7866,6 +7867,11 @@ void handleWiFi(boolean instant)
         channelGuardLoop();   // a router that announces a channel switch and stays must not cost the link
         MDNS.update();
         persWM.handleWiFi(); // if connected, returns instantly. otherwise it reconnects or opens AP
+        static ApRetry apRetry;   // the saved network did not answer at power-on: try it again now and then
+        if (apRetry.due(millis(), WiFi.getMode() == WIFI_AP, WiFi.softAPgetStationNum() > 0, updateInProgress() || otaBusy()) &&
+            persWM.retryStoredNetwork(ApRetry::kTryS))
+            logPrintf(LC_WIFI, LL_INFO, PSTR("access point: nobody joined for a minute, trying the saved network again (%u s)"),
+                      (unsigned)ApRetry::kTryS);
         dnsServer.processNextRequest();
 
         if (((millis() - lastTimePing) > 973) || instant) {

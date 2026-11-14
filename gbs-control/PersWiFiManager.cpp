@@ -62,6 +62,7 @@ bool PersWiFiManager::attemptConnection(const String &ssid, const String &pass)
     }
 
     //if in nonblock mode, skip this loop
+    _connectTimeoutS = WIFI_CONNECT_TIMEOUT;
     _connectStartTime = millis(); // + 1;
     while (!_connectNonBlock && _connectStartTime) {
         handleWiFi();
@@ -103,7 +104,7 @@ void PersWiFiManager::handleWiFi()
     }
 
     //if failed or not connected and time is up
-    if ((WiFi.status() == WL_CONNECT_FAILED) || ((WiFi.status() != WL_CONNECTED) && ((millis() - _connectStartTime) > (1000 * WIFI_CONNECT_TIMEOUT)))) {
+    if ((WiFi.status() == WL_CONNECT_FAILED) || ((WiFi.status() != WL_CONNECTED) && ((millis() - _connectStartTime) > (1000UL * _connectTimeoutS)))) {
         startApMode();
         _connectStartTime = 0; //reset connect start time
     }
@@ -136,6 +137,27 @@ void PersWiFiManager::startApMode()
     if (_apHandler)
         _apHandler();
 } //startApMode
+
+bool PersWiFiManager::retryStoredNetwork(uint8_t timeoutS)
+{
+    // startApMode() cleared the current station config (RAM only): read the saved one and pass it on
+    struct station_config conf;
+    if (!wifi_station_get_config_default(&conf) || conf.ssid[0] == 0)
+        return false;
+    char ssid[sizeof(conf.ssid) + 1] = {0}, pass[sizeof(conf.password) + 1] = {0};
+    memcpy(ssid, conf.ssid, sizeof(conf.ssid));
+    memcpy(pass, conf.password, sizeof(conf.password));
+    _dnsServer->stop();
+    WiFi.persistent(false);   // the saved network stays as it is
+    WiFi.softAPdisconnect(true);
+    WiFi.mode(WIFI_STA);
+    WiFi.hostname(device_hostname_partial);
+    WiFi.begin(ssid, pass[0] ? pass : nullptr);
+    memset(pass, 0, sizeof(pass));
+    _connectTimeoutS = timeoutS;
+    _connectStartTime = millis();   // handleWiFi(): connected, or the access point again after timeoutS
+    return true;
+} //retryStoredNetwork
 
 void PersWiFiManager::setConnectNonBlock(bool b)
 {

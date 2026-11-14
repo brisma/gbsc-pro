@@ -30,6 +30,9 @@ refer to brisma/gbsc-pro.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
+- WiFi: when the saved network does not answer at power-on (a router that starts slower than the GBSC after a power
+  cut), the GBSC no longer stays an access point until a restart: every minute that nobody is joined to the access
+  point it tries the saved network again for 15 seconds.
 - Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
 - Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board
   does not show. (#72)

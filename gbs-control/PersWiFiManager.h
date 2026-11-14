@@ -40,6 +40,10 @@ public:
 
     void startApMode();
 
+    // From the access point: try the network saved in flash again (read only, nothing written) for timeoutS
+    // seconds, then the access point comes back. False when no network is saved
+    bool retryStoredNetwork(uint8_t timeoutS);
+
     void onConnect(WiFiChangeHandlerFunction fn);
 
     void onAp(WiFiChangeHandlerFunction fn);
@@ -51,6 +55,7 @@ private:
 
     bool _connectNonBlock;
     unsigned long _connectStartTime;
+    uint8_t _connectTimeoutS = WIFI_CONNECT_TIMEOUT;
 
     WiFiChangeHandlerFunction _connectHandler;
     WiFiChangeHandlerFunction _apHandler;
