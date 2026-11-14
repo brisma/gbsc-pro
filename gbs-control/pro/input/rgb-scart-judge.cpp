@@ -28,6 +28,10 @@ uint8_t rjWiresAfterLook(const uint16_t content[3]) {
     return RW_FLAT;                                      // R is not asked: the chroma of S-Video over SCART
 }
 
+bool rjHintSeesPicture(const uint16_t content[3]) {
+    return content[1] >= RgbScartJudge::kWiresFlatMax || content[2] >= RgbScartJudge::kWiresFlatMax;
+}
+
 bool rjPathMeasurable(uint8_t videoStandardInput, bool hdBypass) {
     return videoStandardInput != 0 && videoStandardInput != 15 && !hdBypass;
 }

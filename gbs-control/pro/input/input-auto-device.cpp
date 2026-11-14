@@ -736,8 +736,12 @@ static void hintLoop(uint32_t now) {
         return;
     uint16_t c[3];
     tv5725ChannelContent(7, c);
-    if (gHint.sampled(now, rjRgbContent(c)) == RH_SHOW) {
-        logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART still black after 20 s, hint: try Composite"));
+    uint8_t r = gHint.sampled(now, rjHintSeesPicture(c));
+    logPrintf(LC_INPUT, LL_DEBUG, PSTR("identify: hint sample, R/G/B content %u/%u/%u (%s)"), c[0], c[1], c[2],
+              r == RH_DONE ? "a picture, no hint" : r == RH_SHOW ? "black, hint" : "black");
+    if (r == RH_SHOW) {
+        logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART still black after 20 s (R/G/B content %u/%u/%u), hint: try Composite"),
+                  c[0], c[1], c[2]);
         menuNotice(S_T_TRY_COMPOSITE);
     }
 }

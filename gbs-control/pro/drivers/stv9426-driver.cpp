@@ -91,7 +91,7 @@ void Stv9426::setOutput(StvOutStd s, uint32_t fhHz, uint16_t activeLines) {
     out_ = s;
     fh_ = fhHz;
     active_ = activeLines;
-    t_ = stvTimingForRate(s, fhHz, xtal_);
+    t_ = stvTimingForRate(s, fhHz, xtal_, activeLines);
     override_ = false;
     if (powered_) writeActiveTiming();
 }

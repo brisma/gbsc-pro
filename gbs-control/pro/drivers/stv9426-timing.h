@@ -24,7 +24,25 @@ enum : uint8_t { STV_ALIGN_LEFT, STV_ALIGN_CENTER, STV_ALIGN_RIGHT };
 // refOffsetPx: data-path delay between VDS_HS_SP and the edge the chip sees. No usable window: stvDdFor(ld)
 int stvDdForWindow(uint8_t ld, const StvWindow& w, uint8_t align, int16_t refOffsetPx);
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz);
-StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz);   // fhHz 0 = the nominal rate
+// fhHz 0 = the nominal rate. Bypass (the output is the source): activeLines, the visible lines of a field, give the
+// rows their height (18 lines at 480, as the scaled outputs); 0 = not known, 480p rows
+StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz, uint16_t activeLines = 0);
+// A bypass whose line rate could not be measured when the output changed is asked again every kEveryMs, kTries times
+struct StvRateRetry {
+    static const uint32_t kEveryMs = 2000;
+    static const uint8_t kTries = 3;
+    void start(uint32_t now) { left_ = kTries; at_ = now; }
+    void stop() { left_ = 0; }
+    bool due(uint32_t now) {
+        if (!left_ || now - at_ < kEveryMs) return false;
+        left_--;
+        at_ = now;
+        return true;
+    }
+private:
+    uint8_t left_ = 0;
+    uint32_t at_ = 0;
+};
 // PLL time constants (datasheet §VIII.2, Table 2): A/B valid for this line duration
 bool stvTimeConstantsOk(uint8_t a, uint8_t b, uint8_t ld);
 const uint8_t STV_LOCK_TC = 0x02;      // 0x3FF4: AS 0, BS 2

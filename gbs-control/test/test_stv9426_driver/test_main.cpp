@@ -252,6 +252,15 @@ void test_bypass_rate_override(void) {
     TEST_ASSERT_EQUAL_UINT8(32, f.reg[0]);
 }
 
+// A 720p source passed through: the rows are 720p's, and the overlay is placed in 720 lines
+void test_bypass_uses_the_visible_lines(void) {
+    FakeStv f; Stv9426 d(f);
+    d.begin(8000000UL);
+    d.setOutput(OUT_BYPASS, 45000, 720);
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_720P60, 8000000UL).chMenu, d.timing().chMenu);
+    TEST_ASSERT_EQUAL_UINT16(720, d.activeLines());
+}
+
 void test_power_on_rewrites_descriptors(void) {
     FakeStv f; Stv9426 d(f);
     d.begin(8000000UL);
@@ -343,6 +352,7 @@ int main() {
     RUN_TEST(test_test_screen_480p);
     RUN_TEST(test_failed_descriptor_write_is_retried);
     RUN_TEST(test_bypass_rate_override);
+    RUN_TEST(test_bypass_uses_the_visible_lines);
     RUN_TEST(test_power_on_rewrites_descriptors);
     RUN_TEST(test_layout_switch_keeps_display_off_until_flush);
     RUN_TEST(test_glyph_loaded_on_demand);

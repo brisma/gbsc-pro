@@ -1655,6 +1655,9 @@ static void sourceRes(const MenuSignal& s, char* res, size_t n) {
     else if (near(s.srcLines, 312)) copyStr(res, n, s.interlaced ? "576i" : "288p");
     else if (near(s.srcLines, 525)) copyStr(res, n, "480p");
     else if (near(s.srcLines, 625)) copyStr(res, n, "576p");
+    else if (near(s.srcLines, 750)) copyStr(res, n, "720p");
+    else if (near(s.srcLines, 562)) copyStr(res, n, "1080i");    // the lines of one field
+    else if (near(s.srcLines, 1125)) copyStr(res, n, s.interlaced ? "1080i" : "1080p");
     else if (!s.srcLines) copyStr(res, n, "--");   // not stable yet (MenuLineFilter)
     else snprintf(res, n, "%uL", s.srcLines);
 }

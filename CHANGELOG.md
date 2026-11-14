@@ -56,6 +56,11 @@ refer to brisma/gbsc-pro.
 - VGA: the menus show the source's real line count (it read values such as "494L"), and a profile saved for a VGA
   source is recognised again.
 - Menus: no impossible line count ("396L") while a console is switching off.
+- Menus: an HD source is named 720p, 1080i or 1080p; it was shown by its line count ("749L"). (#72)
+- TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu has the size it has on a scaled output;
+  it was stretched wide, ran off the right edge and its rows were as low as on 480p. (#72)
+- Auto input: the hint "No picture: try Composite" no longer appears over a dim picture (thin text on a dark
+  background).
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
@@ -65,6 +70,8 @@ refer to brisma/gbsc-pro.
   cut), the GBSC no longer stays an access point until a restart: every minute that nobody is joined to the access
   point it tries the saved network again for 15 seconds.
 - Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
+- Web app: on phones and tablets the numbers of Settings > Picture are in line with their buttons; they sat a few
+  pixels lower. (#69)
 - Web app: with two pages already connected, a third one is answered at once and retries, instead of waiting about 7
   seconds while the GBSC held memory for it.
 - Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board

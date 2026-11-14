@@ -106,7 +106,7 @@ bool stvTimeConstantsOk(uint8_t a, uint8_t b, uint8_t ld) {
 
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz) { return stvTimingForRate(s, 0, xtalHz); }
 
-StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz) {
+StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz, uint16_t activeLines) {
     if (s >= OUT_STD_COUNT) s = OUT_480P;
     uint32_t fh = fhHz ? fhHz : kLineHz[s];
     uint8_t fm = stvFm(xtalHz);
@@ -115,5 +115,10 @@ StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz) {
     t.pp = stvPp(fm, xtalHz, t.ld, fh);
     t.dd = stvDdFor(t.ld);
     t.chMenu = kGeo[s].ch; t.topMenu = kGeo[s].top; t.zoomMenu = kGeo[s].zoom;
+    if (s == OUT_BYPASS && activeLines) {              // the rows of a scaled output with as many visible lines
+        uint16_t ch = (uint16_t)(18u * activeLines / 480u);
+        t.chMenu = (uint8_t)(ch < 12 ? 12 : ch > 45 ? 45 : ch);
+        t.topMenu = t.chMenu >= 27 ? 58 : t.chMenu >= 18 ? 40 : 20;
+    }
     return t;
 }

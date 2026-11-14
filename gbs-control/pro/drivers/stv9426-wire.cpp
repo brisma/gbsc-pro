@@ -75,15 +75,25 @@ void osdDriverLoop() {
     static uint32_t windowAt = 0;
     static bool windowDue = false;
     if (windowDue && (int32_t)(millis() - windowAt) >= 0) { windowDue = false; osdReadWindow(); }
-    if (rto->presetID != lastPreset) {
-        lastPreset = rto->presetID;
-        windowDue = true;                  // the new preset's window, once its registers are written
-        windowAt = millis() + 500;
+    static StvRateRetry rateRetry;
+    bool again = rateRetry.due(millis());
+    if (rto->presetID != lastPreset || again) {
+        if (rto->presetID != lastPreset) {
+            lastPreset = rto->presetID;
+            windowDue = true;              // the new preset's window, once its registers are written
+            windowAt = millis() + 500;
+            rateRetry.stop();
+        }
         StvOutStd s = stvOutStdOf(lastPreset);
-        // bypass: the output follows the source (rate and lines; about 96 % of the lines are visible)
+        // bypass: the output follows the source (rate and lines; about 96 % of the lines are visible). A rate that
+        // cannot be measured yet leaves the menu at its widest: asked again a few times (not the VGA pass-through,
+        // which has no pulse to time)
         uint16_t lines = s == OUT_BYPASS ? profileSourceLines() : 0;
-        gDriver.setOutput(s, s == OUT_BYPASS ? osdSourceLineHz() : 0,
-                          lines >= 200 && lines <= 1200 ? (uint16_t)(lines * 96 / 100) : 0);
+        uint32_t fh = s == OUT_BYPASS ? osdSourceLineHz() : 0;
+        if (s == OUT_BYPASS && !fh && lastPreset != 0x22 && !again) rateRetry.start(millis());
+        if (fh) rateRetry.stop();
+        if (!again || fh)
+            gDriver.setOutput(s, fh, lines >= 200 && lines <= 1250 ? (uint16_t)(lines * 96 / 100) : 0);
     }
     gDriver.service(millis());
 }

@@ -70,6 +70,20 @@ void test_judge_wires_after_a_look(void) {
     TEST_ASSERT_EQUAL_UINT8(RW_FAINT, rjWiresAfterLook(dim));
 }
 
+// The "try Composite" hint asks whether the screen is black, not whether it is a rich picture: a dim one (the
+// 240p Test Suite menu reads 22/23/27 before a preset, a little less while it runs) is a picture
+void test_hint_takes_a_dim_picture_for_a_picture(void) {
+    uint16_t black[3] = {0, 1, 0};
+    TEST_ASSERT_FALSE(rjHintSeesPicture(black));
+    uint16_t dim[3] = {20, 21, 23};                          // under kRgbMin on every channel
+    TEST_ASSERT_FALSE(rjRgbContent(dim));
+    TEST_ASSERT_TRUE(rjHintSeesPicture(dim));
+    uint16_t edge[3] = {0, RgbScartJudge::kWiresFlatMax, 0};
+    TEST_ASSERT_TRUE(rjHintSeesPicture(edge));
+    uint16_t chroma[3] = {RgbScartJudge::kRgbMin + 10, 0, 0};   // R alone: S-Video over SCART, Composite is the advice
+    TEST_ASSERT_FALSE(rjHintSeesPicture(chroma));
+}
+
 void test_judge_samples_only_a_scaled_path(void) {
     TEST_ASSERT_FALSE(rjPathMeasurable(15, false));          // RGBHV bypass (first step of RGB + CSync + VSync)
     TEST_ASSERT_TRUE(rjPathMeasurable(14, false));           // RGBHV scaled
@@ -129,6 +143,7 @@ int main(int, char**) {
     RUN_TEST(test_judge_samples_only_a_scaled_path);
     RUN_TEST(test_hint_after_20s_of_black_rgb);
     RUN_TEST(test_judge_wires_after_a_look);
+    RUN_TEST(test_hint_takes_a_dim_picture_for_a_picture);
     RUN_TEST(test_hint_not_for_an_rgb_picture);
     RUN_TEST(test_hint_idle_until_armed);
     RUN_TEST(test_hint_once_per_acquisition);

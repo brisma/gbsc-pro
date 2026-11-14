@@ -112,6 +112,44 @@ void test_bypass_uses_the_measured_rate(void) {
     TEST_ASSERT_EQUAL_UINT8(32, stvTimingForRate(OUT_BYPASS, 0, STV_XTAL_HZ).ld);       // unknown: conservative
 }
 
+// Bypass: the rows follow the visible lines of the source (18 lines at 480, as the scaled outputs), not 480p's
+void test_bypass_rows_follow_the_visible_lines(void) {
+    StvTiming t = stvTimingForRate(OUT_BYPASS, 45000, STV_XTAL_HZ, 720);     // 720p
+    StvTiming p = stvTimingFor(OUT_720P60, STV_XTAL_HZ);
+    TEST_ASSERT_EQUAL_UINT8(p.chMenu, t.chMenu);
+    TEST_ASSERT_EQUAL_UINT8(p.topMenu, t.topMenu);
+    TEST_ASSERT_EQUAL_UINT8(p.ld, t.ld);
+    t = stvTimingForRate(OUT_BYPASS, 67500, STV_XTAL_HZ, 1080);             // 1080p
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_1080P60, STV_XTAL_HZ).chMenu, t.chMenu);
+    t = stvTimingForRate(OUT_BYPASS, 33750, STV_XTAL_HZ, 540);              // 1080i: a field has 540
+    TEST_ASSERT_EQUAL_UINT8(20, t.chMenu);
+    TEST_ASSERT_EQUAL_UINT8(40, t.topMenu);
+    t = stvTimingForRate(OUT_BYPASS, 15734, STV_XTAL_HZ, 240);              // a 15 kHz source passed through
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_15K60, STV_XTAL_HZ).chMenu, t.chMenu);
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_15K60, STV_XTAL_HZ).topMenu, t.topMenu);
+    t = stvTimingForRate(OUT_BYPASS, 0, STV_XTAL_HZ);                       // nothing known: 480p rows, as before
+    TEST_ASSERT_EQUAL_UINT8(18, t.chMenu);
+    TEST_ASSERT_EQUAL_UINT8(40, t.topMenu);
+    t = stvTimingForRate(OUT_1080P60, 0, STV_XTAL_HZ, 720);                 // a scaled output keeps its own rows
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_1080P60, STV_XTAL_HZ).chMenu, t.chMenu);
+}
+
+// The line rate of a bypass is asked again while it is unknown, a few times
+void test_bypass_rate_is_asked_again(void) {
+    StvRateRetry r;
+    TEST_ASSERT_FALSE(r.due(1000));                       // nothing to ask
+    r.start(1000);
+    TEST_ASSERT_FALSE(r.due(1000 + StvRateRetry::kEveryMs - 1));
+    TEST_ASSERT_TRUE(r.due(1000 + StvRateRetry::kEveryMs));
+    TEST_ASSERT_FALSE(r.due(1001 + StvRateRetry::kEveryMs));
+    uint32_t t = 1000 + StvRateRetry::kEveryMs;
+    for (uint8_t i = 1; i < StvRateRetry::kTries; i++) { t += StvRateRetry::kEveryMs; TEST_ASSERT_TRUE(r.due(t)); }
+    TEST_ASSERT_FALSE(r.due(t + 10 * StvRateRetry::kEveryMs));   // given up until the next output change
+    r.start(t);
+    r.stop();                                             // the rate came
+    TEST_ASSERT_FALSE(r.due(t + StvRateRetry::kEveryMs));
+}
+
 void test_menu_fits_the_line_for_ld_35_to_63(void) {
     for (uint8_t ld = 35; ld <= 63; ld++) {
         unsigned start = (stvDdFor(ld) + 8u) * 3u, line = 12u * (ld + 1u);
@@ -189,6 +227,8 @@ int main() {
     RUN_TEST(test_pll_time_constants_valid_for_every_ld);
     RUN_TEST(test_compat_menu_fits_the_line_for_every_ld);
     RUN_TEST(test_bypass_uses_the_measured_rate);
+    RUN_TEST(test_bypass_rows_follow_the_visible_lines);
+    RUN_TEST(test_bypass_rate_is_asked_again);
     RUN_TEST(test_menu_fits_the_line_for_ld_35_to_63);
     RUN_TEST(test_dd_centres_the_panel_on_the_active_window);
     RUN_TEST(test_dd_left_and_right_keep_a_margin);

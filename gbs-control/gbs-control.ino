@@ -7446,9 +7446,11 @@ bool profileSignalPresent()
 // STV9426 line rate in bypass (the output follows the source): lines per field x field rate; 0 when unknown
 uint32_t osdSourceLineHz()
 {
-    uint16_t lines = GBS::VPERIOD_IF::read();
-    float sfr = getSourceFieldRate(0);
-    if (lines < 200 || sfr < 20.0f || sfr > 120.0f) return 0;
+    if (rto->presetID == PresetBypassRGBHV) return 0;   // VGA pass-through: no pulse to time, no stall
+    uint16_t lines = profileSourceLines();
+    // HD bypass: the IF test bus carries no pulse, the sync processor still sees the source
+    float sfr = getSourceFieldRate(rto->outModeHdBypass);
+    if (lines < 200 || sfr < 40.0f || sfr > 120.0f) return 0;   // ~18.5 Hz from the sync processor = no vsync found
     uint32_t fh = (uint32_t)(lines * sfr);
     return (fh >= 15000 && fh <= 100000) ? fh : 0;
 }

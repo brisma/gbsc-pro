@@ -1135,6 +1135,26 @@ static void setRgbs240p(MenuRig& r) {
     r.be.texts[LT_WIFI_IP] = "192.168.0.99"; r.be.texts[LT_WIFI_MODE] = "Client"; r.be.lives[LV_WIFI_RSSI] = -54;
 }
 
+// An HD source is named, not shown as a line count ("749L" for an Xbox at 720p)
+void test_hd_sources_are_named(void) {
+    MenuRig r;
+    setRgbs240p(r);
+    MenuIdle i;
+    r.be.sig.presetId = 0x21;                              // HD bypass
+    r.be.sig.srcLines = 749; r.be.sig.interlaced = false;
+    r.e.idle(i);
+    TEST_ASSERT_EQUAL_STRING("720p", i.inRes);
+    r.be.sig.srcLines = 562; r.be.sig.interlaced = true;   // 1080i: lines of a field
+    r.e.idle(i);
+    TEST_ASSERT_EQUAL_STRING("1080i", i.inRes);
+    r.be.sig.srcLines = 1124; r.be.sig.interlaced = false;
+    r.e.idle(i);
+    TEST_ASSERT_EQUAL_STRING("1080p", i.inRes);
+    r.be.sig.srcLines = 806;                               // a VGA mode without a name: the lines, as before
+    r.e.idle(i);
+    TEST_ASSERT_EQUAL_STRING("806L", i.inRes);
+}
+
 void test_idle_block(void) {
     MenuRig r;
     setRgbs240p(r);
@@ -3240,6 +3260,7 @@ int main() {
     RUN_TEST(test_back_row_cursor_skips_a_leading_header);
     RUN_TEST(test_back_row_on_empty_profile_list);
     RUN_TEST(test_back_row_cleared_when_reopened_by_menu);
+    RUN_TEST(test_hd_sources_are_named);
     RUN_TEST(test_idle_block);
     RUN_TEST(test_idle_block_profile_region_ap_and_no_signal);
     RUN_TEST(test_idle_and_info_name_1200p);

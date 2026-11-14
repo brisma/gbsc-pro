@@ -36,9 +36,11 @@ uint8_t rjWiresAfterLook(const uint16_t content[3]);
 // The test bus carries the picture only on a scaled path: RGBHV bypass (mode 15, the first step when the LM1881
 // gives CSync and VSync) and HD bypass read flat, and mode 0 has no preset yet
 bool rjPathMeasurable(uint8_t videoStandardInput, bool hdBypass);
-// An RGB SCART fallback verdict of the identification (no lock, decoder silent, ambiguous level, timeout) on a black
-// picture: sampled in place every kStepMs; still black after kShowMs gives one "try Composite" hint, a picture on RGB
-// ends it silently
+// An RGB SCART verdict given without a picture (black on both, no lock, decoder silent, ambiguous level, timeout):
+// sampled in place every kStepMs; still black after kShowMs gives one "try Composite" hint, a picture on RGB ends it
+// silently. The hint asks "is the screen black?", so anything above the flat bound on G or B is a picture: a dim
+// screen (thin text on a dark background reads 20-27) is under kRgbMin and still not black
+bool rjHintSeesPicture(const uint16_t content[3]);
 enum : uint8_t { RH_WAIT, RH_SHOW, RH_DONE };
 struct RjHint {
     static const uint32_t kStepMs = 5000, kShowMs = 20000;
