@@ -53,6 +53,7 @@ extern bool gSettingsPresetPending;   // pro/settings/settings-apply.cpp: preset
 #include "pro/net/wifi-tune-device.h"
 #include "pro/net/channel-guard-device.h"
 #include "pro/net/ap-retry.h"
+#include "pro/clock/frame-lock-fails.h"
 #include "pro/input/sync-pulse.h"
 #include "pro/input/rgb-scart-judge.h"
 #include "pro/picture/picture-color.h"
@@ -8932,7 +8933,7 @@ void loop()
                 ? FrameSync::runFrequency()
                 : FrameSync::runVsync(uopt->frameTimeLockMethod);
             if (!success) {
-                if (rto->syncLockFailIgnore-- == 0) {
+                if (frameLockFailed(rto->syncLockFailIgnore)) {
                     FrameSync::reset(uopt->frameTimeLockMethod); // in case run() failed because we lost sync signal
                 }
             } else if (rto->syncLockFailIgnore > 0) {

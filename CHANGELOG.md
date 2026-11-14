@@ -30,6 +30,8 @@ refer to brisma/gbsc-pro.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
+- Frame lock: during a long run of failed attempts it starts over every 17 failures; after the first restart the next
+  one took 255.
 - WiFi: when the saved network does not answer at power-on (a router that starts slower than the GBSC after a power
   cut), the GBSC no longer stays an access point until a restart: every minute that nobody is joined to the access
   point it tries the saved network again for 15 seconds.
