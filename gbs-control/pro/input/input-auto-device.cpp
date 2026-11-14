@@ -288,6 +288,9 @@ static const uint32_t kVgaLookConfirmMs = 200, kVgaLookSettleMs = 60, kVgaLookSa
 static const uint8_t kVgaLookRun = 6, kVgaLookNoHs = 8;         // 5 ms samples: H and V 6 in a row; no H in the first 8
 static const uint8_t kVgaLookVsEarly = 6;                       // a VS in the first samples is not a measured one
 
+// What the last look read (the return watch decides on it)
+static struct { bool hs, vs, pathMeasured, pathVs; } gLook;
+
 bool inputAutoVgaLookDue() {
     return gBegun && platformLinkHardware() && gAuto.vgaLookWanted() && uopt->activeInputType == gAuto.want() &&
            !advLinkChecking() && advLinkController().status == ADV_CONTROLLER_OK;
@@ -320,7 +323,9 @@ bool inputAutoLookAtVga() {
         GBS::SP_EXT_SYNC_SEL::write(ext);
     }
     uopt->activeInputType = was;
-    if (onVga && gAuto.syncOnVga(millis())) {
+    gLook = {hs != 0, vs != 0, false, false};
+    // in a scan the cursor goes to VGA; after a find (the return watch) a scan starts there
+    if (onVga && (gAuto.syncOnVga(millis()) || gAuto.returnOnVga(millis()))) {
         logPrintf(LC_SCAN, LL_INFO, PSTR("the sync on %s comes from the VGA connector (H %u/%u, V %u/%u from sample %u, %lu ms): probing VGA"),
                   inputLongName(was), hs, n, vs, n, vsFirst, (unsigned long)(millis() - t0));
         gJudgeMoved = true;                                      // the TV5725 detects from scratch there, as at boot
@@ -331,7 +336,7 @@ bool inputAutoLookAtVga() {
     delay(kVgaLookBackMs);
     // An HS and no VS on the VGA path: a SCART console's bright picture read as sync, or a cable with composite sync
     // on the VGA connector. The two differ in the sync on SCART pin 20: the LM1881's VS (Sync cleanup on) says
-    // whether there is one. Measured and logged only, for reports from such cables
+    // whether there is one. Logged for reports from such cables; the return watch looks again only without it
     uint8_t m = 0, sv = 0, first = 0;
     if (hs && back) {
         uint8_t ext = GBS::SP_EXT_SYNC_SEL::read();
@@ -345,6 +350,8 @@ bool inputAutoLookAtVga() {
         }
         GBS::SP_EXT_SYNC_SEL::write(ext);
     }
+    gLook.pathMeasured = m != 0;
+    gLook.pathVs = sv != 0;
     char pin20[56] = "";
     if (m) snprintf_P(pin20, sizeof(pin20), PSTR("; VS from this path %u/%u from sample %u, cleanup %s"), sv, m, first,
                       uopt->advSyncStripper ? "on" : "off");
@@ -573,6 +580,45 @@ static void rateWatch(bool link, uint8_t active, uint32_t now) {
     gAuto.sourceChanged(now);
 }
 
+// Auto on the Pro, a source found on RGB SCART or RGB SoG, VGA searched: when its sync returns from a gap the VGA
+// connector is looked at (ReturnWatch); a source there (H and V sync) moves the scan to VGA, anything else leaves
+// the found source alone. An HS alone with no sync on SCART pin 20 either is a VGA source that has not started its
+// VS yet: looked at again, kReturnLooks in all
+static ReturnWatch gReturn;
+static const uint8_t kReturnLooks = 3;
+static uint8_t gReturnLooks = 0;              // looks left for this return
+static uint32_t gReturnLookAt = 0;
+static void returnLook(uint32_t now) {
+    gReturnLooks--;
+    if (inputAutoLookAtVga()) { gReturnLooks = 0; return; }    // scanning on VGA now
+    if (gReturnLooks && inputVgaReturnLookAgain(gAuto.found(), uopt->advSyncStripper != 0, gLook.hs, gLook.vs,
+                                                gLook.pathMeasured, gLook.pathVs))
+        gReturnLookAt = now + InputAuto::kVgaLookAgainMs;
+    else gReturnLooks = 0;
+}
+static void returnWatch(bool link, uint8_t active, bool judging, uint32_t now) {
+    if (!link || !gAuto.vgaReturnLookWanted() || gAuto.found() != active || rto->sourceDisconnected) {
+        gReturn.reset();
+        gReturnLooks = 0;
+        return;
+    }
+    if (judging || advLinkChecking() || advLinkController().status != ADV_CONTROLLER_OK) {   // no look now
+        gReturnLooks = 0;
+        return;
+    }
+    if (gReturnLooks) {
+        if ((int32_t)(now - gReturnLookAt) >= 0) returnLook(now);
+        return;
+    }
+    bool sync = rto->noSyncCounter < 2;                         // one missed check is noise (as LogSyncReturn)
+    uint8_t mode = rto->videoStandardInput == 1 || rto->videoStandardInput == 2 ? rto->videoStandardInput : 0;
+    if (!gReturn.feed(sync, mode, now)) return;
+    logPrintf(LC_INPUT, LL_INFO, PSTR("%s: sync back after a %lu.%lu s gap, looking at the VGA connector"), inputLongName(active),
+              (unsigned long)(gReturn.gapMs() / 1000), (unsigned long)(gReturn.gapMs() % 1000 / 100));
+    gReturnLooks = kReturnLooks;
+    returnLook(now);
+}
+
 // One pass of the identification, every kIdPassMs while it runs
 static void identifyLoop(uint32_t now) {
     if (gId.phase() == ID_DONE && gAuto.state() == IA_SCANNING && rto->sourceDisconnected) {
@@ -692,6 +738,8 @@ void inputAutoLoop() {
     if (!inputAutoSourceCounts(was, active, gAuto.want())) present = false;   // still on the previous input
     if (!judging && (present || !gTickHold)) gAuto.tick(present, now);   // the hold only delays absence
     rateWatch(link, active, now);
+    returnWatch(link, active, judging, now);
+    active = uopt->activeInputType;                             // a look that found the source moved to VGA
     if (link && was != IA_SCANNING && gAuto.state() == IA_SCANNING) {    // the source went: search from scratch
         tvRedetect(false);
         gSwitchAt = now;

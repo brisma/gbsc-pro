@@ -48,6 +48,10 @@ bool inputTvPathNoPicture(bool disconnected, bool present, uint32_t sinceSyncMs)
 // looked at there again every InputAuto::kVgaLookAgainMs it stays unread. A source on the VGA connector can show its
 // horizontal sync before the vertical one, and this wait would hold it for 6 s
 bool inputVgaLookAgain(bool looked, uint32_t sinceLookMs);
+// The look that follows a ReturnWatch report, when it read an HS and no VS on the VGA connector: a source there that
+// has not started its VS yet, or a picture read as sync. Looked at again only when SCART pin 20 is silent too (no VS
+// from the LM1881), which only RGB SCART with Sync cleanup on can tell; otherwise one look is all
+bool inputVgaReturnLookAgain(uint8_t found, bool cleanupOn, bool hs, bool vs, bool pathMeasured, bool pathVs);
 
 // A source shown on the active input counts for the machine only when that is the input it wants: right after a new
 // scan starts or an input is chosen by hand the hardware is still on the previous input for a few passes, and its
@@ -65,6 +69,27 @@ public:
 private:
     uint8_t ref_ = 0, cand_ = 0;
     uint32_t candAt_ = 0;
+};
+
+// A found source on RGB SCART / RGB SoG whose sync drops for a moment and comes back. A dropout shorter than
+// InputAuto::kNoSyncLost is not an absence for the machine, and on the Pro a source on the VGA connector shows as a
+// signal on those paths (shared wires): a Dreamcast switched on within a second or two of the SCART console going
+// off kept the scaler on RGB SCART with a rolling picture, for ever. Nothing in that signal tells it reliably (its
+// line count read 535, 515, and the Mega Drive's own 523), so the VGA connector itself is looked at, the moment the
+// sync returns: the look corrupts the picture for 0.2 to 0.8 s, which then only makes the dropout that long longer.
+// sync: the sync watcher has the sync (it also counts none while a new format's preset loads); mode: the 15 kHz mode
+// (1, 2), 0 = another. Not after a format change (a region switch: RateWatch's business), and looks are kQuietMs
+// apart: an unstable sync must not get one at every dropout, and the return that had to wait is looked at then
+class ReturnWatch {
+public:
+    static const uint32_t kGapMs = 400, kQuietMs = 10000;
+    bool feed(bool sync, uint8_t mode, uint32_t now);     // true: look at the VGA connector now
+    void reset() { *this = ReturnWatch(); }
+    uint32_t gapMs() const { return gapMs_; }             // the gap that asked for the look
+private:
+    bool gone_ = false, pending_ = false, looked_ = false;
+    uint8_t mode_ = 0;                                    // while the sync was there
+    uint32_t goneAt_ = 0, gapMs_ = 0, lookAt_ = 0;
 };
 
 class InputAuto {
@@ -92,6 +117,11 @@ public:
     // path (vgaLookWanted); a sync still there (syncOnVga) sends the scan to VGA, where it is probed as usual
     bool vgaLookWanted() const;
     bool syncOnVga(uint32_t now);                        // true: want() is VGA now
+    // The same wires after a find: a source found on RGB SCART / RGB SoG that comes back from a sync gap
+    // (ReturnWatch) may be the VGA connector's. The glue looks there (vgaReturnLookWanted); only a source really
+    // there (returnOnVga) starts a scan, straight on VGA. Nothing there: the find stays as it is
+    bool vgaReturnLookWanted() const;
+    bool returnOnVga(uint32_t now);                      // true: scanning, want() is VGA now
     void setBoard(const InputAutoBoard& b, uint32_t now);   // Auto search changed: a running scan restarts
     void setAbsentMs(uint32_t ms) { absentMs_ = ms; }   // input.lost_wait: absence before a new scan / back to Auto
     uint8_t want() const;                                // the input the hardware should be on (1..6)

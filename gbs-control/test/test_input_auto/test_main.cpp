@@ -714,6 +714,153 @@ void test_sync_without_a_picture_gives_the_path_up(void) {
 // A sync on RGB SCART / RGB SoG that the mode detector does not read gets the look at the VGA path again: a source on
 // the VGA connector can show its horizontal sync before the vertical one (a Dreamcast just switched on: H 30/30 and
 // V 0/30 at the first look, then 6 s in the composite sync wait and 16 s to its picture)
+// A found source on RGB SCART whose sync drops and comes back: the VGA connector is looked at as the sync returns
+// (the Mega Drive goes off and a Dreamcast on the VGA connector comes on within a second or two: its sync reads as
+// a signal on RGB SCART, with the Mega Drive's line count or not, and no search ever started)
+static bool feedFor(ReturnWatch& w, bool sync, uint8_t mode, uint32_t& t, uint32_t ms) {
+    bool due = false;
+    for (uint32_t end = t + ms; t < end; t += 50) due |= w.feed(sync, mode, t);
+    return due;
+}
+
+void test_a_look_is_due_when_the_sync_returns_from_a_gap(void) {
+    ReturnWatch w;
+    uint32_t t = 1000;
+    TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 5000));
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, 1500));                    // the gap itself asks nothing
+    TEST_ASSERT_TRUE(w.feed(true, 1, t));                                // at once, as the picture comes back
+    t += 50;
+    TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 5000));                     // once
+}
+
+void test_a_glitch_is_not_a_gap(void) {
+    ReturnWatch w;
+    uint32_t t = 1000;
+    feedFor(w, true, 1, t, 5000);
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, ReturnWatch::kGapMs - 100));
+    TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 5000));
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, ReturnWatch::kGapMs));     // just kGapMs counts
+    TEST_ASSERT_TRUE(feedFor(w, true, 1, t, 100));
+}
+
+// A region switch (a switchless Mega Drive, a SuperCIC): the sync watcher counts no sync until the new preset is
+// loaded, and the mode is another one when it returns. RateWatch decides there, with the picture on RGB
+void test_a_format_change_is_not_a_return(void) {
+    ReturnWatch w;
+    uint32_t t = 1000;
+    feedFor(w, true, 1, t, 5000);
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, 1000));
+    TEST_ASSERT_FALSE(feedFor(w, true, 2, t, 5000));                     // 60 -> 50 Hz
+    TEST_ASSERT_FALSE(feedFor(w, false, 2, t, 1000));
+    TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 5000));                     // and back
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, 1000));
+    TEST_ASSERT_TRUE(feedFor(w, true, 1, t, 100));                       // a gap in the same mode still counts
+}
+
+// A look corrupts the picture for a moment: an unstable sync must not get one at every dropout. The second return
+// inside kQuietMs waits for the end of it (a VGA source that came on meanwhile is still found)
+void test_looks_are_kQuietMs_apart(void) {
+    ReturnWatch w;
+    uint32_t t = 1000;
+    feedFor(w, true, 1, t, 5000);
+    feedFor(w, false, 1, t, 600);
+    uint32_t first = t;
+    TEST_ASSERT_TRUE(w.feed(true, 1, t));
+    t += 50;
+    for (int k = 0; k < 4; k++) {                                        // dropouts every 1.5 s
+        TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 900));
+        TEST_ASSERT_FALSE(feedFor(w, false, 1, t, 600));
+    }
+    bool due = false;
+    while (!due && t < first + 2 * ReturnWatch::kQuietMs) { due = w.feed(true, 1, t); t += 50; }
+    TEST_ASSERT_TRUE(due);                                               // the one that waited
+    TEST_ASSERT_UINT32_WITHIN(100, first + ReturnWatch::kQuietMs, t - 50);
+    TEST_ASSERT_FALSE(feedFor(w, true, 1, t, 20000));                    // and no more without a new gap
+}
+
+void test_a_waiting_look_is_made_with_the_sync_only(void) {
+    ReturnWatch w;
+    uint32_t t = 1000;
+    feedFor(w, true, 1, t, 5000);
+    feedFor(w, false, 1, t, 600);
+    TEST_ASSERT_TRUE(w.feed(true, 1, t));
+    t += 50;
+    feedFor(w, true, 1, t, 1000);
+    feedFor(w, false, 1, t, 600);
+    feedFor(w, true, 1, t, 1000);                                        // a second return: waiting
+    TEST_ASSERT_FALSE(feedFor(w, false, 1, t, ReturnWatch::kQuietMs));   // the quiet time ends inside a new gap
+    TEST_ASSERT_TRUE(w.feed(true, 1, t));                                // looked at when that one returns
+}
+
+// The look is repeated only for a VGA source that has not started its VS yet: an HS alone on the VGA connector and
+// no sync on SCART pin 20, which only RGB SCART with Sync cleanup on can tell (the LM1881's VS)
+void test_the_look_is_repeated_only_when_scart_is_silent(void) {
+    TEST_ASSERT_TRUE(inputVgaReturnLookAgain(InputTypeRGBs, true, true, false, true, false));
+    TEST_ASSERT_FALSE(inputVgaReturnLookAgain(InputTypeRGBs, true, true, false, true, true));    // a console's sync on pin 20
+    TEST_ASSERT_FALSE(inputVgaReturnLookAgain(InputTypeRGBs, true, false, false, false, false)); // no HS on the VGA connector
+    TEST_ASSERT_FALSE(inputVgaReturnLookAgain(InputTypeRGBs, true, true, false, false, false));  // pin 20 not measured
+    TEST_ASSERT_FALSE(inputVgaReturnLookAgain(InputTypeRGBs, false, true, false, true, false));  // cleanup off: no VS to read
+    TEST_ASSERT_FALSE(inputVgaReturnLookAgain(InputTypeRGsB, true, true, false, true, false));   // RGB SoG: the LM1881 reads green
+}
+
+// The look at the VGA connector that follows: only a source really there (H and V sync) moves the found source, and
+// then the scan goes straight to VGA. Nothing there: the found source stays as it is, no search
+void test_a_found_rgb_source_may_be_looked_at_on_vga(void) {
+    InputAuto a;
+    a.begin(kPro, InputTypeRGBs, 0);
+    TEST_ASSERT_FALSE(a.vgaReturnLookWanted());                          // scanning: the scan has its own look
+    a.tick(true, 100);
+    TEST_ASSERT_EQUAL_UINT8(IA_FOUND, a.state());
+    TEST_ASSERT_TRUE(a.vgaReturnLookWanted());
+    TEST_ASSERT_TRUE(a.returnOnVga(5000));
+    TEST_ASSERT_EQUAL_UINT8(IA_SCANNING, a.state());
+    TEST_ASSERT_EQUAL_UINT8(IA_WHY_RETURN, a.scanReason());
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.want());
+    uint8_t order[6];
+    TEST_ASSERT_EQUAL_UINT8(6, a.scanPaths(order, 6));                   // a whole round, VGA first
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, order[0]);
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGBs, order[1]);
+    a.tick(true, 5100);
+    TEST_ASSERT_EQUAL_UINT8(IA_FOUND, a.state());
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.found());
+    TEST_ASSERT_FALSE(a.vgaReturnLookWanted());                          // found on VGA: nothing to look for
+}
+
+void test_a_found_sog_source_may_be_looked_at_on_vga_too(void) {
+    InputAutoBoard noScart = kPro;
+    noScart.skip = 1 << (InputTypeRGBs - 1);                             // RGB SCART left out: a SoG find needs no confirm
+    InputAuto a;
+    a.begin(noScart, InputTypeRGsB, 0);
+    a.tick(true, 100);
+    TEST_ASSERT_EQUAL_UINT8(InputTypeRGsB, a.found());
+    TEST_ASSERT_TRUE(a.vgaReturnLookWanted());
+    TEST_ASSERT_TRUE(a.returnOnVga(5000));
+    TEST_ASSERT_EQUAL_UINT8(InputTypeVGA, a.want());
+}
+
+void test_no_vga_look_where_it_cannot_help(void) {
+    InputAutoBoard noVga = kPro;
+    noVga.skip = 1 << (InputTypeVGA - 1);                                // VGA left out of Auto search
+    InputAuto a;
+    a.begin(noVga, InputTypeRGBs, 0);
+    a.tick(true, 100);
+    TEST_ASSERT_FALSE(a.vgaReturnLookWanted());
+    TEST_ASSERT_FALSE(a.returnOnVga(5000));
+    TEST_ASSERT_EQUAL_UINT8(IA_FOUND, a.state());
+
+    InputAuto b;                                                         // the standard board has one RGB path
+    b.begin(kStd, InputTypeRGBs, 0);
+    b.tick(true, 100);
+    TEST_ASSERT_FALSE(b.vgaReturnLookWanted());
+
+    InputAuto c;                                                         // an input chosen by hand is never moved
+    c.begin(kPro, InputTypeRGBs, 0);
+    c.choose(InputTypeRGBs, 100);
+    c.tick(true, 200);
+    TEST_ASSERT_FALSE(c.vgaReturnLookWanted());
+    TEST_ASSERT_FALSE(c.returnOnVga(5000));
+}
+
 void test_unread_sync_is_looked_at_on_vga_again(void) {
     TEST_ASSERT_FALSE(inputVgaLookAgain(false, 60000));                           // no look on this pass: none later
     TEST_ASSERT_FALSE(inputVgaLookAgain(true, InputAuto::kVgaLookAgainMs - 1));   // a SCART console is read well before
@@ -771,5 +918,14 @@ int main(int, char**) {
     RUN_TEST(test_no_vga_look_where_it_does_not_apply);
     RUN_TEST(test_sync_without_a_picture_gives_the_path_up);
     RUN_TEST(test_unread_sync_is_looked_at_on_vga_again);
+    RUN_TEST(test_a_look_is_due_when_the_sync_returns_from_a_gap);
+    RUN_TEST(test_a_glitch_is_not_a_gap);
+    RUN_TEST(test_a_format_change_is_not_a_return);
+    RUN_TEST(test_looks_are_kQuietMs_apart);
+    RUN_TEST(test_a_waiting_look_is_made_with_the_sync_only);
+    RUN_TEST(test_a_found_rgb_source_may_be_looked_at_on_vga);
+    RUN_TEST(test_a_found_sog_source_may_be_looked_at_on_vga_too);
+    RUN_TEST(test_no_vga_look_where_it_cannot_help);
+    RUN_TEST(test_the_look_is_repeated_only_when_scart_is_silent);
     return UNITY_END();
 }

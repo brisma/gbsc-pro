@@ -24,6 +24,8 @@ refer to brisma/gbsc-pro.
   HD15); it gave "No signal". (#69)
 - Auto input: a source on the VGA connector (a Dreamcast, a PC) switched on while Auto was looking at RGB SCART or RGB
   SoG is found on VGA in about three seconds; it was taken for a SCART console and never shown.
+- Auto input: a source on the VGA connector switched on within a second or two of the SCART console going off is
+  found too, in about four seconds; the scaler stayed on RGB SCART with a rolling picture.
 - Auto input: a sync that does not become a picture no longer holds the search for over a minute; after 5 seconds the
   other inputs are tried.
 - VGA: loading a profile or Defaults (also by auto-load, after another console) with a scaled VGA source no longer

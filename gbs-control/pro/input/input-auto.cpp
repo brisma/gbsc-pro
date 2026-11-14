@@ -174,6 +174,24 @@ void InputAuto::sourceChanged(uint32_t now) {
     if (state_ == IA_FOUND && choice_ == 0) scanFrom(found_, IA_WHY_FORMAT, now);
 }
 
+bool ReturnWatch::feed(bool sync, uint8_t mode, uint32_t now) {
+    if (!sync) {
+        if (!gone_) { gone_ = true; goneAt_ = now; }
+        return false;
+    }
+    if (gone_) {
+        gone_ = false;
+        uint32_t gap = now - goneAt_;
+        if (gap >= kGapMs && mode_ && mode == mode_) { pending_ = true; gapMs_ = gap; }
+    }
+    mode_ = mode;
+    if (!pending_ || (looked_ && now - lookAt_ < kQuietMs)) return false;
+    pending_ = false;
+    looked_ = true;
+    lookAt_ = now;
+    return true;
+}
+
 void InputAuto::pathResult(uint8_t path, bool found, uint32_t now) {
     (void)now;
     if (state_ != IA_SCANNING || path != want()) return;
@@ -243,6 +261,21 @@ bool InputAuto::syncOnVga(uint32_t now) {
         return true;
     }
     return false;
+}
+
+bool InputAuto::vgaReturnLookWanted() const {
+    return state_ == IA_FOUND && choice_ == 0 && board_.proPaths && (inputAutoScanned(board_) & pathBit(InputTypeVGA)) &&
+           (found_ == InputTypeRGBs || found_ == InputTypeRGsB);
+}
+
+bool InputAuto::returnOnVga(uint32_t now) {
+    if (!vgaReturnLookWanted()) return false;
+    scanFrom(InputTypeVGA, IA_WHY_RETURN, now);      // a whole round from VGA, where the source was seen
+    return want() == InputTypeVGA;
+}
+
+bool inputVgaReturnLookAgain(uint8_t found, bool cleanupOn, bool hs, bool vs, bool pathMeasured, bool pathVs) {
+    return found == InputTypeRGBs && cleanupOn && hs && !vs && pathMeasured && !pathVs;
 }
 
 void InputAuto::setBoard(const InputAutoBoard& b, uint32_t now) {
