@@ -26,6 +26,7 @@ refer to brisma/gbsc-pro.
   leaves the picture rolling.
 - VGA: the menus show the source's real line count (it read values such as "494L"), and a profile saved for a VGA
   source is recognised again.
+- Menus: no impossible line count ("396L") while a console is switching off.
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).

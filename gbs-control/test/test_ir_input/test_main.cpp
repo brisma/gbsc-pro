@@ -88,6 +88,19 @@ void test_source_lines_not_halved_below_400(void) {
     TEST_ASSERT_EQUAL_UINT16(300, menuSourceLines(1, 300));
 }
 
+// A 15 kHz source has 230 to 340 lines a field, read as that or as twice that. What the scaler counts while a
+// console is switching off (396 held for seconds, shown as "396L") is neither: no line count
+void test_source_lines_of_a_15khz_mode_are_a_possible_count(void) {
+    TEST_ASSERT_EQUAL_UINT16(0, menuSourceLines(1, 396));
+    TEST_ASSERT_EQUAL_UINT16(0, menuSourceLines(2, 350));
+    TEST_ASSERT_EQUAL_UINT16(0, menuSourceLines(1, 890));       // 445 lines a field: not a 15 kHz source either
+    TEST_ASSERT_EQUAL_UINT16(261, menuSourceLines(1, 523));
+    TEST_ASSERT_EQUAL_UINT16(312, menuSourceLines(2, 624));
+    TEST_ASSERT_EQUAL_UINT16(239, menuSourceLines(1, 239));
+    TEST_ASSERT_EQUAL_UINT16(525, menuSourceLines(3, 525));     // the other modes as they are
+    TEST_ASSERT_EQUAL_UINT16(396, menuSourceLines(14, 396));
+}
+
 void test_signal_change_detector(void) {
     MenuSignalKey a = {1, 1, false, 0, 525};
     MenuSignalKey b = a;
@@ -129,6 +142,7 @@ int main() {
     RUN_TEST(test_ir_real_nec_spacing);
     RUN_TEST(test_sync_type_sog_first);
     RUN_TEST(test_source_lines_not_halved_below_400);
+    RUN_TEST(test_source_lines_of_a_15khz_mode_are_a_possible_count);
     RUN_TEST(test_signal_change_detector);
     RUN_TEST(test_ir_key_map);
     RUN_TEST(test_ir_repeat_acceleration);
