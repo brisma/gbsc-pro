@@ -31,6 +31,8 @@ refer to brisma/gbsc-pro.
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
 - Web app: Filter shows **Custom** when Sharpness or Line filter were set by hand, instead of no selected option. (#69)
+- Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board
+  does not show. (#72)
 - Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
   be measured; it measures again before it decides. (#69)
 

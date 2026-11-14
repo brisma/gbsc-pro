@@ -36,7 +36,10 @@ function Labelled({ k, icon, repeat }: { k: KeyName; icon: string; repeat?: bool
 function RemoteBody() {
   return (
     <>
-      <p style="font-size:13px">The TV menu, driven from here. Same keys as the IR remote.</p>
+      {/* the standard board has no text OSD (no STV9426) and no IR receiver: its menu is on the OLED only */}
+      <p style="font-size:13px">{board.value === "pro"
+        ? "The TV menu, driven from here. Same keys as the IR remote."
+        : "The OLED menu, driven from here (this board shows no menu on the TV)."}</p>
       <div class="remote">
         <div class="rpad">
           <Key k="Up" cls="u" icon="keyboard_arrow_up" repeat />
