@@ -27,6 +27,7 @@
 #include "../log/log.h"
 #include "../log/event-ring.h"
 #include "../profiles/profile-store.h"
+#include "../net/ws-watch.h"
 #include <memory>
 #include <new>
 #include <ESP8266WiFi.h>
@@ -61,6 +62,24 @@ static bool wsValidateHeader(String name, String value) {
 void apiWebSocketGuard() {
     static const char* kMandatory[] = {"Origin"};   // browsers always send it on a WebSocket handshake
     webSocket.onValidateHttpHeader(wsValidateHeader, kMandatory, 1);
+}
+
+// The library's heartbeat does not run in the async build; a client that vanished is closed by the TCP layer when
+// the status sent every second gets no ack within 5 s. These lines show when each slot really opens and closes
+void apiWebSocketWatch(uint32_t now) {
+    static WsSlotWatch slots[WEBSOCKETS_SERVER_CLIENT_MAX];
+    for (uint8_t i = 0; i < WEBSOCKETS_SERVER_CLIENT_MAX; i++) {
+        bool open = webSocket.clientIsConnected(i);
+        uint8_t ev = slots[i].update(open, now);
+        if (ev == WSW_OPENED) {
+            IPAddress ip = webSocket.remoteIP(i);
+            logPrintf(LC_API, LL_INFO, PSTR("web socket %u: open, from %u.%u.%u.%u (%d of %u slots)"), i, ip[0], ip[1],
+                      ip[2], ip[3], webSocket.connectedClients(false), (unsigned)WEBSOCKETS_SERVER_CLIENT_MAX);
+        } else if (ev == WSW_CLOSED) {
+            logPrintf(LC_API, LL_INFO, PSTR("web socket %u: closed after %lu s"), i,
+                      (unsigned long)(slots[i].openForMs() / 1000));
+        }
+    }
 }
 
 static void addGuard(AsyncWebServer& server) {

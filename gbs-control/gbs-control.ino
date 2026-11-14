@@ -7868,13 +7868,11 @@ void handleWiFi(boolean instant)
         persWM.handleWiFi(); // if connected, returns instantly. otherwise it reconnects or opens AP
         dnsServer.processNextRequest();
 
-        if ((millis() - lastTimePing) > 953) { // slightly odd value so not everything happens at once
-            // Note: ping/pong now handled by webSocket.enableHeartbeat() in setup()
-        }
         if (((millis() - lastTimePing) > 973) || instant) {
-            if ((webSocket.connectedClients(false) > 0) || instant) { // true = with compliant ping
-                updateWebSocketData();
+            if ((webSocket.connectedClients(false) > 0) || instant) {
+                updateWebSocketData();   // also what lets the TCP layer find a vanished client (no ack in 5 s)
             }
+            apiWebSocketWatch(millis());
             lastTimePing = millis();
         }
     }
@@ -9680,9 +9678,9 @@ void startWebserver()
     apiWebSocketGuard();
     webSocket.begin(); // Websocket for interaction
     logSinkEnable(true, true);   // console log lines go out on the WebSocket from now on
-    // Enable heartbeat: ping every 2000ms, pong timeout 3000ms, disconnect after 2 missed pongs
-    // This keeps the connection alive during idle periods (client has 2.7s timeout)
-    webSocket.enableHeartbeat(2000, 3000, 2);
+    // No library heartbeat: its ping and pong timeout only run in the library's loop(), which the async build does
+    // not have. The status sent every second keeps the page's 2.7 s liveness check fed, and a client that vanished
+    // is closed by the TCP layer when that status gets no ack within 5 s (apiWebSocketWatch() logs each slot)
     yield();
 
 #ifdef HAVE_PINGER_LIBRARY

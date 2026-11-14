@@ -33,6 +33,7 @@ bool apiGuardRequest(AsyncWebServerRequest* req);   // Host/Origin/X-GBSC rules 
 void apiWebRegister(AsyncWebServer& server);        // middleware + /api routes
 void apiSetReady();   // setup() mounted LittleFS and read the settings: requests stop answering 503 "starting"
 void apiWebSocketGuard();                           // WebSocket handshake needs a valid Origin
+void apiWebSocketWatch(uint32_t now);               // once a second: a log line when a slot opens or closes
 
 // Restore upload (POST /api/system/restore): chunks go to a temp file, the loop validates and applies
 void apiRestoreChunk(AsyncWebServerRequest* req, size_t index, const uint8_t* data, size_t len, bool final);
