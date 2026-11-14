@@ -70,6 +70,19 @@ void test_indicator_timer(void) {
     TEST_ASSERT_FALSE(t.due(10000));
 }
 
+// Contrast changed while the brightness bar is still up: the chip keeps the first icon unless the menu goes off first
+void test_indicator_another_icon(void) {
+    TvOsdIndicator t;
+    TEST_ASSERT_FALSE(t.another(TVO_BRIGHTNESS));                // nothing shown
+    t.show(TVO_BRIGHTNESS, 0);
+    TEST_ASSERT_FALSE(t.another(TVO_BRIGHTNESS));                // the same control again: the bar alone moves
+    TEST_ASSERT_TRUE(t.another(TVO_CONTRAST));
+    t.show(TVO_CONTRAST, 500);
+    TEST_ASSERT_FALSE(t.another(TVO_CONTRAST));
+    t.hide();
+    TEST_ASSERT_FALSE(t.another(TVO_BRIGHTNESS));
+}
+
 void test_rearm_after_a_preset_load(void) {
     uint16_t seen = 3;
     TEST_ASSERT_FALSE(tvOsdNeedsRearm(seen, 3));
@@ -85,6 +98,7 @@ int main(int, char**) {
     RUN_TEST(test_indicator_only_for_single_writes);
     RUN_TEST(test_allowed_rule);
     RUN_TEST(test_indicator_timer);
+    RUN_TEST(test_indicator_another_icon);
     RUN_TEST(test_rearm_after_a_preset_load);
     return UNITY_END();
 }

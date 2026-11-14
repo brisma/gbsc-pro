@@ -27,6 +27,8 @@ public:
     bool due(uint32_t now) const { return shown_ && now - at_ >= kShowMs; }
     void hide() { shown_ = false; }
     bool shown() const { return shown_; }
+    // Up with a different icon: the TV5725 changes the icon of its bar only from off (menu off, then the layout again)
+    bool another(uint8_t icon) const { return shown_ && icon_ != icon; }
     uint8_t icon() const { return icon_; }
 private:
     uint8_t icon_ = TVO_NONE;

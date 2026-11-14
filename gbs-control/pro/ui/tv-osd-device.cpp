@@ -58,7 +58,9 @@ void tvOsdNav(uint8_t nav) {
 
 void tvOsdIndicate(uint8_t icon, int8_t dir) {
     if (icon == TVO_NONE || gMode || !uopt->tvChanges || !allowed() || updateInProgress()) return;
-    bool rearm = tvOsdNeedsRearm(gSeenGen, tv5725OsdGeneration()) || !gIndicator.shown();
+    bool swap = gIndicator.another(icon);             // another control while the bar is still up
+    if (swap) osdManager.menuOff();
+    bool rearm = tvOsdNeedsRearm(gSeenGen, tv5725OsdGeneration()) || !gIndicator.shown() || swap;
     uint8_t bar = 64;
     if (icon == TVO_BRIGHTNESS) bar = (uint8_t)(uopt->picBrightness * 128 / 100);
     else if (icon == TVO_CONTRAST) bar = (uint8_t)(uopt->picContrast * 128 / 100);
