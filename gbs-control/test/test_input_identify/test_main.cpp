@@ -12,7 +12,9 @@ static IdSample level(uint8_t g, uint32_t sinceListen, uint32_t sincePowered = 0
     IdSample s = pass(); s.listenSent = true; s.switchesApplied = true; s.levelMeasured = true; s.gLevel = g;
     s.sinceListenMs = sinceListen; s.sincePoweredMs = sincePowered; return s;
 }
-static IdSample report(IdSample s, bool lock, bool freeRun) { s.reportFresh = true; s.lock = lock; s.freeRun = freeRun; return s; }
+static IdSample report(IdSample s, bool lock, bool freeRun, bool burst = true) {
+    s.reportFresh = true; s.lock = lock; s.freeRun = freeRun; s.burst = burst; return s;
+}
 
 // begin, then the flat R/G/B pass: listen goes on
 static void toListening(InputIdentify& id, bool decoderListens = true) {
@@ -123,11 +125,37 @@ void test_identify_composite_keeps_an_earlier_fresh_report(void) {   // reports 
     TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
 }
 
-void test_identify_composite_colour_kill_still_composite(void) {   // lock without burst (a console without colour)
+// A lock without a colour burst on pin 20 is a sync, not a picture: an RGB cable wired with composite sync (csync),
+// its console on a black screen for more than kCompositeMinMs, was shown through the decoder with a jumping picture.
+// The burst may lock a little after the sync: it is waited for as long as a Composite verdict is
+void test_identify_sync_without_colour_is_not_composite(void) {
     InputIdentify id; toListening(id);
     id.step(level(0, 300, 200), 600);
-    id.step(report(level(0, 600, 500), true, false), 900);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 600, 500), true, false, false), 900));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2000, 1900), 2300));   // past kDecoderReadyMs: still waiting
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_NO_BURST, id.why());
+    TEST_ASSERT_EQUAL_UINT8(ID_RELEASING, id.phase());
+}
+
+void test_identify_a_burst_that_locks_later_is_composite(void) {
+    InputIdentify id; toListening(id);
+    id.step(level(0, 300, 200), 600);
+    id.step(report(level(0, 600, 500), true, false, false), 900);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 1100, 1000), true, false, true), 1400));
     TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
+}
+
+// Composite left out of Auto search: nothing to tell apart, RGB SCART at once (no decoder, no termination)
+void test_identify_composite_not_searched_is_rgb_at_once(void) {
+    InputIdentify id; id.begin(0, true, false);
+    TEST_ASSERT_EQUAL_UINT8(IA_RELEASE_RGB, id.step(pass(), 0));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE_OFF, id.why());
+    TEST_ASSERT_EQUAL_UINT8(ID_DONE, id.phase());
+    TEST_ASSERT_FALSE(id.listenWanted());
+    TEST_ASSERT_FALSE(id.holdsSyncWatcher());
+    TEST_ASSERT_FALSE(id.releaseForced());
 }
 
 void test_identify_composite_waits_for_lock(void) {
@@ -309,7 +337,9 @@ int main(int, char**) {
     RUN_TEST(test_identify_blue_content_beats_a_composite_verdict_due);
     RUN_TEST(test_identify_blue_content_needs_the_switches_applied);
     RUN_TEST(test_identify_composite_keeps_an_earlier_fresh_report);
-    RUN_TEST(test_identify_composite_colour_kill_still_composite);
+    RUN_TEST(test_identify_sync_without_colour_is_not_composite);
+    RUN_TEST(test_identify_a_burst_that_locks_later_is_composite);
+    RUN_TEST(test_identify_composite_not_searched_is_rgb_at_once);
     RUN_TEST(test_identify_composite_waits_for_lock);
     RUN_TEST(test_identify_lock_with_freerun_is_not_present);
     RUN_TEST(test_identify_ambiguous_level_goes_rgb);

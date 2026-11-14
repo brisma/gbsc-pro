@@ -457,6 +457,8 @@ static const char* idWhyName(uint8_t w) {
         case IW_DECODER_SILENT: return "decoder silent";
         case IW_TIMEOUT: return "no verdict in time";
         case IW_COMPOSITE: return "composite only";
+        case IW_NO_BURST: return "a sync without colour on pin 20";
+        case IW_COMPOSITE_OFF: return "Composite is not in Auto search";
         case IW_SYNC_LOST: return "sync lost";
         case IW_CHOICE: return "choice";
         case IW_RESCAN: return "new scan";
@@ -508,12 +510,13 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
                 gSwitchAt = now;                                   // the scan's RGB SCART window starts again
                 passesRestart();
             }
-            if (w == IW_PICTURE)
-                logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (picture) after %lu ms"), (unsigned long)elapsed);
+            if (w == IW_PICTURE || w == IW_COMPOSITE_OFF)
+                logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (%s) after %lu ms"), idWhyName(w), (unsigned long)elapsed);
             else if (!gId.releaseForced() && gIdListenOff)     // not the cap before listen ever came on
                 logPrintf(LC_INPUT, LL_INFO, PSTR("identify: termination off (%s, G %u), RGB SCART preset after %lu ms"),
                           gIdOffReport ? "decoder off report" : "G low", gLastLevel, (unsigned long)elapsed);
-            if (w == IW_NO_LOCK || w == IW_DECODER_SILENT || w == IW_LEVEL_AMBIGUOUS || w == IW_TIMEOUT) gHint.arm(now);
+            if (w == IW_NO_LOCK || w == IW_DECODER_SILENT || w == IW_LEVEL_AMBIGUOUS || w == IW_TIMEOUT || w == IW_NO_BURST)
+                gHint.arm(now);
             break;
         }
         case IA_MOVE_COMPOSITE:
@@ -635,7 +638,7 @@ static void identifyLoop(uint32_t now) {
             return;
         }
         gIdTermination = !advLinkCanListen();
-        gId.begin(now, !gIdTermination);
+        gId.begin(now, !gIdTermination, (inputAutoScanned(board()) & (1 << (InputTypeAV - 1))) != 0);
         gIdNext = IdSample();
         gIdPassAt = 0;
         gIdStartedAt = now;
@@ -664,6 +667,7 @@ static void identifyLoop(uint32_t now) {
         s.reportFresh = true;
         s.lock = (g->flags & ADV_SIG_LOCK) != 0;
         s.freeRun = (g->flags & ADV_SIG_FREERUN) != 0;
+        s.burst = (g->flags & ADV_SIG_FSC) != 0;
         if ((g->flags & ADV_SIG_POWERED) && !gPoweredSince) gPoweredSince = now;
     }
     s.sincePoweredMs = gPoweredSince ? now - gPoweredSince : 0;

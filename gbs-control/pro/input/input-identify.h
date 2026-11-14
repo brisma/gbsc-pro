@@ -1,7 +1,9 @@
 // Input search identification: pure. A sync found on RGB SCART during a scan,
 // nothing shown yet: R/G/B content first (listen off); flat → the ADV7280 listens on pin 20 (the termination raises
 // the G level only when a console drives the SCART RGB lines; content on B meanwhile = the picture came back after a
-// black stretch) → RGB SCART or Composite; then the preset loads once.
+// black stretch) → RGB SCART or Composite; then the preset loads once. Composite needs a picture on pin 20, not
+// only a sync: the decoder locked with a colour burst (an RGB cable wired with composite sync locks it without one).
+// With Composite left out of Auto search there is nothing to tell apart: RGB SCART at once.
 #pragma once
 #include <stdint.h>
 
@@ -13,7 +15,7 @@ struct IdSample {                 // one pass (every ~300 ms); fields not measur
     bool levelMeasured;           // tv5725ChannelStatsLive G, taken with the switches applied
     uint8_t gLevel;
     bool blueContent;             // with the level: content on B (rjPictureContentListening), the picture is back
-    bool reportFresh, lock, freeRun;   // a decoder report newer than the previous pass
+    bool reportFresh, lock, freeRun, burst;   // a decoder report newer than the previous pass (burst: FSC lock)
     uint32_t sinceListenMs;       // since the listen STATE went out (0 if not yet)
     uint32_t sincePoweredMs;      // since the first POWERED report after it (0 if none)
     bool listenOffConfirmed;      // RELEASING: a report after the listen-off STATE without POWERED (the termination
@@ -24,7 +26,8 @@ enum : uint8_t { ID_IDLE, ID_IDENTIFY, ID_RELEASING, ID_DONE };
 enum : uint8_t { IA_NONE, IA_SAMPLE_RGB, IA_LISTEN_ON, IA_SAMPLE_LEVEL, IA_LISTEN_OFF, IA_RELEASE_RGB, IA_MOVE_COMPOSITE,
                  IA_ABANDON };
 enum : uint8_t { IW_NONE, IW_PICTURE, IW_RGB_WIRED, IW_LEVEL_AMBIGUOUS, IW_NO_LOCK, IW_DECODER_SILENT, IW_TIMEOUT,
-                 IW_COMPOSITE, IW_SYNC_LOST, IW_CHOICE, IW_RESCAN, IW_PAUSED, IW_PICTURE_LISTENING };
+                 IW_COMPOSITE, IW_SYNC_LOST, IW_CHOICE, IW_RESCAN, IW_PAUSED, IW_PICTURE_LISTENING, IW_NO_BURST,
+                 IW_COMPOSITE_OFF };
 
 class InputIdentify {
 public:
@@ -34,8 +37,9 @@ public:
                           kAbsoluteCapMs = 6000;   // from begin(), whatever the glue's stamps say: never a hang
     static const uint32_t kCompositeMinMs = 4000;   // from begin(): a booting console keeps R/G/B flat (MD 3.4 s)
     // A sync on RGB SCART in a scan: phase IDENTIFY, first action SAMPLE_RGB. decoderListens false = an ADV Controller
-    // without ADV_INFO_CAP_LISTEN: the termination alone (no decoder report, Composite needs no lock)
-    void begin(uint32_t now, bool decoderListens);
+    // without ADV_INFO_CAP_LISTEN: the termination alone (no decoder report, Composite needs no lock).
+    // compositeSearched false = Composite is not among the inputs Auto searches: RGB SCART, no listening
+    void begin(uint32_t now, bool decoderListens, bool compositeSearched = true);
     uint8_t step(const IdSample& s, uint32_t now);   // the next IA_* action for the glue
     void abandon(uint8_t why);                       // CHOICE / RESCAN / PAUSED / SYNC_LOST: back to IDLE, listen off
     void newAcquisition();                           // scan start, choice or path change, source gone: IDLE
@@ -50,6 +54,6 @@ private:
     uint8_t verdictRgb(uint8_t why, uint32_t now);
     uint8_t phase_ = ID_IDLE, why_ = IW_NONE, high_ = 0, low_ = 0, syncLost_ = 0;
     bool listen_ = false, decoderListens_ = true, rgbDone_ = false, haveReport_ = false, lock_ = false, freeRun_ = false,
-         forced_ = false;
+         forced_ = false, burst_ = false, compositeSearched_ = true;
     uint32_t listenAt_ = 0, releaseFrom_ = 0, beginAt_ = 0;
 };

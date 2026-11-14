@@ -1,9 +1,10 @@
 #include "input-identify.h"
 
-void InputIdentify::begin(uint32_t now, bool decoderListens) {
+void InputIdentify::begin(uint32_t now, bool decoderListens, bool compositeSearched) {
     newAcquisition();
     phase_ = ID_IDENTIFY;
     decoderListens_ = decoderListens;
+    compositeSearched_ = compositeSearched;
     listenAt_ = beginAt_ = now;
 }
 
@@ -18,7 +19,7 @@ void InputIdentify::newAcquisition() {
     phase_ = ID_IDLE;
     why_ = IW_NONE;
     high_ = low_ = syncLost_ = 0;
-    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = false;
+    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = burst_ = false;
 }
 
 // RGB SCART after listen: listen goes off first; the syncwatcher stays held until the termination is off (RELEASING)
@@ -39,7 +40,12 @@ uint8_t InputIdentify::step(const IdSample& s, uint32_t now) {
         return IA_ABANDON;
     }
     syncLost_ = 0;
-    if (s.reportFresh) { haveReport_ = true; lock_ = s.lock; freeRun_ = s.freeRun; }   // the last fresh report counts
+    if (s.reportFresh) { haveReport_ = true; lock_ = s.lock; freeRun_ = s.freeRun; burst_ = s.burst; }   // the last fresh report counts
+    if (phase_ == ID_IDENTIFY && !compositeSearched_) {      // nothing to tell apart
+        why_ = IW_COMPOSITE_OFF;
+        phase_ = ID_DONE;
+        return IA_RELEASE_RGB;
+    }
     if (phase_ == ID_IDENTIFY && now - beginAt_ >= kAbsoluteCapMs) {   // a STATE that never goes out, a flapping sync
         if (listen_) return verdictRgb(IW_TIMEOUT, now);
         why_ = IW_TIMEOUT;
@@ -74,8 +80,10 @@ uint8_t InputIdentify::step(const IdSample& s, uint32_t now) {
     }
     if (high_ >= 2) return verdictRgb(IW_RGB_WIRED, now);
     if (low_ >= 2) {
-        if (!decoderListens_ || (haveReport_ && lock_ && !freeRun_)) {
+        bool present = haveReport_ && lock_ && !freeRun_;
+        if (!decoderListens_ || present) {
             if (now - beginAt_ < kCompositeMinMs) return IA_SAMPLE_LEVEL;   // a booting console: its picture may come
+            if (decoderListens_ && !burst_) return verdictRgb(IW_NO_BURST, now);   // a sync and no picture on pin 20
             why_ = IW_COMPOSITE;
             phase_ = ID_DONE;                            // listen_ stays on: the decoder keeps its lock into Composite
             return IA_MOVE_COMPOSITE;

@@ -26,6 +26,9 @@ refer to brisma/gbsc-pro.
   SoG is found on VGA in about three seconds; it was taken for a SCART console and never shown.
 - Auto input: a source on the VGA connector switched on within a second or two of the SCART console going off is
   found too, in about four seconds; the scaler stayed on RGB SCART with a rolling picture.
+- Auto input: a console on an RGB cable wired with composite sync is no longer taken for a Composite source when it
+  starts on a black screen (the picture jumped every two seconds), and with Composite left out of Auto search the
+  search never ends there. (#69)
 - Auto input: a sync that does not become a picture no longer holds the search for over a minute; after 5 seconds the
   other inputs are tried.
 - VGA: loading a profile or Defaults (also by auto-load, after another console) with a scaled VGA source no longer
