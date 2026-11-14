@@ -15,6 +15,33 @@ static IdSample level(uint8_t g, uint32_t sinceListen, uint32_t sincePowered = 0
 static IdSample report(IdSample s, bool lock, bool freeRun, bool burst = true) {
     s.reportFresh = true; s.lock = lock; s.freeRun = freeRun; s.burst = burst; return s;
 }
+// The answer of a look at the composite picture (the pass after IA_PEEK_COMPOSITE): content there, and what the RGB
+// wires read right after it
+static IdSample peeked(IdSample s, bool content, uint8_t wires = RW_FLAT) {
+    s.peekMeasured = true; s.peekContent = content; s.peekWires = wires; return s;
+}
+// Passes while R/G/B and the composite are both black, every 300 ms from `t` to `until`: the machine asks for a G
+// level sample or for a look, never anything else. Returns the number of looks asked
+static uint8_t blackUntil(InputIdentify& id, uint32_t& t, uint32_t until, bool& afterPeek) {
+    uint8_t looks = 0;
+    for (; t < until; t += 300) {
+        IdSample s = level(0, t - 300, t - 300);
+        if (afterPeek) s = peeked(s, false);
+        uint8_t a = id.step(s, t);
+        TEST_ASSERT_TRUE(a == IA_SAMPLE_LEVEL || a == IA_PEEK_COMPOSITE);
+        afterPeek = a == IA_PEEK_COMPOSITE;
+        if (afterPeek) looks++;
+    }
+    return looks;
+}
+// To the first look: listening, two low G levels, the decoder present on pin 20
+static void toFirstLook(InputIdentify& id, bool burst = true, bool lastComposite = false) {
+    id.begin(0, true, true, lastComposite);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_RGB, id.step(pass(), 0));
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_ON, id.step(rgb(false), 300));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 300, 200), 600));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(report(level(0, 600, 500), true, false, burst), 900));
+}
 
 // begin, then the flat R/G/B pass: listen goes on
 static void toListening(InputIdentify& id, bool decoderListens = true) {
@@ -54,11 +81,11 @@ void test_identify_rgb_only_cable_on_black(void) {      // SNES csync: G 76-80
     expectRgbWired(id, 77);
 }
 
-void test_identify_composite_only(void) {               // N64: G 0, decoder lock + PAL burst
-    InputIdentify id; toListening(id);
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 300, 200), 600));
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 600, 500), true, false), 900));   // a booting console?
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
+// N64 (composite only): G 0, the decoder locked on pin 20, and a picture seen there at the first look: Composite
+// at once, well before kCompositeMinMs
+void test_identify_composite_only(void) {
+    InputIdentify id; toFirstLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
     TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
     TEST_ASSERT_EQUAL_UINT8(ID_DONE, id.phase());
     TEST_ASSERT_TRUE(id.listenWanted());                 // kept until the glue switched to Composite
@@ -67,17 +94,107 @@ void test_identify_composite_only(void) {               // N64: G 0, decoder loc
     TEST_ASSERT_FALSE(id.holdsSyncWatcher());
 }
 
-// Mega Drive powered on during a scan: sync at once, R/G/B and the G level flat for 3.4 s, then the
-// SEGA logo; a composite verdict waits kCompositeMinMs from begin(), the picture coming on gives RGB SCART
+// The picture is what tells a composite source, not its colour: a black-and-white one is Composite too
+void test_identify_composite_picture_without_burst(void) {
+    InputIdentify id; toFirstLook(id, false);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
+}
+
+// No look before the decoder is present on pin 20, then one every kPeekEveryMs with a G level sample in between,
+// and none close to the black cap
+void test_identify_looks_are_spaced(void) {
+    InputIdentify id; id.begin(0, true);
+    id.step(pass(), 0);
+    id.step(rgb(false), 300);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 300, 200), 600));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 600, 500), 900));    // two lows, no decoder report yet
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(report(level(0, 900, 800), true, false), 1200));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), false), 1500));  // the answer: black; G not sampled yet
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1500, 1400), 1800));   // sampled, but only 600 ms on
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1800, 1700), 2100));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 2100, 2000), 1200 + InputIdentify::kPeekEveryMs));
+    uint32_t t = 2500;
+    bool afterPeek = true;
+    blackUntil(id, t, InputIdentify::kPeekLastMs, afterPeek);
+    for (; t < InputIdentify::kBlackCapMs; t += 300)                                 // too late for another look
+        TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(afterPeek ? peeked(level(0, t, t), false) : level(0, t, t), t)), afterPeek = false;
+}
+
+// Mega Drive without a cartridge, or its region switched on a black screen: black on the RGB wires and on pin 20
+// (its cable carries CVBS) for as long as the identification lasts. Nothing says Composite: RGB SCART
+void test_identify_black_on_both_is_rgb(void) {
+    InputIdentify id; toFirstLook(id);
+    uint32_t t = 1200;
+    bool afterPeek = true;
+    TEST_ASSERT_GREATER_OR_EQUAL_UINT8(2, blackUntil(id, t, InputIdentify::kBlackCapMs, afterPeek));
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(0, t, t), InputIdentify::kBlackCapMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_BLACK, id.why());
+    TEST_ASSERT_EQUAL_UINT8(ID_RELEASING, id.phase());
+}
+
+// ... unless the last source found on this unit was Composite (a composite-only console on a long black start)
+void test_identify_black_on_both_follows_the_last_source(void) {
+    InputIdentify id; toFirstLook(id, true, true);
+    uint32_t t = 1200;
+    bool afterPeek = true;
+    blackUntil(id, t, InputIdentify::kBlackCapMs, afterPeek);
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, t, t), InputIdentify::kBlackCapMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE_LAST, id.why());
+    TEST_ASSERT_TRUE(id.listenWanted());
+}
+
+// The console's own picture came back while the composite was looked at: content on B right after the look
+void test_identify_picture_back_during_a_look_is_rgb(void) {
+    InputIdentify id; toFirstLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(peeked(level(0, 900, 800), true, RW_BLUE), 1200));
+    TEST_ASSERT_EQUAL_UINT8(IW_PICTURE_LISTENING, id.why());
+}
+
+// Mega Drive switched on, its first screen (white, the blue wire uniform) coming up while the composite was looked
+// at: Y content 163/184, R/G/B right after 0/129/0. Not a composite-only source: the G level decides next
+void test_identify_picture_on_the_wires_during_a_look_is_not_composite(void) {
+    InputIdentify id; toFirstLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true, RW_CONTENT), 1200));
+    TEST_ASSERT_EQUAL_UINT8(ID_IDENTIFY, id.phase());
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(109, 1200, 1100), 1500));
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(104, 1500, 1400), 1800));
+    TEST_ASSERT_EQUAL_UINT8(IW_RGB_WIRED, id.why());
+}
+
+// Something faint on the wires right after a look decides nothing: Composite needs them flat, at this look or a later one
+void test_identify_faint_wires_wait_for_a_flat_look(void) {
+    InputIdentify id; toFirstLook(id);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true, RW_FAINT), 1200));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1200, 1100), 1500));
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 1500, 1400), 1800));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 1800, 1700), 2100));
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(pass(), true), 2400));
+    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
+}
+
+// Bright parts on black without blue (G median 0, B flat) for as long as the identification lasts: a look saw content
+// on the G wire, so this is the console's own picture whatever the last source was
+void test_identify_content_on_the_wires_is_rgb_at_the_cap(void) {
+    InputIdentify id; toFirstLook(id, true, true);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(peeked(pass(), true, RW_CONTENT), 1200));
+    uint32_t t = 1500;
+    bool afterPeek = false;
+    blackUntil(id, t, InputIdentify::kBlackCapMs, afterPeek);
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(0, t, t), InputIdentify::kBlackCapMs));
+    TEST_ASSERT_EQUAL_UINT8(IW_WIRES, id.why());
+}
+
+// Mega Drive powered on during a scan: sync at once, R/G/B, the G level and the composite black for 3.4 s, then the
+// SEGA logo: the picture coming on gives RGB SCART
 void test_identify_booting_console_ends_rgb(void) {
-    InputIdentify id; toListening(id);
-    uint32_t t = 600;
-    for (; t <= 3000; t += 300) {
-        IdSample s = level(0, t - 300, t - 300);
-        if (t == 900) s = report(s, true, false);
-        TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(s, t));
-    }
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(190, t - 300, t - 300), t));
+    InputIdentify id; toFirstLook(id);
+    uint32_t t = 1200;
+    bool afterPeek = true;
+    blackUntil(id, t, 3300, afterPeek);
+    IdSample a = level(190, t - 300, t - 300);
+    if (afterPeek) a = peeked(a, false);
+    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(a, t));
     TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(192, t, t), t + 300));
     TEST_ASSERT_EQUAL_UINT8(IW_RGB_WIRED, id.why());
 }
@@ -85,13 +202,10 @@ void test_identify_booting_console_ends_rgb(void) {
 // Mega Drive, Sonic 2 demo loop: 3.5 s of black, then a scene on a black background (bright parts, the G median
 // stays 0). The blue wire carries nothing but an RGB picture: its content during the listen gives RGB SCART
 void test_identify_picture_back_on_a_dark_scene_ends_rgb(void) {
-    InputIdentify id; toListening(id);
-    uint32_t t = 600;
-    for (; t <= 3300; t += 300) {
-        IdSample s = level(0, t - 300, t - 300);
-        if (t == 900) s = report(s, true, false);       // the decoder locks on the cable's CVBS
-        TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(s, t));
-    }
+    InputIdentify id; toFirstLook(id);
+    uint32_t t = 1200;
+    bool afterPeek = true;
+    blackUntil(id, t, 3600, afterPeek);
     IdSample s = level(0, t - 300, t - 300);
     s.blueContent = true;
     TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(s, t));
@@ -102,12 +216,10 @@ void test_identify_picture_back_on_a_dark_scene_ends_rgb(void) {
 }
 
 void test_identify_blue_content_beats_a_composite_verdict_due(void) {   // the same pass would say Composite
-    InputIdentify id; toListening(id);
-    id.step(level(0, 300, 200), 600);
-    id.step(report(level(0, 600, 500), true, false), 900);
-    IdSample s = level(0, 3700, 3600);
+    InputIdentify id; toFirstLook(id);
+    IdSample s = peeked(level(0, 900, 800), true);
     s.blueContent = true;
-    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(s, InputIdentify::kCompositeMinMs));
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(s, 1200));
     TEST_ASSERT_EQUAL_UINT8(IW_PICTURE_LISTENING, id.why());
 }
 
@@ -121,30 +233,22 @@ void test_identify_blue_content_needs_the_switches_applied(void) {   // a sample
 void test_identify_composite_keeps_an_earlier_fresh_report(void) {   // reports every 500 ms, passes every 300 ms
     InputIdentify id; toListening(id);
     TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 300, 200), true, false), 600));
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 600, 500), 900));
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
+    TEST_ASSERT_EQUAL_UINT8(IA_PEEK_COMPOSITE, id.step(level(0, 600, 500), 900));
+    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(peeked(level(0, 900, 800), true), 1200));
 }
 
-// A lock without a colour burst on pin 20 is a sync, not a picture: an RGB cable wired with composite sync (csync),
-// its console on a black screen for more than kCompositeMinMs, was shown through the decoder with a jumping picture.
-// The burst may lock a little after the sync: it is waited for as long as a Composite verdict is
+// A lock without a colour burst and no picture on pin 20 is a sync: an RGB cable wired with composite sync (csync),
+// its console on a black screen, was shown through the decoder with a jumping picture. RGB SCART at kCompositeMinMs
 void test_identify_sync_without_colour_is_not_composite(void) {
-    InputIdentify id; toListening(id);
-    id.step(level(0, 300, 200), 600);
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 600, 500), true, false, false), 900));
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(level(0, 2000, 1900), 2300));   // past kDecoderReadyMs: still waiting
-    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
+    InputIdentify id; toFirstLook(id, false);
+    uint32_t t = 1200;
+    bool afterPeek = true;
+    blackUntil(id, t, InputIdentify::kCompositeMinMs, afterPeek);
+    IdSample s = level(0, t, t);
+    if (afterPeek) s = peeked(s, false);
+    TEST_ASSERT_EQUAL_UINT8(IA_LISTEN_OFF, id.step(s, InputIdentify::kCompositeMinMs));
     TEST_ASSERT_EQUAL_UINT8(IW_NO_BURST, id.why());
     TEST_ASSERT_EQUAL_UINT8(ID_RELEASING, id.phase());
-}
-
-void test_identify_a_burst_that_locks_later_is_composite(void) {
-    InputIdentify id; toListening(id);
-    id.step(level(0, 300, 200), 600);
-    id.step(report(level(0, 600, 500), true, false, false), 900);
-    TEST_ASSERT_EQUAL_UINT8(IA_SAMPLE_LEVEL, id.step(report(level(0, 1100, 1000), true, false, true), 1400));
-    TEST_ASSERT_EQUAL_UINT8(IA_MOVE_COMPOSITE, id.step(level(0, 3700, 3600), InputIdentify::kCompositeMinMs));
-    TEST_ASSERT_EQUAL_UINT8(IW_COMPOSITE, id.why());
 }
 
 // Composite left out of Auto search: nothing to tell apart, RGB SCART at once (no decoder, no termination)
@@ -332,13 +436,20 @@ int main(int, char**) {
     RUN_TEST(test_identify_rgb_wired_on_black);
     RUN_TEST(test_identify_rgb_only_cable_on_black);
     RUN_TEST(test_identify_composite_only);
+    RUN_TEST(test_identify_composite_picture_without_burst);
+    RUN_TEST(test_identify_looks_are_spaced);
+    RUN_TEST(test_identify_black_on_both_is_rgb);
+    RUN_TEST(test_identify_black_on_both_follows_the_last_source);
+    RUN_TEST(test_identify_picture_back_during_a_look_is_rgb);
+    RUN_TEST(test_identify_picture_on_the_wires_during_a_look_is_not_composite);
+    RUN_TEST(test_identify_faint_wires_wait_for_a_flat_look);
+    RUN_TEST(test_identify_content_on_the_wires_is_rgb_at_the_cap);
     RUN_TEST(test_identify_booting_console_ends_rgb);
     RUN_TEST(test_identify_picture_back_on_a_dark_scene_ends_rgb);
     RUN_TEST(test_identify_blue_content_beats_a_composite_verdict_due);
     RUN_TEST(test_identify_blue_content_needs_the_switches_applied);
     RUN_TEST(test_identify_composite_keeps_an_earlier_fresh_report);
     RUN_TEST(test_identify_sync_without_colour_is_not_composite);
-    RUN_TEST(test_identify_a_burst_that_locks_later_is_composite);
     RUN_TEST(test_identify_composite_not_searched_is_rgb_at_once);
     RUN_TEST(test_identify_composite_waits_for_lock);
     RUN_TEST(test_identify_lock_with_freerun_is_not_present);

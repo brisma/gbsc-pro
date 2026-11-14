@@ -52,6 +52,24 @@ void test_judge_r_only_is_not_rgb(void) {
     TEST_ASSERT_TRUE(rjRgbContent(q));
 }
 
+// The wires right after a look at the composite picture
+void test_judge_wires_after_a_look(void) {
+    uint16_t n64[3] = {0, 0, 0};                             // composite only, a picture on pin 20
+    TEST_ASSERT_EQUAL_UINT8(RW_FLAT, rjWiresAfterLook(n64));
+    uint16_t noise[3] = {7, 7, 7};
+    TEST_ASSERT_EQUAL_UINT8(RW_FLAT, rjWiresAfterLook(noise));
+    uint16_t white[3] = {0, 129, 0};                         // Mega Drive, a white first screen: blue uniform
+    TEST_ASSERT_EQUAL_UINT8(RW_CONTENT, rjWiresAfterLook(white));
+    uint16_t snes[3] = {0, 14, 63};
+    TEST_ASSERT_EQUAL_UINT8(RW_BLUE, rjWiresAfterLook(snes));
+    uint16_t faint[3] = {0, RgbScartJudge::kWiresFlatMax, 0};
+    TEST_ASSERT_EQUAL_UINT8(RW_FAINT, rjWiresAfterLook(faint));
+    uint16_t chroma[3] = {RgbScartJudge::kRgbMin + 10, 0, 0};   // R alone: S-Video over SCART
+    TEST_ASSERT_EQUAL_UINT8(RW_FLAT, rjWiresAfterLook(chroma));
+    uint16_t dim[3] = {0, 0, RgbScartJudge::kWiresFlatMax};
+    TEST_ASSERT_EQUAL_UINT8(RW_FAINT, rjWiresAfterLook(dim));
+}
+
 void test_judge_samples_only_a_scaled_path(void) {
     TEST_ASSERT_FALSE(rjPathMeasurable(15, false));          // RGBHV bypass (first step of RGB + CSync + VSync)
     TEST_ASSERT_TRUE(rjPathMeasurable(14, false));           // RGBHV scaled
@@ -110,6 +128,7 @@ int main(int, char**) {
     RUN_TEST(test_judge_r_only_is_not_rgb);
     RUN_TEST(test_judge_samples_only_a_scaled_path);
     RUN_TEST(test_hint_after_20s_of_black_rgb);
+    RUN_TEST(test_judge_wires_after_a_look);
     RUN_TEST(test_hint_not_for_an_rgb_picture);
     RUN_TEST(test_hint_idle_until_armed);
     RUN_TEST(test_hint_once_per_acquisition);

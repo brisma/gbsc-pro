@@ -8,6 +8,11 @@ struct RgbScartJudge {
     // 8-bit levels (rjBusLevel). Measured: black RGB and floating R/G/B 0-1, a Sonic 2 screen 94-255 per
     // channel, N64 PAL composite Y 61-76
     static const uint16_t kRgbMin = 24, kYMin = 24;
+    // The identification's look at the composite picture (the YPbPr ADC input while the decoder listens, before any
+    // preset). Measured: a black picture 4-7 (Mega Drive without a cartridge), a game screen 46-93
+    static const uint16_t kPeekYMin = 12;
+    // ... and the R/G/B wires read right after it: a composite-only source leaves them at 0 (N64 with a picture)
+    static const uint16_t kWiresFlatMax = 8;
 };
 
 // One TV5725 test-bus word (0_2E low, 0_2F high) as an 8-bit level: bit 15 toggles by itself and the level sits in
@@ -22,6 +27,12 @@ bool rjRgbContent(const uint16_t content[3]);
 // The same while the decoder listens on pin 20: B alone decides (G takes what the termination couples in from pin 20,
 // R the chroma of S-Video over SCART). A scene of bright parts on black has content and a median level of 0.
 bool rjPictureContentListening(const uint16_t content[3]);
+// R, G, B contents right after a look at the composite picture. FLAT: nothing on G and B (what a composite-only
+// source gives; R may carry the chroma of S-Video over SCART). BLUE: content on B, the console's own picture.
+// CONTENT: content on G only, a picture whose blue is uniform (a white screen) or absent. FAINT: something below
+// kRgbMin on G or B
+enum : uint8_t { RW_FLAT, RW_FAINT, RW_CONTENT, RW_BLUE };
+uint8_t rjWiresAfterLook(const uint16_t content[3]);
 // The test bus carries the picture only on a scaled path: RGBHV bypass (mode 15, the first step when the LM1881
 // gives CSync and VSync) and HD bypass read flat, and mode 0 has no preset yet
 bool rjPathMeasurable(uint8_t videoStandardInput, bool hdBypass);

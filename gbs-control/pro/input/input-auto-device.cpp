@@ -287,6 +287,7 @@ static void switchTo(uint8_t want, uint32_t now) {
 static const uint32_t kVgaLookConfirmMs = 200, kVgaLookSettleMs = 60, kVgaLookSampleMs = 160, kVgaLookBackMs = 60;
 static const uint8_t kVgaLookRun = 6, kVgaLookNoHs = 8;         // 5 ms samples: H and V 6 in a row; no H in the first 8
 static const uint8_t kVgaLookVsEarly = 6;                       // a VS in the first samples is not a measured one
+static const uint32_t kPeekSettleMs = 20, kPeekAgainMs = 60;    // the identification's look at the composite picture
 
 // What the last look read (the return watch decides on it)
 static struct { bool hs, vs, pathMeasured, pathVs; } gLook;
@@ -458,6 +459,9 @@ static const char* idWhyName(uint8_t w) {
         case IW_TIMEOUT: return "no verdict in time";
         case IW_COMPOSITE: return "composite only";
         case IW_NO_BURST: return "a sync without colour on pin 20";
+        case IW_BLACK: return "black on R/G/B and on pin 20";
+        case IW_WIRES: return "content on the R/G/B wires";
+        case IW_COMPOSITE_LAST: return "black on both, Composite as the last source";
         case IW_COMPOSITE_OFF: return "Composite is not in Auto search";
         case IW_SYNC_LOST: return "sync lost";
         case IW_CHOICE: return "choice";
@@ -484,6 +488,45 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
             gIdNext.gLevel = (uint8_t)(l[1] > 255 ? 255 : l[1]);
             gIdNext.blueContent = rjPictureContentListening(c);
             logPrintf(LC_INPUT, LL_DEBUG, PSTR("identify: G level %u, content G %u B %u"), l[1], c[1], c[2]);
+            break;
+        }
+        case IA_PEEK_COMPOSITE: {
+            // The composite picture: while the decoder listens the encoder already drives the TV5725's YPbPr input,
+            // so the ADC input alone moves (no ADV switch, no STATE). Twice in a row for a picture, then the RGB
+            // wires: the console's own picture may have come up meanwhile. With the wires flat the composite once
+            // more: a picture there before and after is a source that drives pin 20 alone, not a fade or a cut
+            uint16_t y[3] = {0, 0, 0}, c[3];
+            uint16_t y1, y2 = 0, y3 = 0;
+            const uint16_t yMin = RgbScartJudge::kPeekYMin;
+            uint8_t sel = GBS::ADC_INPUT_SEL::read();
+            GBS::ADC_INPUT_SEL::write(0);
+            delay(kPeekSettleMs);
+            tv5725ChannelContentLive(2, y);
+            y1 = y[1];
+            if (y1 >= yMin) {
+                delay(kPeekAgainMs);
+                tv5725ChannelContentLive(2, y);
+                y2 = y[1];
+            }
+            GBS::ADC_INPUT_SEL::write(sel);
+            delay(kPeekSettleMs);
+            tv5725ChannelContentLive(7, c);
+            uint8_t wires = rjWiresAfterLook(c);
+            if (y2 >= yMin && wires == RW_FLAT) {
+                GBS::ADC_INPUT_SEL::write(0);
+                delay(kPeekSettleMs);
+                tv5725ChannelContentLive(2, y);
+                y3 = y[1];
+                GBS::ADC_INPUT_SEL::write(sel);
+            }
+            gIdNext.peekMeasured = true;
+            gIdNext.peekContent = y2 >= yMin && (wires != RW_FLAT || y3 >= yMin);
+            gIdNext.peekWires = wires;
+            gIdPassAt = millis();                                  // the next pass a whole step after the look
+            logPrintf(LC_INPUT, y1 >= yMin || wires != RW_FLAT ? LL_INFO : LL_DEBUG,
+                      PSTR("identify: composite Y content %u/%u/%u (%s), R/G/B in between %u/%u/%u (%s)"), y1, y2, y3,
+                      gIdNext.peekContent ? "a picture" : "black", c[0], c[1], c[2],
+                      wires == RW_FLAT ? "flat" : wires == RW_BLUE ? "a picture" : wires == RW_CONTENT ? "content on G" : "faint");
             break;
         }
         case IA_LISTEN_ON:
@@ -515,7 +558,8 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
             else if (!gId.releaseForced() && gIdListenOff)     // not the cap before listen ever came on
                 logPrintf(LC_INPUT, LL_INFO, PSTR("identify: termination off (%s, G %u), RGB SCART preset after %lu ms"),
                           gIdOffReport ? "decoder off report" : "G low", gLastLevel, (unsigned long)elapsed);
-            if (w == IW_NO_LOCK || w == IW_DECODER_SILENT || w == IW_LEVEL_AMBIGUOUS || w == IW_TIMEOUT || w == IW_NO_BURST)
+            if (w == IW_NO_LOCK || w == IW_DECODER_SILENT || w == IW_LEVEL_AMBIGUOUS || w == IW_TIMEOUT || w == IW_NO_BURST ||
+                w == IW_BLACK)
                 gHint.arm(now);
             break;
         }
@@ -638,7 +682,8 @@ static void identifyLoop(uint32_t now) {
             return;
         }
         gIdTermination = !advLinkCanListen();
-        gId.begin(now, !gIdTermination, (inputAutoScanned(board()) & (1 << (InputTypeAV - 1))) != 0);
+        gId.begin(now, !gIdTermination, (inputAutoScanned(board()) & (1 << (InputTypeAV - 1))) != 0,
+                  uopt->inputLast == InputTypeAV);
         gIdNext = IdSample();
         gIdPassAt = 0;
         gIdStartedAt = now;

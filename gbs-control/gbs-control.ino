@@ -6975,6 +6975,9 @@ void si5351Lab(const uint8_t* d, uint8_t n)
 // `count` samples (default 10) of tv5725ChannelContent(mask, default 7) `gap` x 10 ms apart (default 20), each
 // logged with the detection state. Blocks the loop meanwhile (no preset can load), WiFi served by the sampler.
 // Mode 6: tv5725ChannelContentLive/LevelLive in the detection state (the identification's own sampling), no reset after.
+// Mode 7: the look at the composite picture from the listening state (dev.listen 1 first, RGB SCART): detection
+// state, then per sample the YPbPr ADC input alone (no ADV switch: the encoder already drives it under listen) for
+// data[4] ms (default 20) before the live sample there, the RGB input back and a live sample on it.
 void contentProbe(const uint8_t* d, uint8_t n)
 {
     uint8_t count = n > 1 && d[1] ? d[1] : 10, mask = n > 2 && d[2] ? d[2] : 7, gap = n > 3 && d[3] ? d[3] : 20;
@@ -7035,6 +7038,27 @@ void contentProbe(const uint8_t* d, uint8_t n)
             tv5725ChannelLevelLive(7, l);
             logPrintf(LC_INPUT, LL_INFO, PSTR("live %u: hs %u -> %u mode %u content R %u G %u B %u level R %u G %u B %u"), i,
                       hsBefore, (unsigned)getStatus16SpHsStable(), (unsigned)getVideoMode(), c[0], c[1], c[2], l[0], l[1], l[2]);
+            for (uint8_t k = 0; k < gap; k++) { delay(10); handleWiFi(0); }
+        }
+        return;   // no reset: the detection takes over from the state it was in
+    }
+    if (n > 0 && d[0] == 7) {
+        uint8_t settle = n > 4 && d[4] ? d[4] : 20;
+        uint32_t w = millis();
+        while (!getStatus16SpHsStable() && millis() - w < 1000) { delay(10); handleWiFi(0); }
+        for (uint8_t i = 0; i < count; i++) {
+            uint16_t yc[3], yl[3], rc[3];
+            uint32_t t = millis();
+            uint8_t sel = GBS::ADC_INPUT_SEL::read(), hsBefore = getStatus16SpHsStable();
+            GBS::ADC_INPUT_SEL::write(0);
+            delay(settle);
+            tv5725ChannelStatsLive(7, yl, yc);
+            GBS::ADC_INPUT_SEL::write(sel);
+            delay(settle);
+            uint8_t hsBack = getStatus16SpHsStable();
+            tv5725ChannelContentLive(7, rc);
+            logPrintf(LC_INPUT, LL_INFO, PSTR("look %u: composite content Pr %u Y %u Pb %u level Y %u | RGB after %u/%u/%u | hs %u -> %u, adc %u, %lu ms"),
+                      i, yc[0], yc[1], yc[2], yl[1], rc[0], rc[1], rc[2], hsBefore, hsBack, sel, (unsigned long)(millis() - t));
             for (uint8_t k = 0; k < gap; k++) { delay(10); handleWiFi(0); }
         }
         return;   // no reset: the detection takes over from the state it was in

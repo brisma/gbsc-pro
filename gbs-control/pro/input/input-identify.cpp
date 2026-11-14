@@ -1,10 +1,11 @@
 #include "input-identify.h"
 
-void InputIdentify::begin(uint32_t now, bool decoderListens, bool compositeSearched) {
+void InputIdentify::begin(uint32_t now, bool decoderListens, bool compositeSearched, bool lastComposite) {
     newAcquisition();
     phase_ = ID_IDENTIFY;
     decoderListens_ = decoderListens;
     compositeSearched_ = compositeSearched;
+    lastComposite_ = lastComposite;
     listenAt_ = beginAt_ = now;
 }
 
@@ -19,7 +20,7 @@ void InputIdentify::newAcquisition() {
     phase_ = ID_IDLE;
     why_ = IW_NONE;
     high_ = low_ = syncLost_ = 0;
-    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = burst_ = false;
+    listen_ = rgbDone_ = haveReport_ = lock_ = freeRun_ = forced_ = burst_ = peeked_ = levelSincePeek_ = wires_ = false;
 }
 
 // RGB SCART after listen: listen goes off first; the syncwatcher stays held until the termination is off (RELEASING)
@@ -72,21 +73,47 @@ uint8_t InputIdentify::step(const IdSample& s, uint32_t now) {
         return IA_LISTEN_ON;
     }
 
+    // a black stretch ended, the picture is back: in a G level sample, or right after a look at the composite
+    if ((s.levelMeasured && s.blueContent) || (s.peekMeasured && s.peekWires == RW_BLUE)) return verdictRgb(IW_PICTURE_LISTENING, now);
+    if (s.peekMeasured) {
+        if (s.peekWires == RW_CONTENT) wires_ = true;    // the console's own picture, its blue uniform or absent
+        if (s.peekContent && s.peekWires == RW_FLAT) {   // a picture on pin 20, nothing on R/G/B: composite only
+            why_ = IW_COMPOSITE;
+            phase_ = ID_DONE;                            // listen_ stays on: the decoder keeps its lock into Composite
+            return IA_MOVE_COMPOSITE;
+        }
+    }
     if (s.levelMeasured) {
-        if (s.blueContent) return verdictRgb(IW_PICTURE_LISTENING, now);   // a black stretch ended: the picture is back
+        levelSincePeek_ = true;
         if (s.gLevel >= kRgbWiredMin) { high_++; low_ = 0; }
         else if (s.gLevel < kLevelNoise) { low_++; high_ = 0; }
         else return verdictRgb(IW_LEVEL_AMBIGUOUS, now);
     }
     if (high_ >= 2) return verdictRgb(IW_RGB_WIRED, now);
     if (low_ >= 2) {
-        bool present = haveReport_ && lock_ && !freeRun_;
-        if (!decoderListens_ || present) {
-            if (now - beginAt_ < kCompositeMinMs) return IA_SAMPLE_LEVEL;   // a booting console: its picture may come
-            if (decoderListens_ && !burst_) return verdictRgb(IW_NO_BURST, now);   // a sync and no picture on pin 20
+        uint32_t since = now - beginAt_;
+        if (!decoderListens_) {                          // an ADV Controller that cannot listen: the time rule
+            if (since < kCompositeMinMs) return IA_SAMPLE_LEVEL;   // a booting console: its picture may come
             why_ = IW_COMPOSITE;
-            phase_ = ID_DONE;                            // listen_ stays on: the decoder keeps its lock into Composite
+            phase_ = ID_DONE;
             return IA_MOVE_COMPOSITE;
+        }
+        if (haveReport_ && lock_ && !freeRun_) {         // the decoder present on pin 20, black on both so far
+            if (!burst_ && since >= kCompositeMinMs) return verdictRgb(IW_NO_BURST, now);   // a sync, not a picture
+            if (since >= kBlackCapMs) {
+                if (wires_) return verdictRgb(IW_WIRES, now);
+                if (!lastComposite_) return verdictRgb(IW_BLACK, now);
+                why_ = IW_COMPOSITE_LAST;
+                phase_ = ID_DONE;
+                return IA_MOVE_COMPOSITE;
+            }
+            if (since < kPeekLastMs && (!peeked_ || (levelSincePeek_ && now - peekAt_ >= kPeekEveryMs))) {
+                peeked_ = true;
+                levelSincePeek_ = false;
+                peekAt_ = now;
+                return IA_PEEK_COMPOSITE;
+            }
+            return IA_SAMPLE_LEVEL;
         }
         if (s.sincePoweredMs >= kDecoderReadyMs) return verdictRgb(IW_NO_LOCK, now);
     }
