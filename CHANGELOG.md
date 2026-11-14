@@ -5,64 +5,71 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
-## 3.0.0-beta2
+## 3.0.0-beta2 - 2026-11-14
 
-### Changed
-- Input: **75 ohm sync** is a setting saved with the profile (it switched off at every restart and input change); it
-  is applied while a picture from RGB SCART is shown. The action `input.termination` of the HTTP API is gone: write
-  the setting `input.sync_75ohm`. (#69)
+What came out of the first beta's reports: a more careful Auto input, a System menu and an Update page that are
+easier to read, an option to turn the OLED off, and the fixes below. Update from 3.0.0-beta1 with System > Update >
+Check now or with the flasher; settings and profiles stay. The ADV Controller gets a new build with it.
 
+### Menus
+- System is ordered as in the web app: WiFi, **Device** (sound, knob, board type), **TV and OLED menu** (pop-ups,
+  OLED idle, look of the TV menu), Update, then Signal info, Restart and Factory reset, always the last rows. Sound
+  and OSD settings are gone as pages; no setting changed.
+- System > Update lists what is installed (GBS-Control, ADV Controller, Channel), then Check now, **Found on** (was
+  Offer), Install, **Install ADV** (was ADV update), **Last check** (was Last result) and Auto check.
+- Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier versions.
+  (#70)
+
+### Updates
+- **Channel** (System > Update) is a setting, Stable or Beta, that the checks follow; it starts as the channel of
+  the installed firmware. On Stable the latest Stable is offered; on Beta the newest of Beta and Stable, and the
+  unit stays on Beta. The page **Other channels** is gone.
+- A version older than the installed one (the latest Stable for a unit on a Beta, or the one before a withdrawn
+  release) is shown in the page and never announced.
+- A channel with nothing published answers "Up to date" instead of "Check failed".
 - ADV Controller: still 3.0.0, in a new build (6BAAF3C4) that behaves the same, so the GBSC PRO offers to update it.
   Please install it: if it fails, an issue with the report helps, since the log now says from which build to which,
   how long it took and whether it had to start over.
 
-- Menu: Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier
-  versions. (#70)
+### OLED
+- System > TV and OLED menu > **OLED idle** chooses what the small display does without input: the screensaver, or
+  **Off** (any key turns it on again). **OLED idle after** chooses when: 30 s, 1 min, 3 min or 10 min. The default
+  is now 1 minute (it was 3) and the screensaver moves every 10 seconds (it was 30). (#73)
 
-- Menu: the System page is ordered as in the web app: **Device** (sound, knob, board type) and **TV and OLED menu**
-  (pop-ups, OLED idle, look of the TV menu) are two pages of it, and Restart and Factory reset are always the last
-  rows. Sound and OSD settings are gone as pages; no setting changed.
+### Input
+- **75 ohm sync** is a setting saved with the profile (it switched off at every restart and input change); it is
+  applied while a picture from RGB SCART is shown. (#69)
 
-- Update: **Channel** (System > Update) is a setting, Stable or Beta, that the checks follow; it starts as the
-  channel of the installed firmware. On Stable the latest Stable is offered; on Beta the newest of Beta and Stable,
-  and the unit stays on Beta. A version older than the installed one (the latest Stable for a unit on a Beta, or the
-  one before a withdrawn release) is shown in the page and never announced. The page **Other channels** is gone. A
-  channel with nothing published answers "Up to date" instead of "Check failed". HTTP API: `system.check_channel`
-  is gone, `system.install_update` takes `older` when the user confirmed an older version, `/api/info` `update` has
-  `follows` and no `manual`.
-
-- Menu: System > Update lists what is installed (GBS-Control, ADV Controller, Channel), then Check now, **Found on**
-  (was Offer) and Install, **Install ADV** (was ADV update), **Last check** (was Last result) and Auto check.
-
-- OLED: System > TV and OLED menu > **OLED idle** chooses what the small display does without input, the screensaver or **Off** (any key
-  turns it on again), and **OLED idle after** when: 30 s, 1 min, 3 min or 10 min. The default is now 1 minute (it was
-  3) and the screensaver moves every 10 seconds (it was 30). (#73)
+### HTTP API
+- The action `input.termination` is gone: write the setting `input.sync_75ohm`.
+- `system.check_channel` is gone: write the setting `system.update_channel`, then `system.check_update`.
+  `system.install_update` takes `older` when the user confirmed an older version; `/api/info` `update` has `follows`
+  and no `manual`.
 
 ### Fixed
-- Input: with Source = VGA chosen by hand, the VGA connector also takes composite sync on its HS pin (RGBS cables on
-  HD15); it gave "No signal". (#69)
-- Auto input: a source on the VGA connector (a Dreamcast, a PC) switched on while Auto was looking at RGB SCART or RGB
-  SoG is found on VGA in about three seconds; it was taken for a SCART console and never shown.
-- Auto input: a source on the VGA connector switched on within a second or two of the SCART console going off is
-  found too, in about four seconds; the scaler stayed on RGB SCART with a rolling picture.
 - Auto input: an RGB console on a long black screen (no cartridge, a region switch, a cable wired with composite
   sync) is no longer taken for a Composite source (the picture jumped every two seconds): Composite is chosen when
   a picture is seen on SCART pin 20, twice in a row, with the RGB wires flat, which also finds a composite-only
   console in about 3 s instead of 4. With Composite left out of Auto search the search never ends there. (#69)
-- Auto input: a screen of thin text on black counts as a picture on the RGB wires; it read as black, and an RGB
-  console showing one could be taken for a Composite source.
+- Auto input: a screen of thin text on black counts as a picture on the RGB wires; it read as black.
+- Auto input: a source on the VGA connector (a Dreamcast, a PC) switched on while Auto was looking at RGB SCART or RGB
+  SoG is found on VGA in about three seconds, also right after the SCART console went off; it was taken for a SCART
+  console and never shown, or left with a rolling picture.
 - Auto input: a sync that does not become a picture no longer holds the search for over a minute; after 5 seconds the
   other inputs are tried.
+- Auto input: the hint "No picture: try Composite" no longer appears over a dim picture.
+- Input: with Source = VGA chosen by hand, the VGA connector also takes composite sync on its HS pin (RGBS cables on
+  HD15); it gave "No signal". (#69)
 - VGA: loading a profile or Defaults (also by auto-load, after another console) with a scaled VGA source no longer
   leaves the picture rolling.
 - VGA: the menus show the source's real line count (it read values such as "494L"), and a profile saved for a VGA
   source is recognised again.
-- Menus: no impossible line count ("396L") while a console is switching off.
-- Menus: an HD source is named 720p, 1080i or 1080p; it was shown by its line count ("749L"). (#72)
+- Menus: an HD source is named 720p, 1080i or 1080p (it was "749L"), and there is no impossible line count ("396L")
+  while a console is switching off. (#72)
 - TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu has the size it has on a scaled output;
   it was stretched wide, ran off the right edge and its rows were as low as on 480p. (#72)
-- Auto input: the hint "No picture: try Composite" no longer appears over a dim picture (thin text on a dark
-  background).
+- Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
+  be measured; it measures again before it decides. (#69)
 - Profiles: a console name with its region is shown whole in the Load list and in the messages ("SNES/Super Famicom
   NTSC-U" and "Genesis/Mega Drive NTSC-U" lost a letter).
 - Backup: a backup downloaded right after a change contains it (it was saved up to two seconds later).
@@ -76,14 +83,11 @@ refer to brisma/gbsc-pro.
   pixels lower. (#69)
 - Web app: with two pages already connected, a third one is answered at once and retries, instead of waiting about 7
   seconds while the GBSC held memory for it.
-- Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board
-  does not show. (#72)
-- Standard board: the TV bar shows the icon of the control being changed; with the bar still up after another
-  control it kept the first icon. (#72)
-- Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
-  be measured; it measures again before it decides. (#69)
-- Flasher: the steps are again one column of numbered cards; in beta1 they were squeezed side by side and overlapped
-  (a style of the web app reached them). The buttons worked.
+- Standard board: the Remote of the web app says that it drives the menu on the OLED (it spoke of a TV menu that
+  board does not show), and the TV bar shows the icon of the control being changed (it kept the first one while
+  the bar was still up). (#72)
+- Flasher: the steps are again one column of numbered cards; in beta1 they were squeezed side by side and overlapped.
+  The buttons worked.
 
 ### Source code
 - A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before
