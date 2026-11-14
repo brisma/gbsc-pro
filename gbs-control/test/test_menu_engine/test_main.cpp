@@ -2149,11 +2149,6 @@ void test_leaving_advanced_toasts_and_keeps_values(void) {
 }
 
 // Variable choices (Filter, Scanlines, Resolution) with Custom, revert and commit
-static std::string valueOf(MenuRig& r, const char* label) {
-    for (uint8_t i = 0; i < r.v().rowCount; i++) if (r.label(i) == label) return r.value(i);
-    return "?";
-}
-
 void test_choice_custom_label(void) {
     MenuRig r;
     r.be.apply(SID_pic_scanlines, 1); r.be.apply(SID_pic_scan_strength, 0x40); r.be.settle();
@@ -2182,12 +2177,6 @@ void test_choice_step_from_custom(void) {
     r.key(K_LEFT); r.be.settle(); r.wait(300);
     TEST_ASSERT_EQUAL_STRING("Smooth", r.selectedValue().c_str());    // Left from Custom: the last entry
     TEST_ASSERT_EQUAL_UINT16(1, r.be.value(SID_pic_line_filter));
-}
-
-static void stepResolution(MenuRig& r, int presses, uint8_t key) {
-    for (int i = 0; i < presses; i++) r.key(key);
-    r.key(K_OK);                                                       // NF_COMMIT: OK applies the pending value
-    r.be.settle(); r.wait(50);
 }
 
 void test_choice_hides_advanced_and_capped_options(void) {

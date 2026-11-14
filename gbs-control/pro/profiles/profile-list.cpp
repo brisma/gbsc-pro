@@ -61,7 +61,7 @@ uint8_t ProfileList::sorted(uint8_t* idx, uint8_t max) const {
     return n;
 }
 
-void ProfileList::idOf(uint8_t i, char out[4]) { snprintf(out, 4, "p%02u", (unsigned)i); }
+void ProfileList::idOf(uint8_t i, char out[4]) { snprintf(out, 4, "p%02u", (unsigned)(i % 100)); }   // i < PROFILE_MAX
 
 int ProfileList::indexOfId(const char* id) {
     if (!id || id[0] != 'p' || id[1] < '0' || id[1] > '9' || id[2] < '0' || id[2] > '9' || id[3]) return -1;

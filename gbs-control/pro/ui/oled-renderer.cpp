@@ -266,7 +266,7 @@ void OledRenderer::drawList(const MenuView& v) {
     const MenuViewRow* cur = v.rowCount && v.cursorRow < v.rowCount ? &v.rows[v.cursorRow] : nullptr;
     bool shown = false;
     if (cur && v.help[0] && !(cur->flags & ROWF_EDITING)) {
-        char key[100];
+        char key[sizeof(cur->label) + sizeof(v.help)];   // label + '|' + help + NUL
         snprintf(key, sizeof(key), "%s|%s", cur->label, v.help);   // a new row restarts it, even with the same text
         uint32_t e = since(bandScroll_, key);
         if (e >= kBandRestMs) {

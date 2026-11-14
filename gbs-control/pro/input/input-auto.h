@@ -109,7 +109,7 @@ public:
     bool foundByFallback() const { return fallback_; }   // the find came back after an empty RGB SCART look
 private:
     void scanFrom(uint8_t hint, uint8_t why, uint32_t now);
-    InputAutoBoard board_ = {true, true};
+    InputAutoBoard board_ = {true, true, 0};
     uint8_t paths_[6] = {0};
     uint8_t count_ = 0, cursor_ = 0;
     uint8_t state_ = IA_SCANNING, choice_ = 0, found_ = 0, manual_ = 0, hint_ = 0;   // hint_: from begin()

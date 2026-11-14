@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+// Every snprintf here cuts its text to a screen line on purpose (28 OSD cells, the overlay and OLED widths)
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
 #include "osd-renderer.h"
 #include "menu-model.h"
 #include "osd-theme.h"

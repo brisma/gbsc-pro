@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+// Every snprintf here cuts its text to a screen line on purpose (28 OSD cells, the overlay and OLED widths)
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
 #include "../settings/settings-registry.h"
 #include "../profiles/profile-list.h"
 #include "menu-engine.h"
@@ -1480,10 +1484,12 @@ void MenuEngine::rebuild() {
             }
             if (r.dyn == DYN_LOAD_DEFAULTS) menuStrCopy(be_.profileActive() < 0 ? S_V_ACTIVE : S_NONE, row.value, sizeof(row.value));
             bool sel = vis[i] == e.cursor;
-            row.kind = (r.dyn == DYN_MANAGE_ITEM || r.dyn == DYN_ALL_SETTINGS) ? ROWK_SUB : r.dyn == DYN_EMPTY ? ROWK_LIVE
-                     : (r.dyn == DYN_LOAD_ITEM || r.dyn == DYN_LOAD_DEFAULTS) ? ROWK_PROFILE
-                     : r.dyn == DYN_NAME_CONSOLE ? ROWK_CYCLE
-                     : r.dyn != DYN_NONE ? ROWK_ACTION : rowKind(r.node, menuSliderHalves(r.node, be_));
+            if (r.dyn == DYN_MANAGE_ITEM || r.dyn == DYN_ALL_SETTINGS) row.kind = ROWK_SUB;
+            else if (r.dyn == DYN_EMPTY) row.kind = ROWK_LIVE;
+            else if (r.dyn == DYN_LOAD_ITEM || r.dyn == DYN_LOAD_DEFAULTS) row.kind = ROWK_PROFILE;
+            else if (r.dyn == DYN_NAME_CONSOLE) row.kind = ROWK_CYCLE;
+            else if (r.dyn != DYN_NONE) row.kind = ROWK_ACTION;
+            else row.kind = rowKind(r.node, menuSliderHalves(r.node, be_));
             if (r.dyn == DYN_NAME_CONSOLE)
                 copyStr(row.value, sizeof(row.value), profileRegionName(regions_[(uint8_t)r.profile]));
             if (r.dyn == DYN_NAME_SOURCE) { be_.text(LT_SOURCE_NAME, row.value, sizeof(row.value)); menuSanitize(row.value); }
@@ -1604,8 +1610,8 @@ void MenuEngine::buildOverlay(MenuView& v) {
                 const MenuSignal& sg = be_.signal();
                 menuStrCopy(updAdv_ ? S_T_UPDATING_ADV_CONTROLLER : S_T_UPDATING, v.lines[0], sizeof(v.lines[0]));
                 uint8_t phase = updOutcome_ != UPV_PROGRESS ? updOutcome_
-                              : sg.updateStage == UPD_DONE ? UPV_DONE
-                              : sg.updateStage == UPD_VERIFYING ? UPV_VERIFYING : UPV_PROGRESS;
+                              : (uint8_t)(sg.updateStage == UPD_DONE ? UPV_DONE
+                                          : sg.updateStage == UPD_VERIFYING ? UPV_VERIFYING : UPV_PROGRESS);
                 v.choice = phase;
                 v.lineCount = 1;
                 if (phase != UPV_PROGRESS) {

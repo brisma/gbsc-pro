@@ -15,7 +15,7 @@ bool advTerminationWanted(const userOptions& u, bool picture, bool identifying) 
 void advStateFromOptions(const userOptions& u, bool termination, bool listen, AdvState& s) {
     memset(&s, 0, sizeof(s));
     s.version = ADV_STATE_VERSION;
-    s.input = inputTypeValid(u.activeInputType) ? u.activeInputType : InputTypeRGBs;
+    s.input = inputTypeValid(u.activeInputType) ? u.activeInputType : (uint8_t)InputTypeRGBs;
     s.syncStripper = u.advSyncStripper ? 1 : 0;
     s.termination = termination ? 1 : 0;
     s.listen = listen && s.input == ADV_INPUT_RGBS ? 1 : 0;

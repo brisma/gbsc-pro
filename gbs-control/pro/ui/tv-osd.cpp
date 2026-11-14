@@ -9,7 +9,7 @@ uint8_t tvOsdIconForSetting(uint8_t sid) {
 }
 
 uint8_t tvOsdIconForWrite(const SettingsPair* pairs, uint8_t n) {
-    return n == 1 ? tvOsdIconForSetting(pairs[0].index) : TVO_NONE;
+    return n == 1 ? tvOsdIconForSetting(pairs[0].index) : (uint8_t)TVO_NONE;
 }
 
 uint8_t tvOsdIconForAction(uint8_t aid) {

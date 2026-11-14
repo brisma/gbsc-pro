@@ -579,7 +579,7 @@ static void logProfileOp(const ProfileOp& op, const char* err) {
         case POP_REPLACE: what = kOp[11]; break;
         default: break;
     }
-    char who[24] = "";
+    char who[PROFILE_NAME_BUF + 1] = "";   // " " + a whole name
     if (op.kind == POP_SAVEAS && op.name[0]) snprintf(who, sizeof(who), " %s", op.name);
     else if (op.index >= 0 && op.kind != POP_DEFAULTS && op.kind != POP_IMPORT && op.kind != POP_SAVEAS_GENERATED)
         snprintf(who, sizeof(who), " p%02d", op.index);

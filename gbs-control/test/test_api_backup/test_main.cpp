@@ -35,7 +35,6 @@ struct MemFs : SettingsFs {
 
 static userOptions u;
 static MemFs fs;
-static void sink(const char* t, void* c) { ((std::string*)c)->append(t); }
 
 void setUp(void) {
     platformSetCaps(0xFF);

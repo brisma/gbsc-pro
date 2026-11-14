@@ -15,7 +15,7 @@ uint8_t platformCapsFrom(const PlatformProbes& p, uint8_t board) {
     bool pro = probedPro;
     if (board == BOARD_PRO) pro = true;
     else if (board == BOARD_ORIGINAL) pro = false;
-    uint8_t caps = pro ? CAPS_PRO : CAP_ORIGINAL;
+    uint8_t caps = pro ? (uint8_t)CAPS_PRO : (uint8_t)CAP_ORIGINAL;
     if (!pro && !probedPro) caps |= CAP_LED;   // never drive GPIO2 on real Pro hardware (IR receiver)
     if (p.oled.ack) caps |= CAP_OLED | CAP_ENCODER;
     return caps;

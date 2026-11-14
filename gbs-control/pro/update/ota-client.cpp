@@ -130,7 +130,7 @@ void otaFetchLoop() {
         if (blocked) {
             logPrintf(LC_UPDATE, LL_INFO, PSTR("fetch: not connecting to %s (%s, largest free block %u)"), gHost,
                       blocked, (unsigned)block);
-            finish(strcmp(blocked, "memory") ? OTA_E_CONNECT : HTTP_E_MEMORY);
+            finish(strcmp(blocked, "memory") ? (int)OTA_E_CONNECT : (int)HTTP_E_MEMORY);
             return;
         }
         if (!connectNow()) { gLife.ended(); finish(OTA_E_CONNECT); return; }

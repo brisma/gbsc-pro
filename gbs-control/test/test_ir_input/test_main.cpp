@@ -102,7 +102,7 @@ void test_source_lines_of_a_15khz_mode_are_a_possible_count(void) {
 }
 
 void test_signal_change_detector(void) {
-    MenuSignalKey a = {1, 1, false, 0, 525};
+    MenuSignalKey a = {1, 1, false, 0, 525, 0};
     MenuSignalKey b = a;
     b.lines = 527;
     TEST_ASSERT_FALSE(menuSignalChanged(a, b));                // jitter within 2 lines

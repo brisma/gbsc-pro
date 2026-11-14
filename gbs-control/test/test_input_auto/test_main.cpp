@@ -6,7 +6,7 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-static const InputAutoBoard kPro = {true, true}, kProNoCtl = {true, false}, kStd = {false, false};
+static const InputAutoBoard kPro = {true, true, 0}, kProNoCtl = {true, false, 0}, kStd = {false, false, 0};
 
 static std::string paths(const InputAutoBoard& b, uint8_t hint) {
     uint8_t p[8]; uint8_t n = inputAutoPaths(b, hint, p, 8);

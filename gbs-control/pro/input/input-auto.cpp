@@ -39,7 +39,7 @@ uint8_t inputAutoPaths(const InputAutoBoard& b, uint8_t hint, uint8_t* out, uint
 
 uint8_t inputAutoBootPath(const InputAutoBoard& b, uint8_t hint) {
     uint8_t p[6];
-    return inputAutoPaths(b, hint, p, 6) ? p[0] : InputTypeRGBs;
+    return inputAutoPaths(b, hint, p, 6) ? p[0] : (uint8_t)InputTypeRGBs;
 }
 
 bool inputTvPathPresent(bool boardPower, bool disconnected, uint8_t videoMode, uint16_t noSyncCounter) {
