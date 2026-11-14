@@ -61,6 +61,8 @@
     uint8_t  boardOverride;         /* system.board: BOARD_AUTO / BOARD_PRO / BOARD_ORIGINAL (Standard) */ \
     uint8_t  encoderReverse;        /* system.encoder_direction: 0 the board's own direction, 1 reversed */ \
     uint8_t  encoderSteps;          /* system.encoder_steps: 1, 2 or 4 menu steps per detent */ \
+    uint8_t  oledIdle;              /* system.oled_idle: the OLED without input, 0 screensaver, 1 panel off */ \
+    uint8_t  oledIdleAfter;         /* system.oled_idle_after: 30 s, 1 min, 3 min, 10 min (oledIdleAfterMs) */ \
     uint8_t  devMode;               /* system.devmode: developer entries in menus and API */ \
     uint8_t  menuMode;              /* system.menu_mode: 0 Easy, 1 Advanced */ \
     uint8_t  profilesAutoload;      /* profiles.autoload: load the profile that matches the signal */ \
@@ -71,6 +73,7 @@
     char     profileActive[4];      /* profile.active: id of the loaded profile, "" for none */ \
     char     profileHash[9];        /* profile.hash: CRC32 (hex) of the Profile scope at load/save */ \
     uint8_t  autoUpdateCheck;       /* system.auto_update_check */ \
+    uint8_t  updateChannel;         /* system.update_channel: the channel the checks follow, OtaChannel (0 Stable, 1 Beta) */ \
     char     otaPassword[33];       /* system.ota_password: ArduinoOTA password (write-only over HTTP) */ \
     char     extraHosts[64];        /* system.extra_hosts: extra Host names, comma-separated (guardExtraHostsValid) */ \
     char     advControllerSkip[9];  /* system.adv_controller_skip: ADV Controller build id the boot prompt skips */ \

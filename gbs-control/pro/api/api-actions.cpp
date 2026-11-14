@@ -92,11 +92,9 @@ void actionsListJson(bool devmode, SettingsSink sink, void* ctx) {
             if (r.maxValue != 0xFF) { snprintf(num, sizeof(num), "%u", r.maxValue); sink(",\"max\":", ctx); sink(num, ctx); }
             sink("}]", ctx);
         }
-        if (d.flags & (ACTION_PARAM_TEXT | ACTION_PARAM_OPT_TEXT)) {   // the accepted words (OTA)
-            sink(",\"params\":[{\"name\":\"data\",\"type\":\"text\",", ctx);
-            if (d.flags & ACTION_PARAM_OPT_TEXT) sink("\"optional\":1,", ctx);
-            if (d.kind == ACT_FUNC && d.arg == AF_CHECK_CHANNEL) sink("\"values\":[\"stable\",\"beta\",\"dev\"]", ctx);
-            else if (d.kind == ACT_FUNC && d.arg == AF_INSTALL_UPDATE) sink("\"values\":[\"manual\"]", ctx);
+        if (d.flags & ACTION_PARAM_OPT_TEXT) {   // the accepted words (OTA)
+            sink(",\"params\":[{\"name\":\"data\",\"type\":\"text\",\"optional\":1,", ctx);
+            if (d.kind == ACT_FUNC && d.arg == AF_INSTALL_UPDATE) sink("\"values\":[\"older\"]", ctx);
             else sink("\"values\":[]", ctx);
             sink("}]", ctx);
         }

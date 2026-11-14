@@ -12,7 +12,7 @@ export const IN = { RGBS: 1, RGSB: 2, VGA: 3, YUV: 4, SV: 5, AV: 6 } as const;
 
 export interface PredSignal {
   noSignal: boolean; interlaced: boolean; scanlinesOk: boolean; advNtsc: boolean; updateAvailable: boolean;
-  updateManual: boolean; advControllerUpdate: boolean; presetId: number; srcHz10: number;
+  advControllerUpdate: boolean; presetId: number; srcHz10: number;
 }
 export interface PredState {
   caps: number;
@@ -45,7 +45,6 @@ function predVisible(pred: string, s: PredState): boolean {
     case "rgbs": return (s.caps & CAP.ADV) !== 0;
     case "profile_active": return s.profileActive;
     case "update_available": return s.signal.updateAvailable;
-    case "update_manual": return s.signal.updateManual;
     case "adv_controller_update": return s.signal.advControllerUpdate;
     case "vga": return i === IN.VGA;
     case "sog": return i === IN.RGSB || i === IN.YUV;
@@ -134,7 +133,6 @@ export function stateFromStore(v: StoreView): PredState {
       scanlinesOk: !!g.scanlines_ok,
       advNtsc: !!g.adv_ntsc,
       updateAvailable: !!i.update?.offer?.version,
-      updateManual: !!i.update?.manual?.version,
       advControllerUpdate: !!i.adv_controller?.update_available,
       presetId: Number(g.preset ?? 0),
       srcHz10: Number(g.src_hz10 ?? 0),

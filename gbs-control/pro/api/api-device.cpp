@@ -316,13 +316,8 @@ static void runFunc(uint8_t id, const ActionRequest& r) {
         case AF_CHECK_UPDATE:
             otaCheck(true);
             break;
-        case AF_CHECK_CHANNEL: {
-            int ch = otaChannelParse((const char*)r.data);   // validated by the web handler
-            if (ch >= 0) otaCheckChannel((uint8_t)ch);
-            break;
-        }
-        case AF_INSTALL_UPDATE:
-            otaInstall(r.len && !strcmp((const char*)r.data, "manual"));
+        case AF_INSTALL_UPDATE:                                 // "older": the user confirmed an older build
+            otaInstall(r.len && !strcmp((const char*)r.data, "older"));
             break;
         case AF_BORDER_MOVE_LEFT:  screenBorderMoveBy(-4, 0); break;   // 4 px / 2 lines per step
         case AF_BORDER_MOVE_RIGHT: screenBorderMoveBy(4, 0); break;

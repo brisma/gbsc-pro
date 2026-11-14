@@ -26,10 +26,10 @@ export const HELP: Record<string, [string, string]> = {
   "output/analog-out": ["Analog out", "Signal on the analog port: RGB for PC monitors, or YPbPr for the component input of a TV."],
   "input/75-ohm-sync": ["75 ohm sync", "Adds the 75 ohm load on the SCART sync line, for cables that expect it. Saved with the profile; it is on while a picture from RGB SCART is shown."],
   "menu-mode": ["Menu mode", "Easy or Advanced for the menu on the TV and the OLED. It does not change this page: the switch at the top does that."],
-  "system/status-pop-up": ["Status pop-up", "A small box on the TV when the input or the profile changes."],
-  "system/sound/volume": ["Volume", "Volume of the audio output. The remote keys change it too."],
+  "system/tv-and-oled-menu/status-pop-up": ["Status pop-up", "A small box on the TV when the input or the profile changes."],
+  "system/device/volume": ["Volume", "Volume of the audio output. The remote keys change it too."],
   "system/factory-reset": ["Factory reset", "Erases settings and profiles and goes back to the hotspot."],
-  "system/board-type": ["Board type", "Auto finds the board. Change it only if features look wrong; restart to apply."],
+  "system/device/board-type": ["Board type", "Auto finds the board. Change it only if features look wrong; restart to apply."],
 };
 
 // "input/video-standard~adv.format_sv" -> "input/video-standard"; quick rows use the text of the row they repeat

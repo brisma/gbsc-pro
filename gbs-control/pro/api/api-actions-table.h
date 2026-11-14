@@ -7,7 +7,6 @@
     ACTION(sys_factory_reset,  "system.factory_reset",     CAP_NONE, ACTION_CONFIRM, ACT_USER,   '1') \
     ACTION(sys_check_update,   "system.check_update",      CAP_NONE, 0, ACT_FUNC, AF_CHECK_UPDATE) \
     ACTION(sys_install_update, "system.install_update",    CAP_NONE, ACTION_CONFIRM | ACTION_PARAM_OPT_TEXT, ACT_FUNC, AF_INSTALL_UPDATE) \
-    ACTION(sys_check_channel,  "system.check_channel",     CAP_NONE, ACTION_PARAM_TEXT, ACT_FUNC, AF_CHECK_CHANNEL) \
     ACTION(sys_update_adv_controller,    "system.update_adv_controller",       CAP_ADV,  ACTION_CONFIRM, ACT_FUNC, AF_ADV_CONTROLLER_UPDATE) \
     ACTION(in_gain_up,         "input.gain_up",            CAP_NONE, ACTION_REGS, ACT_USER,   'n') \
     ACTION(in_gain_down,       "input.gain_down",          CAP_NONE, ACTION_REGS, ACT_USER,   'o') \

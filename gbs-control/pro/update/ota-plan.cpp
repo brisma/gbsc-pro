@@ -25,10 +25,10 @@ bool otaImageUrl(const char* base, const char* file, char* out, size_t n) {
     return fits(snprintf(out, n, "%s%s", base, file), n);
 }
 
-uint8_t otaChannelsToRead(uint8_t buildChannel, uint8_t out[OTA_CHANNELS]) {
-    if (buildChannel >= OTA_CHANNELS) buildChannel = OTA_STABLE;
+uint8_t otaChannelsToRead(uint8_t chosen, uint8_t out[OTA_CHANNELS]) {
+    if (chosen >= OTA_CHANNELS) chosen = OTA_STABLE;
     uint8_t n = 0;
-    for (int ch = buildChannel; ch >= 0; ch--) out[n++] = (uint8_t)ch;   // the order is stable < beta
+    for (int ch = chosen; ch >= 0; ch--) out[n++] = (uint8_t)ch;   // the order is stable < beta
     return n;
 }
 
@@ -39,23 +39,14 @@ void otaConsider(OtaOffer& best, uint8_t channel, const Manifest& m) {
     best.m = m;
 }
 
-void otaFinishRecommended(OtaOffer& best, const char* running, uint8_t buildChannel) {
-    if (!best.any || versionCompare(best.m.version, running) <= 0) { best = OtaOffer(); return; }
-    best.older = false;
-    best.moves = best.channel != buildChannel;
+void otaFinishCheck(OtaOffer& best, const char* running) {
+    if (!best.any) return;
+    int c = versionCompare(best.m.version, running);
+    if (!c) best = OtaOffer();
+    else best.older = c < 0;
 }
 
-OtaOffer otaManual(uint8_t channel, const Manifest& m, const char* running, uint8_t buildChannel) {
-    OtaOffer o = OtaOffer();
-    int c = versionCompare(m.version, running);
-    if (!c) return o;
-    o.any = true;
-    o.channel = channel;
-    o.older = c < 0;
-    o.moves = channel != buildChannel;
-    o.m = m;
-    return o;
-}
+bool otaInstallMatches(const OtaOffer& o, bool olderConfirmed) { return o.any && o.older == olderConfirmed; }
 
 void OtaAutoClock::ran(uint32_t now, bool ok) {
     if (ok) { fails = 0; next = now + 86400000UL; return; }
@@ -112,13 +103,18 @@ const char* otaReasonWords(const char* code) {
 }
 
 void otaOfferText(const OtaOffer& o, char* out, size_t n) {
-    snprintf(out, n, "%s%s%s", otaChannelLabel(o.channel), o.older ? " older" : "", o.moves ? " switch" : "");
+    snprintf(out, n, "%s%s", otaChannelLabel(o.channel), o.older ? " older" : "");
 }
 
 void otaConfirmText(const OtaOffer& o, char* out, size_t n) {
     if (o.older) snprintf(out, n, "Install an older version?");
-    else if (o.moves) snprintf(out, n, "Move to the %s channel?", otaChannelLabel(o.channel));
     else if (n) out[0] = '\0';
+}
+
+void otaCheckToast(const OtaOffer& o, bool read, const char* err, char* out, size_t n) {
+    if (!read) snprintf(out, n, "Check failed: %s", otaReasonWords(err));
+    else if (o.any) snprintf(out, n, "%s %s", o.m.version, o.older ? "older" : "available");
+    else snprintf(out, n, "Up to date");
 }
 
 void otaInstallFailText(const char* code, char* out, size_t n) { snprintf(out, n, "Not installed: %s", otaReasonWords(code)); }

@@ -1,8 +1,10 @@
 // System › Update. Three states: up to date; an update on offer (group Available: Release notes and Install);
 // installing (group Installing: progress from s:status.update, the bar kept in place). Then what is installed
 // (GBS-Control; Pro: the ADV Controller, Update when the firmware carries a newer image), Auto check and Last result
-// (Advanced), other channels and the upload of a file whose version is read before asking (ota-update.cpp,
-// update-device.cpp, api-web.cpp). Check now is the button of the card header.
+// (Advanced), the channel the checks follow (the setting system.update_channel: picking one writes it and checks)
+// and the upload of a file whose version is read before asking (ota-update.cpp, update-device.cpp, api-web.cpp).
+// An older Stable offered to a unit on a Beta that chose Stable shows in Available with its warning; the header
+// button and the badges announce newer versions only. Check now is the button of the card header.
 import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Icon } from "../../art/icon.tsx";
@@ -20,7 +22,6 @@ import { SysGroup, Progress, MsgRow } from "./parts.tsx";
 interface Job { kind: "ota" | "upload"; version: string; fw: string }
 const job = signal<Job | null>(null);                                  // an install or upload this page started
 const note = signal<{ text: string; tone: "bad" | "good" } | null>(null);
-const picked = signal<string | null>(null);                           // another channel looked at
 const checking = signal(false);
 const log = (m: string) => console.debug("[update] " + m);
 const UPLOAD_REASON_WAIT_MS = 2500;
@@ -28,21 +29,20 @@ const NOTE_ICON = { bad: "error", good: "check_circle" };   // @icons
 
 // The TV menu's Update rows (menu.json ids) with their icons
 const ROWS: Record<string, Row> = {
-  download: { kind: "live", ref: "menu:system/update/offer", icon: "downloading" },
-  upload: { kind: "live", ref: "menu:system/update/offer", icon: "upload" },
+  download: { kind: "live", ref: "menu:system/update/found-on", icon: "downloading" },
+  upload: { kind: "live", ref: "menu:system/update/found-on", icon: "upload" },
   offer: { kind: "action", ref: "menu:system/update/install", icon: "new_releases" },
   current: { kind: "live", ref: "menu:system/update/gbs-control", icon: "memory" },
   file: { kind: "action", label: "Upload firmware", icon: "upload_file" },
   adv: { kind: "live", ref: "menu:system/update/adv-controller", icon: "developer_board" },
   check: { kind: "action", ref: "menu:system/update/check-now", icon: "sync" },
-  last: { kind: "live", ref: "menu:system/update/last-result", icon: "history" },
+  last: { kind: "live", ref: "menu:system/update/last-check", icon: "history" },
   channel: { kind: "live", ref: "menu:system/update/channel", icon: "alt_route" },
-  manual: { kind: "live", ref: "menu:system/update/other-channels/offer", icon: "science" },
 };
 const AUTO_CHECK: Row = { kind: "inline", ref: "menu:system/update/auto-check", icon: "event_repeat" };
 const fw = () => String(device.info.value?.fw ?? "");
 // The store keeps the last status values: cleared before an operation so its answer is the next one that arrives
-const clearStatus = (k: "available" | "channelCheck" | "progress") => { device.update.value = { ...device.update.value, [k]: "" }; };
+const clearStatus = (k: "available" | "progress") => { device.update.value = { ...device.update.value, [k]: "" }; };
 
 function start(kind: Job["kind"], version: string): void {
   note.value = null;
@@ -51,13 +51,14 @@ function start(kind: Job["kind"], version: string): void {
   log(`${kind} ${version}: started (running ${fw()})`);
 }
 
-async function installOffer(version: string, manual: boolean, older: boolean, channel: string): Promise<void> {
+async function installOffer(version: string, older: boolean, channel: string): Promise<void> {
   const ok = await confirm(older
     ? { icon: "history", title: "Install an older version?", ok: "Install", body: `You have ${fw()}, ${channelLabel(channel)} has ${version}. Settings and profiles stay; an older version may not know every setting.` }
     : { icon: "system_update_alt", title: `Install ${version}?`, ok: "Install", body: `GBS-Control downloads ${version} and restarts. Settings and profiles stay.` });
   if (!ok) return;
   start("ota", version);
-  if (!(await runAction("system.install_update", manual ? "manual" : undefined))) job.value = null;
+  // "older": the question above was about an older build; the device refuses an offer that changed meanwhile
+  if (!(await runAction("system.install_update", older ? "older" : undefined))) job.value = null;
 }
 
 async function upload(file: File): Promise<void> {
@@ -99,11 +100,11 @@ async function checkNow(): Promise<void> {
   if (!(await runAction("system.check_update"))) checking.value = false;
 }
 
-async function pickChannel(ch: string, build: string): Promise<void> {
-  if (ch === build) { picked.value = null; return; }
-  picked.value = ch;
-  clearStatus("channelCheck");
-  await runAction("system.check_channel", ch);
+// The channel is a setting: written, then checked at once so the answer for it is on the page
+async function pickChannel(ch: string, cur: string): Promise<void> {
+  if (ch === cur) return;
+  const r = await device.writeSettings([["system.update_channel", CHANNELS.indexOf(ch as (typeof CHANNELS)[number])]]);
+  if (r.ok) await checkNow();
 }
 
 async function updateAdv(): Promise<void> {
@@ -137,34 +138,14 @@ function AdvRow() {
   );
 }
 
-function ChannelRows({ build }: { build: string }) {
-  const cur = picked.value ?? build;
-  const res = device.update.value.channelCheck;
-  const m = picked.value ? /^([a-z]+):(.+)$/.exec(res) : null;
-  const manual = device.info.value?.update?.manual;
-  let row = null;
-  if (picked.value) {
-    const ch = picked.value;
-    if (!res) row = <MsgRow icon="sync" text={`Checking ${channelLabel(ch)}…`} />;
-    else if (res.startsWith("error:")) row = <MsgRow icon="error" tone="bad" text={`Check failed: ${reasonWords(res.slice(6))}`} />;
-    else if (m && m[2] === "none") row = <MsgRow icon="check_circle" text={`${channelLabel(ch)} has the version you run`} />;
-    else if (m) {
-      const v = m[2];
-      const older = manual?.version === v ? !!manual.older : compareVersions(v, fw()) < 0;
-      row = (
-        <Frame row={ROWS.manual} label={`GBS-Control ${v}`} sub={`${channelLabel(m[1])}${older ? ", older than yours" : ""}`} reason={null} noHelp>
-          <button type="button" class="btn" disabled={!!job.value} onClick={() => void installOffer(v, true, older, m[1])}>Install</button>
-        </Frame>
-      );
-    }
-  }
+function ChannelRow() {
+  const n = Number(device.values.value["system.update_channel"] ?? -1);
+  const cur = CHANNELS[n] ?? "";
   return (
-    <>
-      <Frame row={ROWS.channel} label="Channel" sub={build ? `This firmware follows ${channelLabel(build)}.` : undefined} reason={null} wide noHelp>
-        <Seg label="Channel" opts={CHANNELS.map((c) => ({ label: channelLabel(c), on: c === cur, pick: () => void pickChannel(c, build) }))} />
-      </Frame>
-      {row}
-    </>
+    <Frame row={ROWS.channel} label="Channel" reason={null} wide noHelp
+           sub={cur === "beta" ? "Beta: test versions too. The newest of Beta and Stable is offered." : "Stable: only finished versions are offered."}>
+      <Seg label="Channel" opts={CHANNELS.map((c) => ({ label: channelLabel(c), on: c === cur, pick: () => void pickChannel(c, cur) }))} />
+    </Frame>
   );
 }
 
@@ -179,8 +160,9 @@ export function UpdateSection(_: { desk: boolean }) {
   const upd = device.update.value;
   const info = device.info.value;
   const j = job.value;
-  const o = offer.value;
   const off = info?.update?.offer;
+  const older = !!off?.older;
+  const o = older ? String(off?.version ?? "") : offer.value;   // an older Stable is offered here only, never announced
 
   // Outcomes on the WebSocket: an error ends the job; a new firmware running ends it too
   useEffect(() => {
@@ -202,9 +184,10 @@ export function UpdateSection(_: { desk: boolean }) {
         : o ? (
           <SysGroup title="Available">
             <Frame row={ROWS.offer} label={`GBS-Control ${o}`} reason={null} noHelp wide cls="bt"
-                   sub={`The device downloads it and restarts. Settings and profiles stay.${off?.channel ? ` ${channelLabel(off.channel)} channel.` : ""}`}>
+                   sub={older ? `${channelLabel(off?.channel ?? "")} channel, older than the ${fw()} you run: the way back to Stable. Settings and profiles stay.`
+                     : `The device downloads it and restarts. Settings and profiles stay.${off?.channel ? ` ${channelLabel(off.channel)} channel.` : ""}`}>
               <a class="btn ghost" href={`${REPO}/releases`} target="_blank" rel="noopener">Release notes</a>
-              <button type="button" class="btn pri" onClick={() => void installOffer(o, false, !!off?.older, off?.channel ?? "")}><Icon name="system_update_alt" />Install</button>
+              <button type="button" class="btn pri" onClick={() => void installOffer(o, older, off?.channel ?? "")}><Icon name="system_update_alt" />Install</button>
             </Frame>
           </SysGroup>
         ) : null}
@@ -219,11 +202,11 @@ export function UpdateSection(_: { desk: boolean }) {
         <SysGroup title="Checks">
           <RowView row={AUTO_CHECK} />
           {mode.value !== "easy" ? (
-            <Frame row={ROWS.last} label="Last result" reason={null}><span class="val">{lastResultText(String(info?.update?.last ?? ""))}</span></Frame>
+            <Frame row={ROWS.last} label="Last check" reason={null}><span class="val">{lastResultText(String(info?.update?.last ?? ""))}</span></Frame>
           ) : null}
         </SysGroup>
       ) : null}
-      <SysGroup title="Channel"><ChannelRows build={String(info?.update?.channel ?? "")} /></SysGroup>
+      <SysGroup title="Channel"><ChannelRow /></SysGroup>
       <SysGroup title="From a file">
         <Frame row={ROWS.file} label="Upload firmware" sub="A .bin or .bin.gz file. The version is read before installing." reason={null} noHelp>
           <button type="button" class="btn" disabled={!!j} onClick={() => input.current?.click()}><Icon name="upload_file" />Choose file</button>

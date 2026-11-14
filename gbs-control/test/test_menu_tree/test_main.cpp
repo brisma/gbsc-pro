@@ -236,11 +236,11 @@ static void expectCommonEasyPages(FakeBackend& be) {
                              rows(be, "Picture").c_str());
     TEST_ASSERT_EQUAL_STRING("Position, Size, Edge mask, Reset screen", rows(be, "Screen").c_str());
     TEST_ASSERT_EQUAL_STRING("Load, New profile, Save changes, Discard changes, Manage, Auto-load", rows(be, "Profiles").c_str());
-    TEST_ASSERT_EQUAL_STRING("Signal info, Sound, WiFi, Update, Status pop-up, Knob direction, Restart, Factory reset", rows(be, "System").c_str());
-    TEST_ASSERT_EQUAL_STRING("Volume, Mute", rows(be, "System/Sound").c_str());
+    TEST_ASSERT_EQUAL_STRING("WiFi, Device, TV and OLED menu, Update, Signal info, Restart, Factory reset", rows(be, "System").c_str());
+    TEST_ASSERT_EQUAL_STRING("Volume, Mute, Knob direction", rows(be, "System/Device").c_str());
+    TEST_ASSERT_EQUAL_STRING("Status pop-up, OLED idle, OLED idle after", rows(be, "System/TV and OLED menu").c_str());
     TEST_ASSERT_EQUAL_STRING("Mode, Network, Address, Hostname, Reset to hotspot", rows(be, "System/WiFi").c_str());
-    TEST_ASSERT_EQUAL_STRING("Channel, Check now, Other channels, GBS-Control, ADV Controller", rows(be, "System/Update").c_str());
-    TEST_ASSERT_EQUAL_STRING("Stable, Beta", rows(be, "System/Update/Other channels").c_str());   // Dev: Advanced
+    TEST_ASSERT_EQUAL_STRING("GBS-Control, ADV Controller, Channel, Check now", rows(be, "System/Update").c_str());
 }
 
 void test_easy_pages_rgb_scart_240p(void) {
@@ -285,12 +285,20 @@ void test_video_standard_label(void) {
     (void)be;
 }
 
-// Knob direction is an Easy row everywhere (TV menu too), before Restart and Factory reset
+// Knob direction is an Easy row (TV menu too) of System > Device; the knob's steps stay Advanced, right under it.
+// Restart and Factory reset close the System page in both modes
 void test_knob_direction_in_easy(void) {
     FakeBackend& be = easy(1, false, false);
+    std::string dev = rows(be, "System/Device");
+    TEST_ASSERT_TRUE_MESSAGE(dev.find("Knob direction") != std::string::npos, dev.c_str());
+    TEST_ASSERT_TRUE_MESSAGE(dev.find("Knob steps") == std::string::npos, dev.c_str());
     std::string sys = rows(be, "System");
-    TEST_ASSERT_TRUE_MESSAGE(sys.find("Knob direction, Restart, Factory reset") != std::string::npos, sys.c_str());
-    TEST_ASSERT_TRUE_MESSAGE(sys.find("Knob steps") == std::string::npos, sys.c_str());   // steps stay Advanced
+    TEST_ASSERT_TRUE_MESSAGE(sys.size() > 22 && sys.compare(sys.size() - 22, 22, "Restart, Factory reset") == 0, sys.c_str());
+    be.apply(SID_sys_menu_mode, 1);
+    be.settle();
+    sys = rows(be, "System");
+    TEST_ASSERT_TRUE_MESSAGE(sys.compare(sys.size() - 22, 22, "Restart, Factory reset") == 0, sys.c_str());
+    TEST_ASSERT_EQUAL_STRING("Volume, Mute, Knob direction, Knob steps, Board type", rows(be, "System/Device").c_str());
 }
 
 // The hotspot password shows only in hotspot mode; the installed ADV Controller version always shows (both firmware
@@ -301,35 +309,27 @@ void test_wifi_password_and_adv_controller_rows(void) {
     TEST_ASSERT_EQUAL_STRING("Mode, Network, Address, Hostname, Password, Reset to hotspot", rows(be, "System/WiFi").c_str());
     be.sig.advControllerUpdateAvailable = true;
     be.sig.updateAvailable = true;
-    TEST_ASSERT_EQUAL_STRING("Channel, Check now, Install, Offer, Other channels, GBS-Control, ADV Controller, ADV update",
+    TEST_ASSERT_EQUAL_STRING("GBS-Control, ADV Controller, Channel, Check now, Found on, Install, Install ADV",
                              rows(be, "System/Update").c_str());
-}
-
-// Other channels: Stable and Beta; a checked build adds Install and Offer
-void test_other_channels_rows(void) {
-    FakeBackend& be = easy(1, false, false);
-    be.apply(SID_sys_menu_mode, 1);
-    be.settle();
-    TEST_ASSERT_EQUAL_STRING("Stable, Beta", rows(be, "System/Update/Other channels").c_str());
-    be.sig.updateManual = true;
-    TEST_ASSERT_EQUAL_STRING("Stable, Beta, Install, Offer", rows(be, "System/Update/Other channels").c_str());
 }
 
 // Standard board: no STV9426 settings, the TV5725 icon switch instead
 void test_standard_board_system_rows(void) {
     platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);
     FakeBackend& be = easy(1, false, false);
-    TEST_ASSERT_EQUAL_STRING("Signal info, WiFi, Update, Changes on TV, Knob direction, Restart, Factory reset", rows(be, "System").c_str());
+    TEST_ASSERT_EQUAL_STRING("WiFi, Device, TV and OLED menu, Update, Signal info, Restart, Factory reset", rows(be, "System").c_str());
+    TEST_ASSERT_EQUAL_STRING("Knob direction", rows(be, "System/Device").c_str());   // no audio there
+    TEST_ASSERT_EQUAL_STRING("Changes on TV, OLED idle, OLED idle after", rows(be, "System/TV and OLED menu").c_str());
     platformSetCaps(CAPS_DEFAULT);
 }
 
-// Knob steps moved to System; every dev.* key is hidden without Developer mode, so the key must not be one
+// Knob steps is a System > Device row; every dev.* key is hidden without Developer mode, so the key must not be one
 void test_knob_steps_in_system_without_devmode(void) {
     FakeBackend& be = easy(1, false, false);
     be.apply(SID_sys_menu_mode, 1);
     be.settle();
     be.dev = false;
-    TEST_ASSERT_TRUE(rows(be, "System").find("Knob steps") != std::string::npos);
+    TEST_ASSERT_TRUE(rows(be, "System/Device").find("Knob steps") != std::string::npos);
 }
 
 void test_advanced_main_menu_rows(void) {
@@ -344,8 +344,10 @@ void test_advanced_main_menu_rows(void) {
     TEST_ASSERT_EQUAL_STRING("Filter, Scanlines, Brightness, Contrast, Saturation, Deinterlace, Reset picture, Detail, "
                              "Sharpness, Line filter, Color sharpness, Scanline strength, Color, Red, Green, Blue, "
                              "Reset colors", rows(be, "Picture").c_str());
-    TEST_ASSERT_EQUAL_STRING("Signal info, Sound, WiFi, Update, Status pop-up, Knob direction, Restart, Factory reset, "
-                             "OSD settings, Board type, Knob steps, Developer menu", rows(be, "System").c_str());
+    TEST_ASSERT_EQUAL_STRING("WiFi, Device, TV and OLED menu, Update, Signal info, Developer menu, Restart, Factory reset",
+                             rows(be, "System").c_str());
+    TEST_ASSERT_EQUAL_STRING("Status pop-up, OLED idle, OLED idle after, Theme, Menu position, Pop-ups, Auto close",
+                             rows(be, "System/TV and OLED menu").c_str());
     TEST_ASSERT_EQUAL_STRING("Mode, Network, Address, Hostname, Optimize WiFi, Extra hosts, Reset to hotspot", rows(be, "System/WiFi").c_str());
     TEST_ASSERT_EQUAL_STRING("Load, New profile, Save changes, Discard changes, Manage, Auto-load, Load sets input, Startup",
                              rows(be, "Profiles").c_str());
@@ -411,7 +413,6 @@ int main() {
     RUN_TEST(test_video_standard_label);
     RUN_TEST(test_knob_direction_in_easy);
     RUN_TEST(test_wifi_password_and_adv_controller_rows);
-    RUN_TEST(test_other_channels_rows);
     RUN_TEST(test_standard_board_system_rows);
     RUN_TEST(test_advanced_main_menu_rows);
     RUN_TEST(test_knob_steps_in_system_without_devmode);

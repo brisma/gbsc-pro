@@ -19,14 +19,15 @@ Under the base:
 
 | Path | What it is |
 |------|------------|
-| `stable/manifest.txt` | the newest Stable build: **always present** |
+| `stable/manifest.txt` | the newest Stable build: may be missing until the first one is published |
 | `beta/manifest.txt` | the newest Beta build: may be missing |
 | `fw/gbsc-pro-<version>.bin.gz` | one firmware image per version, made by `tools/release.py` |
 
-A Stable build reads `stable/`; a Beta build reads `beta/` and `stable/`. Either reads the other channel when the
-user opens System > Update > Other channels. A check succeeds when at least one manifest it reads is valid: a Stable
-build with no `stable/manifest.txt` shows "Check failed" and retries every 10 minutes (up to every 2 hours) instead of
-once a day.
+The user chooses the channel a unit follows (System > Update > Channel, the setting `system.update_channel`; it
+starts as the channel of the build). A unit on Stable reads `stable/`; a unit on Beta reads `beta/` and `stable/`. A
+manifest answered with 404 means "nothing published on this channel": the check goes on and ends "Up to date" when
+nothing else is found. Any other failure of every manifest read is "Check failed", retried every 10 minutes (up to
+every 2 hours) instead of once a day.
 
 `python3 tools/release.py --channel <stable|beta> --version <X.Y.Z or X.Y.Z-betaN> --out <dir>` builds the
 firmware and writes `<dir>/v1/` as the server must hold it. Upload the image first and the manifest last (see
@@ -66,8 +67,9 @@ and unknown keys are fine.
 | `notes` | optional: a release notes URL, under 96 characters |
 
 Version order: `X.Y.Z` numerically, then for the same `X.Y.Z` `-devN` < `-betaN` < no suffix
-(`tools/ota/version.py`). The recommended check offers a version only when it is newer than the installed one;
-Other channels offers any version different from the installed one, older ones included.
+(`tools/ota/version.py`). A check offers the newest version it read whenever it differs from the installed one. A
+newer one is announced on the TV; an older one (the Stable for a unit on a Beta that chose Stable, or the build
+before one that was withdrawn) is only shown in the Update page, with its own question before the install.
 
 ## What the device sends and accepts
 
@@ -112,7 +114,8 @@ the server breaks a rule:
 - Keep every image that a live manifest points at; older ones can go (`tools/ota/prune.py` keeps the last 3 per
   channel).
 - A rollback is a manifest pointing back at an older image still on the server. Units never downgrade by
-  themselves: users on the newer build choose the older one in System > Update > Other channels.
+  themselves: a unit on the withdrawn build finds the older one in System > Update, without any announcement, and
+  installs it after a confirmation.
 - Optional: CORS (`Access-Control-Allow-Origin: *` for GET and HEAD) on `v1/`, for web pages that read the
   manifests. Paths outside `v1/` are not used by the device.
 

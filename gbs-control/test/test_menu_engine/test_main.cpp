@@ -159,7 +159,7 @@ void test_bool_setting_toggles_through_apply(void) {
 
 void test_enum_left_right_wrap(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("System"); r.enter("OSD settings"); r.select("Theme");
+    r.key(K_MENU); r.enter("System"); r.enter("TV and OLED menu"); r.select("Theme");
     r.key(K_LEFT);
     TEST_ASSERT_EQUAL_STRING("apply osd.theme=3", r.lastLog().c_str());
 }
@@ -168,19 +168,19 @@ void test_enum_left_right_wrap(void) {
 // another control than the remote's volume pill: OK/click opens that same pill, the arrows/encoder adjust it
 void test_volume_row_ok_opens_the_volume_pill(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("System"); r.enter("Sound"); r.select("Volume");
+    r.key(K_MENU); r.enter("System"); r.enter("Device"); r.select("Volume");
     r.key(K_OK);
     TEST_ASSERT_EQUAL_UINT8(OV_VOLUME, r.v().overlay);
     r.key(K_RIGHT);
     TEST_ASSERT_EQUAL_INT(1, countLog(r, "apply audio.volume=82"));
     r.key(K_BACK);
     TEST_ASSERT_EQUAL_UINT8(VIEW_LIST, r.v().mode);
-    TEST_ASSERT_EQUAL_STRING("Sound", r.title().c_str());
+    TEST_ASSERT_EQUAL_STRING("Device", r.title().c_str());
 }
 
 void test_numeric_repeat_allowed_toggle_repeat_ignored(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("System"); r.enter("Sound"); r.select("Volume");
+    r.key(K_MENU); r.enter("System"); r.enter("Device"); r.select("Volume");
     TEST_ASSERT_EQUAL_STRING("80%", r.selectedValue().c_str());   // percent, 2 % per step
     r.key(K_LEFT, true); r.key(K_LEFT, true);
     TEST_ASSERT_EQUAL_INT(1, countLog(r, "apply audio.volume=78"));
@@ -359,14 +359,14 @@ void test_second_revert_waits_for_settle(void) {
 // Edit mode on an enum row (slider rows open the quick slider instead)
 void test_encoder_edit_mode(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("System"); r.enter("OSD settings"); r.select("Theme");
+    r.key(K_MENU); r.enter("System"); r.enter("TV and OLED menu"); r.select("Theme");
     r.key(K_CLICK);
     TEST_ASSERT_TRUE(r.v().rows[r.v().cursorRow].flags & ROWF_EDITING);
     r.key(K_ROT_R);
     TEST_ASSERT_EQUAL_STRING("apply osd.theme=1", r.lastLog().c_str());   // GBSC PRO (default) -> Classic
     r.key(K_LONG);
     TEST_ASSERT_FALSE(r.v().rows[r.v().cursorRow].flags & ROWF_EDITING);
-    TEST_ASSERT_EQUAL_STRING("OSD settings", r.title().c_str());
+    TEST_ASSERT_EQUAL_STRING("TV and OLED menu", r.title().c_str());
     r.key(K_LONG);
     TEST_ASSERT_EQUAL_STRING("System", r.title().c_str());
 }
@@ -425,11 +425,11 @@ void test_install_confirm_names_the_switch(void) {
     MenuRig r;
     r.be.sig.updateAvailable = true;
     r.be.texts[LT_UPDATE_VERSION] = "3.1.0";
-    r.be.texts[LT_UPDATE_CONFIRM] = "Move to the Stable channel?";
+    r.be.texts[LT_UPDATE_CONFIRM] = "Install an older version?";
     r.key(K_MENU); r.enter("System"); r.enter("Update");
     TEST_ASSERT_TRUE(r.select("Install"));
     r.key(K_OK);
-    TEST_ASSERT_EQUAL_STRING("Move to the Stable channel?", line0(r).c_str());
+    TEST_ASSERT_EQUAL_STRING("Install an older version?", line0(r).c_str());
     r.key(K_BACK);
     r.be.texts[LT_UPDATE_CONFIRM] = "";
     TEST_ASSERT_TRUE(r.select("Install"));
@@ -437,38 +437,34 @@ void test_install_confirm_names_the_switch(void) {
     TEST_ASSERT_EQUAL_STRING("Install the update now?", line0(r).c_str());
 }
 
-// Other channels: a row checks that channel through the backend, with the Checking toast first
-void test_other_channel_row_checks(void) {
+// Channel is a setting of the Update page: Left/Right choose what the checks follow
+void test_update_channel_is_a_setting(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("System"); r.enter("Update"); r.enter("Other channels");
-    TEST_ASSERT_TRUE(r.select("Beta"));
-    r.key(K_OK);
-    TEST_ASSERT_EQUAL_STRING("Checking...", line0(r).c_str());
-    TEST_ASSERT_EQUAL_INT(1, countLog(r, "fn " + std::to_string(FN_CHECK_CHANNEL_BETA)));
+    r.key(K_MENU); r.enter("System"); r.enter("Update");
+    TEST_ASSERT_TRUE(r.select("Channel"));
+    int before = r.be.value(SID_sys_update_channel);
+    r.key(K_RIGHT);
+    TEST_ASSERT_TRUE(r.be.value(SID_sys_update_channel) != before);
 }
 
-// The Other channels Install asks first, naming an older build
-void test_manual_install_confirms(void) {
+// The Install of an older Stable (Channel = Stable on a Beta build) asks its own question
+void test_older_install_confirms(void) {
     MenuRig r;
-    r.be.sig.updateManual = true;
-    r.be.texts[LT_MANUAL_VERSION] = "3.0.0";
-    r.be.texts[LT_MANUAL_CONFIRM] = "Install an older version?";
-    r.key(K_MENU); r.enter("System"); r.enter("Update"); r.enter("Other channels");
+    r.be.sig.updateAvailable = true;
+    r.be.texts[LT_UPDATE_VERSION] = "3.0.0";
+    r.be.texts[LT_UPDATE_OFFER] = "Stable older";
+    r.be.texts[LT_UPDATE_CONFIRM] = "Install an older version?";
+    r.key(K_MENU); r.enter("System"); r.enter("Update");
+    TEST_ASSERT_TRUE(r.select("Found on"));
     TEST_ASSERT_TRUE(r.select("Install"));
     r.key(K_OK);
     TEST_ASSERT_EQUAL_STRING("Install an older version?", line0(r).c_str());
-    TEST_ASSERT_EQUAL_INT(0, countLog(r, "fn " + std::to_string(FN_INSTALL_MANUAL)));
-    r.key(K_BACK);
-    r.be.texts[LT_MANUAL_CONFIRM] = "";                  // same channel, newer: the node's own question
-    TEST_ASSERT_TRUE(r.select("Install"));
-    r.key(K_OK);
-    TEST_ASSERT_EQUAL_STRING("Install this version?", line0(r).c_str());
 }
 
 void test_check_update_shows_toast_before_running(void) {
     MenuRig r;
     r.key(K_MENU); r.enter("System"); r.enter("Update");
-    TEST_ASSERT_TRUE(r.select("Check now"));             // the first row is the build channel
+    TEST_ASSERT_TRUE(r.select("Check now"));             // the first rows are the installed versions
     r.now += 100;
     r.e.key(K_OK, false, r.now);
     TEST_ASSERT_EQUAL_UINT8(OV_TOAST, r.v().overlay);
@@ -2021,13 +2017,13 @@ void test_adv_controller_menu_row_follows_availability(void) {
     TEST_ASSERT_TRUE(r.select("ADV Controller"));                   // the installed version
     TEST_ASSERT_EQUAL_UINT8(ROWK_LIVE, r.v().rows[r.v().cursorRow].kind);
     TEST_ASSERT_EQUAL_STRING("3.2.0", r.selectedValue().c_str());
-    TEST_ASSERT_FALSE(r.select("ADV update"));                      // no bundled build to install
+    TEST_ASSERT_FALSE(r.select("Install ADV"));                      // no bundled build to install
     r.key(K_MENU);
     r.be.sig.advControllerUpdateAvailable = true;
     r.key(K_MENU); r.enter("System"); r.enter("Update");
     TEST_ASSERT_TRUE(r.select("ADV Controller"));                   // the installed version stays
     TEST_ASSERT_EQUAL_STRING("3.2.0", r.selectedValue().c_str());
-    TEST_ASSERT_TRUE(r.select("ADV update"));                       // its own row installs the bundled build
+    TEST_ASSERT_TRUE(r.select("Install ADV"));                       // its own row installs the bundled build
     TEST_ASSERT_EQUAL_UINT8(ROWK_ACTION, r.v().rows[r.v().cursorRow].kind);
     TEST_ASSERT_EQUAL_STRING("3.0.1", r.selectedValue().c_str());
 }
@@ -3192,8 +3188,8 @@ int main() {
     RUN_TEST(test_check_update_shows_toast_before_running);
     RUN_TEST(test_check_result_toast);
     RUN_TEST(test_install_confirm_names_the_switch);
-    RUN_TEST(test_other_channel_row_checks);
-    RUN_TEST(test_manual_install_confirms);
+    RUN_TEST(test_update_channel_is_a_setting);
+    RUN_TEST(test_older_install_confirms);
     RUN_TEST(test_restart_note_toast);
     RUN_TEST(test_mute_toggles_and_times_out);
     RUN_TEST(test_volume_unmutes_and_clamps);

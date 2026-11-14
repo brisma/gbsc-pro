@@ -51,7 +51,7 @@ test("stepper without readback shows only the arrows", async ({ page, sim }) => 
 
 test("long option lists use the dropdown", async ({ page, sim }) => {
   await open(page, "?mode=advanced");   // OSD settings is an Advanced page on the TV
-  const pos = row(page, "menu:system/osd-settings/menu-position");
+  const pos = row(page, "menu:system/tv-and-oled-menu/menu-position");
   await expect(pos.getByRole("radio")).toHaveCount(0);
   await pos.getByRole("button", { name: /^Menu position:/ }).click();
   const list = page.getByRole("listbox", { name: "Menu position" });

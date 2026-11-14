@@ -11,7 +11,7 @@ export interface Binding { id: string; web: Web; reason?: string; label?: string
 const EXACT: Record<string, Omit<Binding, "id">> = {
   "input": { web: "section" }, "output": { web: "section" }, "picture": { web: "section" }, "screen": { web: "section" },
   "profiles": { web: "profiles-page" }, "system": { web: "section", label: "System page" },
-  "system/sound": { web: "group", label: "System › Device" }, "system/osd-settings": { web: "group", label: "System › TV and OLED menu" },
+  "system/device": { web: "group", label: "System › Device" }, "system/tv-and-oled-menu": { web: "group", label: "System › TV and OLED menu" },
   "developer": { web: "section", label: "Developer page" },
   "input/auto-search": { web: "group", label: "Input: In Auto switches per cable (Advanced)" },
   "input/sampling": { web: "group" }, "input/decoder": { web: "group" }, "input/decoder/adaptive-contrast": { web: "group" },

@@ -121,26 +121,30 @@ const sys = (id: string) => `menu:system/${id}` as const;
 const WIFI: Section = { id: "wifi", title: "WiFi", icon: "wifi", hint: "Hotspot or your WiFi", bare: true };
 const DEVICE: Section = { id: "device", title: "Device", icon: "tune", hint: "Sound, knob and board", groups: [
   { title: "Sound", rows: [
-    { kind: "stepper", ref: sys("sound/volume"), icon: "volume_up" },
-    { kind: "toggle", ref: sys("sound/mute"), icon: "volume_off" },
+    { kind: "stepper", ref: sys("device/volume"), icon: "volume_up" },
+    { kind: "toggle", ref: sys("device/mute"), icon: "volume_off" },
   ] },
   { title: "Knob", rows: [
-    { kind: "menu", ref: sys("knob-direction"), icon: "adjust" },
-    { kind: "inline", ref: sys("knob-steps"), icon: "adjust" },
+    { kind: "menu", ref: sys("device/knob-direction"), icon: "adjust" },
+    { kind: "inline", ref: sys("device/knob-steps"), icon: "adjust" },
   ] },
-  { title: "Board", rows: [{ kind: "menu", ref: sys("board-type"), icon: "developer_board" }] },
+  { title: "Board", rows: [{ kind: "menu", ref: sys("device/board-type"), icon: "developer_board" }] },
 ] };
 const TVMENU: Section = { id: "tvmenu", title: "TV and OLED menu", icon: "menu", hint: "The menu on the TV and on the OLED", groups: [
   { title: "Menu", rows: [
     { kind: "inline", ref: "menu:menu-mode", icon: "menu", label: "TV/OLED menu mode" },
-    { kind: "menu", ref: sys("status-pop-up"), icon: "notifications" },
-    { kind: "toggle", ref: sys("changes-on-tv"), icon: "live_tv" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/status-pop-up"), icon: "notifications" },
+    { kind: "toggle", ref: sys("tv-and-oled-menu/changes-on-tv"), icon: "live_tv" },
+  ] },
+  { title: "OLED", rows: [
+    { kind: "menu", ref: sys("tv-and-oled-menu/oled-idle"), icon: "bedtime" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/oled-idle-after"), icon: "timer" },
   ] },
   { title: "Look and place", rows: [
-    { kind: "menu", ref: sys("osd-settings/theme"), icon: "palette" },
-    { kind: "menu", ref: sys("osd-settings/menu-position"), icon: "picture_in_picture", look: "grid9" },
-    { kind: "menu", ref: sys("osd-settings/pop-ups"), icon: "notifications", look: "grid9" },
-    { kind: "menu", ref: sys("osd-settings/auto-close"), icon: "timer" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/theme"), icon: "palette" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/menu-position"), icon: "picture_in_picture", look: "grid9" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/pop-ups"), icon: "notifications", look: "grid9" },
+    { kind: "menu", ref: sys("tv-and-oled-menu/auto-close"), icon: "timer" },
   ] },
 ] };
 const UPDATE: Section = { id: "update", title: "Update", icon: "system_update_alt", hint: "GBS-Control and ADV Controller", bare: true };

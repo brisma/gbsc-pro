@@ -56,7 +56,7 @@ static void oledGolden(OScene& s, const char* name) {
 void test_oled_no_changed_dot_on_the_editing_row(void) {
     OScene s;
     s.r.be.apply(SID_osd_theme, 1); s.r.be.settle();             // differs from the default
-    s.r.openFull(); s.clickEnter("System"); s.clickEnter("OSD settings");
+    s.r.openFull(); s.clickEnter("System"); s.clickEnter("TV and OLED menu");
     s.clickEnter("Theme");                                       // edit mode
     s.shot();
     int y = 14 + s.r.v().cursorRow * 10;
@@ -248,20 +248,92 @@ void test_idle_redraws_only_when_its_text_changes(void) {
     TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 3000));
 }
 
-void test_saver_starts_after_180s_and_steps(void) {
+void test_saver_starts_after_a_minute_and_steps(void) {
     OScene s;
     MenuIdle i; s.r.e.idle(i);
     s.o.activity(0);
     s.o.render(s.r.v(), i, 1000);
-    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 179000));
-    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 180000));       // saver on
-    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 200000));
-    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 210000));       // next position after 30 s
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 59000));
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 60000));        // saver on
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 69000));
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 70000));        // next position after 10 s
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 79000));
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 80000));        // and again
     s.r.be.sig.presetId = 0x05;                             // the information changed: redrawn at once
     MenuIdle j; s.r.e.idle(j);
-    TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 211000));
-    s.o.activity(212000);
-    TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 212000));       // back to the home screen
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 91000));
+    s.o.activity(92000);
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 92000));        // back to the home screen
+    TEST_ASSERT_FALSE(s.d.off);                             // a screensaver never turns the panel off
+}
+
+// system.oled_idle_after: 30 s, 1 min, 3 min, 10 min
+void test_idle_time_follows_the_setting(void) {
+    TEST_ASSERT_EQUAL_UINT32(30000, oledIdleAfterMs(0));
+    TEST_ASSERT_EQUAL_UINT32(60000, oledIdleAfterMs(1));
+    TEST_ASSERT_EQUAL_UINT32(180000, oledIdleAfterMs(2));
+    TEST_ASSERT_EQUAL_UINT32(600000, oledIdleAfterMs(3));
+    TEST_ASSERT_EQUAL_UINT32(60000, oledIdleAfterMs(9));    // an unknown value: the default
+    OScene s;
+    MenuIdle i; s.r.e.idle(i);
+    s.o.setIdle(false, oledIdleAfterMs(0));
+    s.o.activity(0);
+    s.o.render(s.r.v(), i, 1000);
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 29000));
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 30000));        // saver on after 30 s
+}
+
+// system.oled_idle = Off: the panel goes off instead of the screensaver, and any key brings the home screen back
+void test_idle_off_turns_the_panel_off_until_a_key(void) {
+    OScene s;
+    MenuIdle i; s.r.e.idle(i);
+    s.o.setIdle(true, 30000);
+    s.o.activity(0);
+    s.o.render(s.r.v(), i, 1000);
+    s.o.render(s.r.v(), i, 29000);
+    TEST_ASSERT_FALSE(s.d.off);
+    int frames = s.d.frames;
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), i, 30000));
+    TEST_ASSERT_TRUE(s.d.off);
+    s.r.be.sig.presetId = 0x05;                             // the information changed: nothing is sent to a dark panel
+    MenuIdle j; s.r.e.idle(j);
+    TEST_ASSERT_FALSE(s.o.render(s.r.v(), j, 95000));
+    TEST_ASSERT_EQUAL_INT(frames, s.d.frames);
+    TEST_ASSERT_TRUE(s.d.off);
+    s.o.activity(100000);
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), j, 100000));       // on again with the home screen
+    TEST_ASSERT_FALSE(s.d.off);
+    TEST_ASSERT_TRUE(s.d.pixel(0, 0));                      // the title band
+}
+
+// ... and an open menu (a key on the remote) is always shown
+void test_idle_off_never_over_an_open_menu(void) {
+    OScene s;
+    MenuIdle i; s.r.e.idle(i);
+    s.o.setIdle(true, 30000);
+    s.o.activity(0);
+    s.o.render(s.r.v(), i, 1000);
+    s.o.render(s.r.v(), i, 40000);
+    TEST_ASSERT_TRUE(s.d.off);
+    s.r.key(K_CLICK);                                       // the engine opens the menu; no activity() told yet
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 41000));
+    TEST_ASSERT_FALSE(s.d.off);
+}
+
+// Off chosen while the screensaver is up: the panel goes off at once
+void test_idle_setting_change_applies_at_once(void) {
+    OScene s;
+    MenuIdle i; s.r.e.idle(i);
+    s.o.activity(0);
+    s.o.render(s.r.v(), i, 1000);
+    s.o.render(s.r.v(), i, 60000);
+    TEST_ASSERT_FALSE(s.d.off);
+    s.o.setIdle(true, 60000);
+    s.o.render(s.r.v(), i, 61000);
+    TEST_ASSERT_TRUE(s.d.off);
+    s.o.setIdle(false, 60000);                              // and back: the screensaver again
+    TEST_ASSERT_TRUE(s.o.render(s.r.v(), i, 62000));
+    TEST_ASSERT_FALSE(s.d.off);
 }
 
 // Screensaver: the resolution path large with profile and region, at a position that moves
@@ -271,10 +343,10 @@ void test_saver_shows_the_path_and_moves(void) {
     s.r.be.active = 0;
     MenuIdle i; s.r.e.idle(i);
     s.o.activity(0);
-    s.o.render(s.r.v(), i, 180000);
+    s.o.render(s.r.v(), i, 60000);
     std::string a = s.d.pbm();
     TEST_ASSERT_TRUE(goldenCheckFile("oled", "saver-path", "pbm", a));
-    s.o.render(s.r.v(), i, 210000);
+    s.o.render(s.r.v(), i, 70000);
     TEST_ASSERT_TRUE(a != s.d.pbm());                       // another place on the panel
 }
 
@@ -516,7 +588,11 @@ int main(int, char**) {
     RUN_TEST(test_oled_every_row_fits);
     RUN_TEST(test_render_sends_frames_only_on_change);
     RUN_TEST(test_idle_redraws_only_when_its_text_changes);
-    RUN_TEST(test_saver_starts_after_180s_and_steps);
+    RUN_TEST(test_saver_starts_after_a_minute_and_steps);
+    RUN_TEST(test_idle_time_follows_the_setting);
+    RUN_TEST(test_idle_off_turns_the_panel_off_until_a_key);
+    RUN_TEST(test_idle_off_never_over_an_open_menu);
+    RUN_TEST(test_idle_setting_change_applies_at_once);
     RUN_TEST(test_saver_shows_the_path_and_moves);
     RUN_TEST(test_saver_never_over_an_open_menu);
     RUN_TEST(test_oled_keyboard);

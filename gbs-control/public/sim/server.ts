@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import type { Gen, SimOptions } from "./types.ts";
 import { loadGen } from "./load.ts";
 import { DeviceState } from "./state.ts";
+import { compareVersions } from "../app/model/version.ts";   // the device's frozen version order (update-manifest.cpp)
 import { WsHub } from "./ws.ts";
 import { hostAllowed, originAllowed } from "./guard.ts";
 import type { Ctx } from "./http.ts";
@@ -193,8 +194,7 @@ export class Sim {
       case "system.restart": this.restart(); return null;
       case "system.factory_reset": st.resetValues(); this.restart(); return null;
       case "system.check_update": this.later(this.opDelayMs, () => this.checkUpdate()); return null;
-      case "system.check_channel": this.later(this.opDelayMs, () => this.checkChannel(text ?? "")); return null;
-      case "system.install_update": this.installUpdate(text === "manual"); return null;
+      case "system.install_update": this.installUpdate(text === "older"); return null;
       case "system.update_adv_controller":
         st.advUpdateState = "running";
         st.log("adv", "info", "update: sending the image");
@@ -245,30 +245,30 @@ export class Sim {
     return null;
   }
 
-  // ota-update.cpp finishCheck: the recommended offer is what the server has now (none clears it)
+  // ota-update.cpp finishCheck + ota-plan.cpp otaFinishCheck: the chosen channel and the more stable ones are read,
+  // the newest wins and is offered whenever it differs from the running version, flagged older when it is lower
   private checkUpdate(): void {
-    const st = this.state, o = st.serverOffer;
+    const st = this.state, chosen = st.updateChannel();
+    let best: { version: string; channel: string } | null = null;
+    for (const ch of chosen === "beta" ? ["beta", "stable"] : ["stable"]) {
+      const v = st.serverBuilds[ch];
+      if (v && (!best || compareVersions(v, best.version) > 0)) best = { version: v, channel: ch };
+    }
+    const c = best ? compareVersions(best.version, st.fw) : 0;
+    const o = best && c !== 0 ? { ...best, older: c < 0 } : null;
     st.updateOffer = o;
+    st.updateFor = chosen;
     st.updateLast = o ? o.version : "none";
     st.send(`s:status.update_available=${st.updateLast}`);
-    st.log("update", "info", o ? `recommended: ${o.version} (${o.channel})` : "recommended: none");
-    if (o) st.event("update_offered", OTA_CHANNELS.indexOf(o.channel), 0);
-  }
-
-  // Other channels: the channel's build when it differs from the running one (also older)
-  private checkChannel(ch: string): void {
-    const st = this.state, v = CHANNEL_BUILDS[ch];
-    if (!v) return;
-    st.manualOffer = v === st.fw ? null : { version: v, channel: ch };
-    st.send(`s:status.update_channel_check=${ch}:${st.manualOffer ? v : "none"}`);
-    st.log("update", "info", `other channel ${ch}: ${st.manualOffer ? v : "none"}`);
+    st.log("update", "info", o ? `offer: ${o.version} (${o.channel}${o.older ? ", older" : ""}), channel ${chosen}` : `offer: none, channel ${chosen}`);
+    if (o) st.event("update_offered", OTA_CHANNELS.indexOf(o.channel), o.older ? 1 : 0);
   }
 
   // otaInstall + updateLoop: download progress every 5 %, done, the restart into the new image
-  private installUpdate(manual: boolean): void {
-    const st = this.state, o = manual ? st.manualOffer : st.updateOffer;
+  private installUpdate(olderConfirmed: boolean): void {
+    const st = this.state, o = st.updateFor === st.updateChannel() ? st.updateOffer : null;
     const refuse = (code: string) => { st.send(`s:status.update=error:${code}`); st.log("update", "info", `install refused: ${code}`); };
-    if (!o) return this.later(this.opDelayMs, () => refuse("changed"));
+    if (!o || !!o.older !== olderConfirmed) return this.later(this.opDelayMs, () => refuse("changed"));   // otaInstallMatches
     if (st.upload.state === "receiving") return this.later(this.opDelayMs, () => refuse("busy"));
     st.log("update", "info", `install ${o.version} from ${o.channel}: started`);
     const step = (pct: number) => this.later(100, () => {   // ~2 s: the device takes about a minute
@@ -403,7 +403,6 @@ const DEV_STEPS: Record<string, [string, number]> = {
   "dev.htotal_up": ["htotal", 1], "dev.htotal_down": ["htotal", -1], "dev.pll_div_up": ["pll_div", 1], "dev.pll_div_down": ["pll_div", -1],
 };
 const OTA_CHANNELS = ["stable", "beta"];   // event a: channel index (ota-plan.h)
-const CHANNEL_BUILDS: Record<string, string> = { stable: "3.0.0", beta: "3.1.0-beta2" };
 
 export async function startSim(opts: SimOptions = {}): Promise<Sim> {
   const sim = new Sim(opts);

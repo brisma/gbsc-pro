@@ -2,6 +2,12 @@
 // SETTING(id, key, type, uopt field, default, min, max, scope, apply groups, options, flags, caps)
 #pragma once
 
+// The build channel (tools/release.py; a plain local build is Beta), as in gbs-control-pro.h, which host builds do
+// not read: the default of system.update_channel
+#ifndef GBS_FW_CHANNEL
+#define GBS_FW_CHANNEL 1
+#endif
+
 // Enum options, "Name|Name=value|..." (a "@cap" suffix needs that capability, "#a" is Advanced only). The registry
 // turns each into a flash array named after it (settings-registry.cpp).
 #define SETTINGS_OPTIONS(OPT) \
@@ -13,8 +19,11 @@
     OPT(OPT_PRESETS,   "960p=0|480p=1|Custom=2|720p=3|1024p=4|1080p=5|1200p=7|Downscale=6@original|Bypass=10@original") \
     OPT(OPT_BOARD,     "Auto=0|Standard=2|Pro=1")   /* Standard = the plain gbs-control board */ \
     OPT(OPT_AUTOUPD,   "Off|Daily") \
+    OPT(OPT_UPD_CHANNEL, "Stable|Beta") \
     OPT(OPT_ENC_DIR,   "Normal|Reversed") \
     OPT(OPT_ENC_STEP,  "1|2|4")   /* menu steps per detent */ \
+    OPT(OPT_OLED_IDLE, "Screensaver|Off") \
+    OPT(OPT_OLED_AFTER, "30s|1min|3min|10min") \
     OPT(OPT_FTL,       "Method 1|Method 2")   /* 0 Vtotal+VSST, 1 Vtotal */ \
     OPT(OPT_HDMI,      "Auto=1|Full=0|Limited=3|Limited SD=2#a")   /* values: 0 off, 1 HD modes, 2 SD/PC modes, 3 all */ \
     OPT(OPT_MENU_MODE, "Easy|Advanced") \
@@ -51,7 +60,10 @@
     SETTING(sys_board,         "system.board",          Enum, boardOverride,                 0,      0, 2,      Device,  APPLY_NONE,        OPT_BOARD,   0, CAP_NONE) \
     SETTING(sys_encoder_dir,   "system.encoder_direction", Enum, encoderReverse,             0,      0, 1,      Device,  APPLY_NONE,        OPT_ENC_DIR, 0, CAP_ENCODER) \
     SETTING(sys_encoder_steps, "system.encoder_steps",  Enum, encoderSteps,                  0,      0, 2,      Device,  APPLY_NONE,        OPT_ENC_STEP, 0, CAP_ENCODER) \
+    SETTING(sys_oled_idle,     "system.oled_idle",      Enum, oledIdle,                      0,      0, 1,      Device,  APPLY_NONE,        OPT_OLED_IDLE, 0, CAP_OLED) \
+    SETTING(sys_oled_after,    "system.oled_idle_after", Enum, oledIdleAfter,                1,      0, 3,      Device,  APPLY_NONE,        OPT_OLED_AFTER, 0, CAP_OLED) \
     SETTING(sys_auto_update,   "system.auto_update_check", Enum, autoUpdateCheck,            1,      0, 1,      Device,  APPLY_NONE,        OPT_AUTOUPD, 0, CAP_NONE) \
+    SETTING(sys_update_channel, "system.update_channel", Enum, updateChannel,                GBS_FW_CHANNEL, 0, 1, Device, APPLY_NONE,     OPT_UPD_CHANNEL, 0, CAP_NONE) \
     SETTING(sys_wifi_optimize, "system.wifi_optimize",  Bool, wifiOptimize,                  1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(profiles_autoload, "profiles.autoload",     Bool, profilesAutoload,              1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(profiles_switch_input, "profiles.switch_input", Bool, profilesSwitchInput,     1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \

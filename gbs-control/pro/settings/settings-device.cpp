@@ -95,8 +95,14 @@ SettingsSaver gSaver;
 
 struct LoadCtx { SettingScope scope; SettingsLoadReport rep; };
 
+// system.update_channel starts as the build's channel and is the user's from then on: a file without the key (a
+// unit coming from a firmware that had none, or a new one) gets it written at this start, not at some later save
+static const char kChannelKey[] = "system.update_channel=";
+bool gChannelStored = false;
+
 void onLoadLine(const char* line, void* ctx) {
     LoadCtx* c = (LoadCtx*)ctx;
+    if (!strncmp(line, kChannelKey, sizeof(kChannelKey) - 1)) gChannelStored = true;
     settingsLoadLine(*uopt, c->scope, line, c->rep);
 }
 
@@ -144,7 +150,12 @@ void settingsInit() {
     settingsRecoverTmp(gFs, SETTINGS_DEVICE_PATH);
     settingsRecoverTmp(gFs, SETTINGS_CURRENT_PATH);
     if (LittleFS.exists("/preferencesv2.txt")) LittleFS.remove("/preferencesv2.txt");
+    gChannelStored = false;
     loadScope(SETTINGS_DEVICE_PATH, SettingScope::Device);
+    if (!gChannelStored) {
+        logPrintf(LC_SYS, LL_INFO, PSTR("settings: update channel %u (this build's) kept from now on"), uopt->updateChannel);
+        gSaver.markDirty(SettingScope::Device, millis());
+    }
     if (profileStartupLoadsCurrent(uopt->profilesStartup)) {
         loadScope(SETTINGS_CURRENT_PATH, SettingScope::Profile);
     } else {   // Startup = Defaults: no profile, factory values at the output resolution last used

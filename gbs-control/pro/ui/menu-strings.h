@@ -11,7 +11,7 @@
     S(S_PICTURE, "Picture") \
     S(S_SCREEN, "Screen") \
     S(S_PROFILES, "Profiles") \
-    S(S_AUDIO, "Sound") \
+    S(S_DEVICE, "Device") \
     S(S_SYSTEM, "System") \
     S(S_DEVELOPER, "Developer") \
     S(S_SOURCE, "Source") \
@@ -88,7 +88,7 @@
     S(S_MUTE, "Mute") \
     S(S_SIGNAL_INFO, "Signal info") \
     S(S_OSD_THEME, "Theme") \
-    S(S_OSD, "OSD settings") \
+    S(S_TV_OLED, "TV and OLED menu") \
     S(S_OSD_POPUP_POS, "Pop-ups") \
     S(S_OSD_TIMEOUT, "Auto close") \
     S(S_WIFI, "WiFi") \
@@ -106,14 +106,11 @@
     S(S_CHECK_NOW, "Check now") \
     S(S_INSTALL, "Install") \
     S(S_UPDATE_ADV_CONTROLLER, "ADV Controller") \
-    S(S_ADV_UPDATE, "ADV update") \
+    S(S_ADV_UPDATE, "Install ADV") \
     S(S_DAILY_CHECK, "Auto check") \
     S(S_CHANNEL, "Channel") \
-    S(S_OFFER, "Offer") \
-    S(S_OTHER_CHANNELS, "Other channels") \
-    S(S_CH_STABLE, "Stable") \
-    S(S_CH_BETA, "Beta") \
-    S(S_LAST_RESULT, "Last result") \
+    S(S_OFFER, "Found on") \
+    S(S_LAST_RESULT, "Last check") \
     S(S_RESTART, "Restart") \
     S(S_FACTORY_RESET, "Factory reset") \
     S(S_DEV_MODE, "Developer menu") \
@@ -149,6 +146,8 @@
     S(S_BOARD, "Board type") \
     S(S_ENCODER_DIR, "Knob direction") \
     S(S_ENCODER_STEPS, "Knob steps") \
+    S(S_OLED_IDLE, "OLED idle") \
+    S(S_OLED_AFTER, "OLED idle after") \
     S(S_OTA_PASSWORD, "OTA password") \
     S(S_WIFI_OPTIMIZE, "Optimize WiFi") \
     S(S_EXTRA_HOSTS, "Extra hosts") \
@@ -249,7 +248,6 @@
     S(S_Q_RESET_FILTERS, "Reset comb and filters?") \
     S(S_Q_RESET_CHIP, "Reset the scaler chip?") \
     S(S_Q_INSTALL, "Install the update now?") \
-    S(S_Q_INSTALL_MANUAL, "Install this version?") \
     S(S_T_UPDATING, "Updating GBS-Control") \
     S(S_T_UPDATING_ADV_CONTROLLER, "Updating ADV Controller") \
     S(S_T_VERIFYING, "Verifying") \
@@ -281,11 +279,8 @@
     S(H_RESET_PICTURE, "Puts every setting on the Picture page back to its default.") \
     S(H_SERIAL_LOG, "Prints status/timings/files/IR codes to the serial log for debugging.") \
     S(H_FW_GBS, "Version running now. GBS-Control: main firmware. ADV Controller: the decoder board.") \
-    S(H_CHANNEL, "Release channel of the installed firmware: Stable/Beta.") \
-    S(H_OFFER, "Channel of the offered version. Switch: it moves you to that channel. Older: a downgrade.") \
-    S(H_OTHER_CHANNELS, "Check Stable/Beta by hand to change channel or to go back to an older version.") \
-    S(H_CH_CHECK, "Looks for the latest version on this channel. Install then appears below.") \
-    S(H_INSTALL_MANUAL, "Installs the version the last channel check found. It may be older than yours.") \
+    S(H_CHANNEL, "The channel Check now and the daily check look at. Beta: test versions before Stable.") \
+    S(H_OFFER, "Channel where the version was found. Older: lower than the installed one.") \
     S(H_PIC_BRIGHTNESS, "Brightness of the final picture on every input. 50 is neutral.") \
     S(H_PIC_CONTRAST, "Contrast of the final picture on every input. 50 is neutral.") \
     S(H_PIC_SATURATION, "Color strength of the final picture on every input. 50 is neutral. 0 is black and white.") \
@@ -306,8 +301,8 @@
     S(H_PICTURE, "How the picture looks: filter/scanlines/levels/deinterlace/colors.") \
     S(H_SCREEN, "Fit the picture to the TV: position/size/edge mask.") \
     S(H_PROFILES, "Save the settings of each console or game and load them by hand or by signal.") \
-    S(H_AUDIO, "Volume and mute of the audio output.") \
-    S(H_SYSTEM, "Signal info/sound/WiFi/updates and device options.") \
+    S(H_DEVICE, "Sound/knob and board options.") \
+    S(H_SYSTEM, "WiFi/device and menu options/updates/signal info and restart.") \
     S(H_DEVELOPER, "Low-level scaler tools for testing and debugging. Not needed for normal use.") \
     S(H_SOURCE, "Input cable. Auto finds it. A cable picked by hand returns to Auto after Wait before search.") \
     S(H_AUTO_SEARCH, "Choose the inputs Auto checks. Turning off unused ones finds the signal faster.") \
@@ -337,7 +332,7 @@
     S(H_SWITCH_INPUT, "Loading a profile by hand also switches to the input it was saved on.") \
     S(H_AUTOLOAD, "When a signal comes in the profile saved for it loads by itself.") \
     S(H_WIFI, "WiFi state and the address of the web page. Reset goes back to the hotspot.") \
-    S(H_OSD, "Look and place of the TV menu and pop-ups and when menus close.") \
+    S(H_TV_OLED, "Pop-ups/the small display when idle and the look of the TV menu.") \
     S(H_AUTO_GAIN, "Sets the input level by itself. Changing Gain by hand turns it off.") \
     S(H_Y_FILTER, "Luma filter of the decoder. Higher SVHS numbers keep more detail. Lower ones look softer.") \
     S(H_Y_FILTER_MODE, "Auto: the decoder picks the S-Video luma filter. Manual: the Luma filter row sets it.") \
@@ -380,7 +375,7 @@
     S(H_ADDRESS, "Type this address in a browser on the same WiFi to open the web page.") \
     S(H_PASSWORD, "Password to join the GBSC PRO hotspot from a phone or computer.") \
     S(H_HOSTNAME, "Name of the device on the network. Open it in a browser instead of the address.") \
-    S(H_CHECK_NOW, "Looks online now for a newer version on this channel or a more stable one.") \
+    S(H_CHECK_NOW, "Looks online now for a version on the chosen channel or a more stable one.") \
     S(H_DAILY_CHECK, "Daily: looks for new firmware once a day and tells you when one is found.") \
     S(H_LAST_RESULT, "What the last update check found or why it failed.") \
     S(H_OSD_THEME, "Colors of the menu on the TV: GBSC PRO/Classic/Light/Retro.") \
@@ -416,13 +411,15 @@
     S(H_BOARD, "Auto finds the board. Pick Standard or Pro only if features look wrong. Restart to apply.") \
     S(H_ENCODER_DIR, "Reverses the knob if turning it moves the cursor the wrong way.") \
     S(H_ENCODER_STEPS, "How many menu steps one click of the knob moves. Change it if the knob skips or lags.") \
+    S(H_OLED_IDLE, "What the small display does when no key is pressed: a moving screensaver or off.") \
+    S(H_OLED_AFTER, "How long without a key before the small display goes idle.") \
     S(H_OTA_PASSWORD, "Sets the password the Arduino IDE needs for WiFi uploads.") \
     S(H_WIFI_OPTIMIZE, "Picks at power-on the scaler memory clock that disturbs WiFi the least. Keep it on.") \
     S(H_EXTRA_HOSTS, "Extra names the web page accepts. Add the name your router or proxy uses for the device.") \
     S(H_RESET_AP, "Forgets your WiFi network and restarts into the GBSC PRO hotspot.") \
     S(H_UPDATE, "Check for and install new firmware from the internet. Shows the installed versions.") \
-    S(H_INSTALL, "Downloads and installs the offered firmware. It includes the ADV Controller update too.") \
-    S(H_UPDATE_ADV_CONTROLLER, "Flashes the ADV Controller with the version that came with this firmware.") \
+    S(H_INSTALL, "Downloads and installs the version found. It includes the ADV Controller update too.") \
+    S(H_UPDATE_ADV_CONTROLLER, "Installs on the ADV Controller the version that came with this firmware.") \
     S(H_FACTORY_RESET, "Erases every setting and profile and restarts with the defaults. The WiFi network is kept.") \
     S(H_WATCHER_MODE, "This profile's sync watcher. Off: signal changes and loss are not followed. Inherit: on.") \
     S(H_SYNC_WATCHER, "Turns the sync watcher on or off now. It detects signal changes and loss.") \

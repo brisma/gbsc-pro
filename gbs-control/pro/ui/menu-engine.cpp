@@ -309,7 +309,6 @@ uint16_t MenuEngine::confirmQuestion(const MenuNode& n) {
             case FN_PICTURE_RESET: return S_Q_RESET_PICTURE;
             case FN_GEOMETRY_RESET: return S_Q_RESET_GEOMETRY;
             case FN_WIFI_RESET: return S_Q_RESET_AP;
-            case FN_INSTALL_MANUAL: return S_Q_INSTALL_MANUAL;
             default: return 0;
         }
     }
@@ -715,11 +714,7 @@ void MenuEngine::execute(const MenuNode& n, uint8_t dyn, int8_t profile) {
                 openKeyboard(KB_EXTRA_HOSTS, t, -1);
                 return;
             }
-            case FN_DECODER_RESET: case FN_GEOMETRY_RESET: case FN_WIFI_RESET: case FN_INSTALL_MANUAL:
-                if (!be_.fn(n.ref)) busyToast();
-                return;
-            case FN_CHECK_CHANNEL_STABLE: case FN_CHECK_CHANNEL_BETA:
-                toast(S_T_CHECKING);                     // the result arrives as a message()
+            case FN_DECODER_RESET: case FN_GEOMETRY_RESET: case FN_WIFI_RESET:
                 if (!be_.fn(n.ref)) busyToast();
                 return;
             case FN_PICTURE_RESET: {   // 12 writes in one all-or-nothing batch: never a half-reset page
@@ -808,9 +803,8 @@ void MenuEngine::activate(const Row& r, uint8_t k) {
             bool confirm = (n.flags & NF_CONFIRM) != 0;
             if (!(n.flags & NF_FN)) { ActionDef d; actionsDefAt(n.ref, d); confirm = confirm || (d.flags & ACTION_CONFIRM); }
             if (confirm) {
-                // OTA installs name a channel switch or an older version (backend text, "" = the node's question)
-                uint8_t lt = (n.flags & NF_FN) ? (n.ref == FN_INSTALL_MANUAL ? LT_MANUAL_CONFIRM : 0)
-                                               : (n.ref == AID_sys_install_update ? LT_UPDATE_CONFIRM : 0);
+                // the OTA install names an older version (backend text, "" = the node's question)
+                uint8_t lt = !(n.flags & NF_FN) && n.ref == AID_sys_install_update ? LT_UPDATE_CONFIRM : 0;
                 char t[29] = "";
                 if (lt) { be_.text(lt, t, sizeof(t)); menuSanitize(t); }
                 openConfirm(r, t);

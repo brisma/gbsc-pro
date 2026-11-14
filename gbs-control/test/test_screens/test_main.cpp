@@ -238,35 +238,37 @@ void test_catalogue(void) {
     closeAll(osd, oled);
     if (osd.e.promptAdvController(osd.now) && oled.e.promptAdvController(oled.now)) { osd.draw(); save("50-ov-adv-controller-prompt", &osd, &oled); }
     closeAll(osd, oled);
-    // OTA: a recommended channel switch, an older build from Other channels, their
-    // confirms, and the longest check and install toasts (ota-update.cpp texts, <= 28 characters)
+    // OTA: an offered version, the older Stable for a unit on a Beta that chose Stable, the confirms, and the
+    // longest check and install toasts (ota-update.cpp texts, <= 28 characters)
     {
         Osd o; Oled l;
         for (FakeBackend* be : {&o.be, &l.be}) {
             setupBackend(*be, 1);
-            be->apply(SID_sys_menu_mode, 1); be->settle();   // Last result is an Advanced row
-            be->texts[LT_FW_CHANNEL] = "Dev";
-            be->texts[LT_UPDATE_VERSION] = "3.0.1-beta12"; be->texts[LT_UPDATE_OFFER] = "Beta switch";
-            be->texts[LT_UPDATE_CONFIRM] = "Move to the Beta channel?"; be->texts[LT_UPDATE_RESULT] = "No connection";
-            be->sig.updateManual = true; be->texts[LT_MANUAL_VERSION] = "2.4.1";
-            be->texts[LT_MANUAL_OFFER] = "Stable older switch"; be->texts[LT_MANUAL_CONFIRM] = "Install an older version?";
+            be->apply(SID_sys_menu_mode, 1); be->settle();   // Last check is an Advanced row
+            be->sig.updateAvailable = true;
+            be->texts[LT_UPDATE_VERSION] = "3.0.1-beta12"; be->texts[LT_UPDATE_OFFER] = "Beta";
+            be->texts[LT_UPDATE_CONFIRM] = ""; be->texts[LT_UPDATE_RESULT] = "No connection";
         }
         if (openPath(o, l, {"System", "Update"})) {
             captureLevel(o, l, "60-ota-update");
             if (selectRow(o, "Install", K_DOWN, K_UP) && selectRow(l, "Install", K_ROT_R, K_ROT_L)) {
-                o.key(K_OK); l.key(K_CLICK); save("61-ota-confirm-switch", &o, &l);
+                o.key(K_OK); l.key(K_CLICK); save("61-ota-confirm", &o, &l);
             }
         }
         closeAll(o, l);
-        if (openPath(o, l, {"System", "Update", "Other channels"})) {
-            captureLevel(o, l, "62-ota-other-channels");
+        for (FakeBackend* be : {&o.be, &l.be}) {
+            be->texts[LT_UPDATE_VERSION] = "3.0.0"; be->texts[LT_UPDATE_OFFER] = "Stable older";
+            be->texts[LT_UPDATE_CONFIRM] = "Install an older version?";
+        }
+        if (openPath(o, l, {"System", "Update"})) {
+            captureLevel(o, l, "62-ota-older");
             if (selectRow(o, "Install", K_DOWN, K_UP) && selectRow(l, "Install", K_ROT_R, K_ROT_L)) {
                 o.key(K_OK); l.key(K_CLICK); save("63-ota-confirm-older", &o, &l);
             }
         }
         closeAll(o, l);
         const char* toasts[] = {"Checking...", "3.0.1-beta12 available", "Check failed: no connection",
-                                "Not installed: offer changed", "Beta up to date"};
+                                "Not installed: offer changed", "10.10.10-beta12 older", "Up to date"};
         for (const char* t : toasts) {
             o.e.message(t, o.now); o.draw(); l.e.message(t, l.now); l.wait(10);
             save("64-ota-toast-" + slug(t), &o, &l);

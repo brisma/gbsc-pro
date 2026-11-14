@@ -617,10 +617,22 @@ bool OledRenderer::scrollPossible(const MenuView& v, const MenuIdle& idle, bool 
 
 static bool sameIdle(const MenuIdle& a, const MenuIdle& b) { return memcmp(&a, &b, sizeof(a)) == 0; }   // idle() zeroes it
 
+uint32_t oledIdleAfterMs(uint8_t option) {
+    static const uint32_t kMs[] = {30000, 60000, 180000, 600000};
+    return option < 4 ? kMs[option] : OledRenderer::kIdleAfterMs;
+}
+
 bool OledRenderer::render(const MenuView& v, const MenuIdle& idle, uint32_t now) {
     bool closed = v.mode == VIEW_CLOSED;
-    bool saver = closed && now - lastActivity_ >= kSaverMs;
-    uint32_t step = saver ? (now - lastActivity_ - kSaverMs) / kSaverStepMs : 0;
+    bool saver = closed && now - lastActivity_ >= idleAfterMs_;
+    bool asleep = saver && idleOff_;
+    if (asleep != asleep_) {
+        asleep_ = asleep;
+        if (asleep) d_.displayOff();
+        else { d_.displayOn(); dirty_ = true; }         // the buffer the panel kept is old: send the frame again
+    }
+    if (asleep) return false;
+    uint32_t step = saver ? (now - lastActivity_ - idleAfterMs_) / kSaverStepMs : 0;
     bool changed = dirty_ || v.rev != rev_ || v.mode != mode_ || saver != saver_ || (saver && step != step_)
                 || (closed && !sameIdle(idle, idle_));   // the saver shows the same information
     // Scrolling text: redraw the buffer every 100 ms; display() sends only what changed (double buffer)

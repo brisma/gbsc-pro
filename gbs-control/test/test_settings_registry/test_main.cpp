@@ -36,6 +36,16 @@ void test_wifi_watch_is_a_developer_toggle_off_by_default(void) {
     TEST_ASSERT_TRUE(d.scope == SettingScope::Device);
 }
 
+// The update channel starts as the build's own (host builds and plain local builds: Beta)
+void test_update_channel_defaults_to_the_build_channel(void) {
+    int i = settingsFind("system.update_channel");
+    TEST_ASSERT_TRUE(i >= 0);
+    SettingDef d; settingsDefAt((uint8_t)i, d);
+    TEST_ASSERT_EQUAL_UINT16(GBS_FW_CHANNEL, d.def);
+    TEST_ASSERT_EQUAL_UINT16(1, d.max);                       // Stable = 0, Beta = 1 (OtaChannel)
+    TEST_ASSERT_TRUE(d.scope == SettingScope::Device);
+}
+
 void test_keys_are_unique_and_defaults_valid(void) {
     char a[48], b[48];
     for (uint8_t i = 0; i < settingsCount(); i++) {
@@ -273,6 +283,7 @@ int main(int, char**) {
     RUN_TEST(test_profiles_startup_setting);
     RUN_TEST(test_no_setup_done_setting);
     RUN_TEST(test_caps_from_key_prefix);
+    RUN_TEST(test_update_channel_defaults_to_the_build_channel);
     RUN_TEST(test_keys_are_unique_and_defaults_valid);
     RUN_TEST(test_wifi_watch_is_a_developer_toggle_off_by_default);
     RUN_TEST(test_changed_apply_mask_has_only_changed_groups);

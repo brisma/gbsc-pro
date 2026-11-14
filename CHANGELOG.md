@@ -19,6 +19,25 @@ refer to brisma/gbsc-pro.
 - Menu: Input > **Sampling** is now **ADC calibration** and its **Gain** is **ADC gain**, the name of earlier
   versions. (#70)
 
+- Menu: the System page is ordered as in the web app: **Device** (sound, knob, board type) and **TV and OLED menu**
+  (pop-ups, OLED idle, look of the TV menu) are two pages of it, and Restart and Factory reset are always the last
+  rows. Sound and OSD settings are gone as pages; no setting changed.
+
+- Update: **Channel** (System > Update) is a setting, Stable or Beta, that the checks follow; it starts as the
+  channel of the installed firmware. On Stable the latest Stable is offered; on Beta the newest of Beta and Stable,
+  and the unit stays on Beta. A version older than the installed one (the latest Stable for a unit on a Beta, or the
+  one before a withdrawn release) is shown in the page and never announced. The page **Other channels** is gone. A
+  channel with nothing published answers "Up to date" instead of "Check failed". HTTP API: `system.check_channel`
+  is gone, `system.install_update` takes `older` when the user confirmed an older version, `/api/info` `update` has
+  `follows` and no `manual`.
+
+- Menu: System > Update lists what is installed (GBS-Control, ADV Controller, Channel), then Check now, **Found on**
+  (was Offer) and Install, **Install ADV** (was ADV update), **Last check** (was Last result) and Auto check.
+
+- OLED: System > TV and OLED menu > **OLED idle** chooses what the small display does without input, the screensaver or **Off** (any key
+  turns it on again), and **OLED idle after** when: 30 s, 1 min, 3 min or 10 min. The default is now 1 minute (it was
+  3) and the screensaver moves every 10 seconds (it was 30). (#73)
+
 ### Fixed
 - Input: with Source = VGA chosen by hand, the VGA connector also takes composite sync on its HS pin (RGBS cables on
   HD15); it gave "No signal". (#69)
@@ -50,6 +69,8 @@ refer to brisma/gbsc-pro.
   seconds while the GBSC held memory for it.
 - Web app: on a standard board the Remote says that it drives the menu on the OLED; it spoke of a TV menu that board
   does not show. (#72)
+- Standard board: the TV bar shows the icon of the control being changed; with the bar still up after another
+  control it kept the first icon. (#72)
 - Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
   be measured; it measures again before it decides. (#69)
 - Flasher: the steps are again one column of numbered cards; in beta1 they were squeezed side by side and overlapped

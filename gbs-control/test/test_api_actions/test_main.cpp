@@ -106,33 +106,27 @@ void test_update_actions(void) {
     TEST_ASSERT_FALSE(d.flags & ACTION_DEV);
 }
 
-// OTA channels: data is the channel name as text, frozen for the mobile app
-void test_check_channel_action_takes_text(void) {
-    ActionDef d = def("system.check_channel");
-    TEST_ASSERT_TRUE(d.flags & ACTION_PARAM_TEXT);
+// The install's optional word, "older" (the user confirmed an older build): a short [a-z0-9_] word
+void test_install_action_takes_an_optional_word(void) {
+    ActionDef d = def("system.install_update");
+    TEST_ASSERT_TRUE(d.flags & ACTION_PARAM_OPT_TEXT);
     TEST_ASSERT_FALSE(d.flags & ACTION_DEV);
     uint8_t b[30], n = 0;
-    TEST_ASSERT_TRUE(actionsParseText("beta", b, sizeof(b), n));
-    TEST_ASSERT_EQUAL_UINT8(4, n);
-    TEST_ASSERT_EQUAL_INT(OTA_BETA, otaChannelParse((const char*)b));
+    TEST_ASSERT_TRUE(actionsParseText("older", b, sizeof(b), n));
+    TEST_ASSERT_EQUAL_UINT8(5, n);
     TEST_ASSERT_FALSE(actionsParseText("", b, sizeof(b), n));
-    TEST_ASSERT_FALSE(actionsParseText("be ta", b, sizeof(b), n));
-    TEST_ASSERT_FALSE(actionsParseText("Beta;x", b, sizeof(b), n));
+    TEST_ASSERT_FALSE(actionsParseText("ol der", b, sizeof(b), n));
+    TEST_ASSERT_FALSE(actionsParseText("Older;x", b, sizeof(b), n));
     TEST_ASSERT_FALSE(actionsParseText("abcdefgh", b, 8, n));                         // 7 characters + NUL at most
-    TEST_ASSERT_TRUE(actionsParseText("stable", b, sizeof(b), n));
-    TEST_ASSERT_EQUAL_INT(-1, otaChannelParse("nightly"));
-    d = def("system.install_update");
-    TEST_ASSERT_TRUE(d.flags & ACTION_PARAM_OPT_TEXT);                                 // "manual": the Other channels offer
+    TEST_ASSERT_EQUAL_INT(-1, actionsFind("system.check_channel"));                    // the channel is a setting now
 }
 
 // The action list tells an app the text parameters (mobile app discovery, frozen from 3.0.0)
 void test_action_list_describes_text_params(void) {
     std::string out;
     actionsListJson(false, sink, &out);
-    TEST_ASSERT_TRUE(out.find("{\"name\":\"system.check_channel\",\"caps\":0,\"params\":[{\"name\":\"data\","
-                              "\"type\":\"text\",\"values\":[\"stable\",\"beta\",\"dev\"]}]}") != std::string::npos);
     TEST_ASSERT_TRUE(out.find("{\"name\":\"system.install_update\",\"caps\":0,\"confirm\":1,\"params\":[{\"name\":"
-                              "\"data\",\"type\":\"text\",\"optional\":1,\"values\":[\"manual\"]}]}") != std::string::npos);
+                              "\"data\",\"type\":\"text\",\"optional\":1,\"values\":[\"older\"]}]}") != std::string::npos);
 }
 
 void test_osd_developer_actions(void) {
@@ -317,7 +311,7 @@ int main(int, char**) {
     RUN_TEST(test_hex_triplets);
     RUN_TEST(test_hex_bytes);
     RUN_TEST(test_update_actions);
-    RUN_TEST(test_check_channel_action_takes_text);
+    RUN_TEST(test_install_action_takes_an_optional_word);
     RUN_TEST(test_action_list_describes_text_params);
     RUN_TEST(test_sog_actions_not_dev);
     RUN_TEST(test_regs_actions_flagged);

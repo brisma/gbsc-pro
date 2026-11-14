@@ -15,12 +15,14 @@ void settingsBroadcastStatusText(const char* key, const char* value);
 
 namespace {
 
-enum Job : uint8_t { J_IDLE, J_CHECK, J_MANUAL, J_INSTALL };
+enum Job : uint8_t { J_IDLE, J_CHECK, J_INSTALL };
 Job gJob = J_IDLE;
 bool gFromUser = false, gAuto = false;
 uint8_t gChannels[OTA_CHANNELS], gCount = 0, gIndex = 0, gReadOk = 0;
+uint8_t gChosen = OTA_STABLE;      // the channel the running check is for
 const char* gLastErr = "";
-OtaOffer gRec, gMan;
+OtaOffer gOffer;
+uint8_t gOfferFor = 0xFF;          // the channel gOffer and gLast were worked out for
 char gLast[32] = "";
 OtaAutoClock gClock;
 void (*gHook)(const char*, bool) = nullptr;
@@ -39,6 +41,7 @@ bool imageSink(const uint8_t* d, size_t n, void*) { return updateCoreWrite(d, n)
 
 bool staConnected() { return WiFi.getMode() != WIFI_AP && WiFi.status() == WL_CONNECTED; }
 bool somethingBusy() { return gJob != J_IDLE || updateInProgress() || advLinkUpdateActive(); }
+uint8_t chosenChannel() { return uopt->updateChannel < OTA_CHANNELS ? uopt->updateChannel : (uint8_t)OTA_STABLE; }
 
 void setLast(const char* v) { strncpy(gLast, v, sizeof(gLast) - 1); gLast[sizeof(gLast) - 1] = '\0'; }
 
@@ -57,58 +60,56 @@ bool readChannel() {
     return true;
 }
 
+void startCheck(bool fromUser);
+
 void finishCheck() {
     OtaOffer best = gBuf ? gBuf->best : OtaOffer();
     freeBuf();
-    char v[40];
-    if (gJob == J_CHECK) {
-        otaFinishRecommended(best, GBS_FW_FULL_VERSION, GBS_FW_CHANNEL);
-        gRec = otaAfterCheck(gRec, best, gReadOk);    // an outage keeps the offer the user may be confirming
-        if (!gReadOk) snprintf(v, sizeof(v), "error:%s", gLastErr);
-        else if (gRec.any) snprintf(v, sizeof(v), "%s", gRec.m.version);
-        else snprintf(v, sizeof(v), "none");
-        setLast(v);
-        settingsBroadcastStatusText("status.update_available", v);
-        if (gRec.any) logPrintf(LC_UPDATE, LL_INFO, PSTR("recommended: %s (%s)"), gRec.m.version, otaChannelName(gRec.channel));
-        if (gRec.any) eventAdd(EV_UPDATE_OFFERED, gRec.channel, 0);   // a: channel; the version is in /api/info update.offer
-        else logPrintf(LC_UPDATE, LL_INFO, PSTR("recommended: %s"), v);
-        char t[29];
-        if (!gReadOk) snprintf_P(t, sizeof(t), PSTR("Check failed: %s"), otaReasonWords(gLastErr));
-        else if (gRec.any) snprintf_P(t, sizeof(t), PSTR("%s available"), gRec.m.version);
-        else snprintf_P(t, sizeof(t), PSTR("Up to date"));
-        if (otaToastWanted(gFromUser, gReadOk && gRec.any)) hook(t, gFromUser);
-        if (gAuto) { gClock.ran(millis(), gReadOk > 0); gAuto = false; }
-    } else {
-        uint8_t ch = gChannels[0];
-        char t[29];
-        if (gReadOk && gMan.any) {
-            snprintf(v, sizeof(v), "%s:%s", otaChannelName(ch), gMan.m.version);
-            snprintf_P(t, sizeof(t), PSTR("%s %s"), otaChannelLabel(ch), gMan.m.version);
-        } else if (gReadOk) {
-            snprintf(v, sizeof(v), "%s:none", otaChannelName(ch));
-            snprintf_P(t, sizeof(t), PSTR("%s up to date"), otaChannelLabel(ch));
-        } else {
-            snprintf(v, sizeof(v), "error:%s", gLastErr);
-            snprintf_P(t, sizeof(t), PSTR("Check failed: %s"), otaReasonWords(gLastErr));
-        }
-        settingsBroadcastStatusText("status.update_channel_check", v);
-        logPrintf(LC_UPDATE, LL_INFO, PSTR("other channel %s: %s"), otaChannelName(ch), v);
-        hook(t, true);
-    }
     gJob = J_IDLE;
+    if (gChosen != chosenChannel()) {             // the channel changed meanwhile: this answer is for the other one
+        logPrintf(LC_UPDATE, LL_INFO, PSTR("check for %s dropped: the channel is %s now"), otaChannelName(gChosen),
+                  otaChannelName(chosenChannel()));
+        if (staConnected() && !updateInProgress() && !advLinkUpdateActive()) startCheck(gFromUser);
+        else if (gAuto) { gClock.ran(millis(), false); gAuto = false; }
+        return;
+    }
+    char v[40];
+    otaFinishCheck(best, GBS_FW_FULL_VERSION);
+    bool had = gOfferFor == gChosen;
+    gOffer = otaAfterCheck(had ? gOffer : OtaOffer(), best, gReadOk);   // an outage keeps the offer being confirmed
+    gOfferFor = gChosen;
+    if (!gReadOk) snprintf(v, sizeof(v), "error:%s", gLastErr);
+    else if (gOffer.any) snprintf(v, sizeof(v), "%s", gOffer.m.version);
+    else snprintf(v, sizeof(v), "none");
+    setLast(v);
+    settingsBroadcastStatusText("status.update_available", v);
+    if (gOffer.any) {
+        logPrintf(LC_UPDATE, LL_INFO, PSTR("offer: %s (%s%s), channel %s"), gOffer.m.version, otaChannelName(gOffer.channel),
+                  gOffer.older ? ", older" : "", otaChannelName(gChosen));
+        eventAdd(EV_UPDATE_OFFERED, gOffer.channel, gOffer.older ? 1 : 0);   // a: channel, b: older; the version is in /api/info
+    } else logPrintf(LC_UPDATE, LL_INFO, PSTR("offer: %s, channel %s"), v, otaChannelName(gChosen));
+    char t[29];
+    otaCheckToast(gOffer, gReadOk > 0, gLastErr, t, sizeof(t));
+    if (otaToastWanted(gFromUser, gReadOk ? gOffer : OtaOffer())) hook(t, gFromUser);
+    if (gAuto) { gClock.ran(millis(), gReadOk > 0); gAuto = false; }
 }
 
 // One manifest read ended: keep it, then the next channel or the end of the check
 void channelDone(bool started) {
     uint8_t ch = gChannels[gIndex];
     Manifest m;
-    bool ok = started && otaFetchResult() == HTTP_DONE && gBuf && manifestParse(gBuf->buf, gBuf->len, m);
-    if (started && !ok) gLastErr = otaFetchResult() == HTTP_DONE ? "manifest" : otaFetchReason();
+    bool done = started && otaFetchResult() == HTTP_DONE;
+    bool ok = done && gBuf && manifestParse(gBuf->buf, gBuf->len, m);
+    // a channel with nothing published yet (404): read, no version
+    bool empty = started && !done && otaFetchStatus() == 404;
+    if (started && !ok && !empty) gLastErr = done ? "manifest" : otaFetchReason();
     if (ok) {
         gReadOk++;
         logPrintf(LC_UPDATE, LL_INFO, PSTR("check %s: %s"), otaChannelName(ch), m.version);
-        if (gJob == J_CHECK) otaConsider(gBuf->best, ch, m);
-        else gMan = otaManual(ch, m, GBS_FW_FULL_VERSION, GBS_FW_CHANNEL);   // also clears it when equal
+        otaConsider(gBuf->best, ch, m);
+    } else if (empty) {
+        gReadOk++;
+        logPrintf(LC_UPDATE, LL_INFO, PSTR("check %s: nothing published"), otaChannelName(ch));
     } else {
         logPrintf(LC_UPDATE, LL_INFO, PSTR("check %s: error:%s"), otaChannelName(ch), gLastErr);
     }
@@ -116,22 +117,25 @@ void channelDone(bool started) {
     finishCheck();
 }
 
-void startJob(Job j, bool fromUser) {
-    gJob = j;
+void startCheck(bool fromUser) {
+    gChosen = chosenChannel();
+    gCount = otaChannelsToRead(gChosen, gChannels);
+    logPrintf(LC_UPDATE, LL_INFO, PSTR("check started (channel %s, %s build, %u to read)"), otaChannelName(gChosen),
+              otaChannelName(GBS_FW_CHANNEL), gCount);
+    gJob = J_CHECK;
     gFromUser = fromUser;
     gIndex = 0;
     gReadOk = 0;
     gLastErr = "";
     freeBuf();
-    // the manual slot is replaced only by a check that read its manifest (channelDone)
     for (; gIndex < gCount; gIndex++) if (readChannel()) return;
     finishCheck();
 }
 
-bool refuse(Job j, bool fromUser, const char* code) {
+bool refuse(bool fromUser, const char* code) {
     char v[24];
     snprintf(v, sizeof(v), "error:%s", code);
-    settingsBroadcastStatusText(j == J_MANUAL ? "status.update_channel_check" : "status.update_available", v);
+    settingsBroadcastStatusText("status.update_available", v);
     logPrintf(LC_UPDATE, LL_INFO, PSTR("check refused: %s"), code);
     if (fromUser) {
         char t[29];
@@ -141,27 +145,8 @@ bool refuse(Job j, bool fromUser, const char* code) {
     return false;
 }
 
-} // namespace
-
-void otaCheck(bool fromUser) {
-    if (somethingBusy()) { refuse(J_CHECK, fromUser, "busy"); return; }
-    if (!staConnected()) { refuse(J_CHECK, fromUser, "no_wifi"); return; }
-    gCount = otaChannelsToRead(GBS_FW_CHANNEL, gChannels);
-    logPrintf(LC_UPDATE, LL_INFO, PSTR("check started (%s build, %u channels)"), otaChannelName(GBS_FW_CHANNEL), gCount);
-    startJob(J_CHECK, fromUser);
-}
-
-void otaCheckChannel(uint8_t ch) {
-    if (ch >= OTA_CHANNELS) return;
-    if (somethingBusy()) { refuse(J_MANUAL, true, "busy"); return; }
-    if (!staConnected()) { refuse(J_MANUAL, true, "no_wifi"); return; }
-    gChannels[0] = ch;
-    gCount = 1;
-    startJob(J_MANUAL, true);
-}
-
 // A refused install: status, log and a toast on the TV/OLED (the reason is shown and logged)
-static bool installRefused(const char* code) {
+bool installRefused(const char* code) {
     char v[24], t[29];
     snprintf(v, sizeof(v), "error:%s", code);
     settingsBroadcastStatusText("status.update", v);
@@ -171,9 +156,7 @@ static bool installRefused(const char* code) {
     return false;
 }
 
-bool otaInstall(bool manual) {
-    const OtaOffer& o = manual ? gMan : gRec;
-    if (!o.any) return installRefused("changed");
+bool install(const OtaOffer& o) {
     if (somethingBusy()) return installRefused("busy");
     if (!staConnected()) return installRefused("no_wifi");
     char url[128];
@@ -187,13 +170,28 @@ bool otaInstall(bool manual) {
         return installRefused(otaFetchReason());
     }
     gJob = J_INSTALL;
-    logPrintf(LC_UPDATE, LL_INFO, PSTR("install %s from %s: started"), o.m.version, otaChannelName(o.channel));
+    logPrintf(LC_UPDATE, LL_INFO, PSTR("install %s from %s%s: started"), o.m.version, otaChannelName(o.channel),
+              o.older ? " (older)" : "");
     return true;
+}
+
+} // namespace
+
+void otaCheck(bool fromUser) {
+    if (somethingBusy()) { refuse(fromUser, "busy"); return; }
+    if (!staConnected()) { refuse(fromUser, "no_wifi"); return; }
+    startCheck(fromUser);
+}
+
+bool otaInstall(bool olderConfirmed) {
+    const OtaOffer& o = otaOffer();
+    if (!otaInstallMatches(o, olderConfirmed)) return installRefused("changed");
+    return install(o);
 }
 
 void otaLoop() {
     otaFetchLoop();
-    if ((gJob == J_CHECK || gJob == J_MANUAL) && !otaFetchBusy()) channelDone(true);
+    if (gJob == J_CHECK && !otaFetchBusy()) channelDone(true);
     else if (gJob == J_INSTALL && !otaFetchBusy()) {
         int r = otaFetchResult();
         if (r == HTTP_DONE) updateCoreFinish(US_PULL);   // size and sha256 are checked by updateLoop()
@@ -209,22 +207,18 @@ void otaLoop() {
 }
 
 bool otaBusy() { return gJob != J_IDLE; }
-const OtaOffer& otaRecommended() { return gRec; }
-const OtaOffer& otaManualOffer() { return gMan; }
-const char* otaLastResult() { return gLast; }
+const OtaOffer& otaOffer() {
+    static const OtaOffer kNone = OtaOffer();
+    return gOfferFor == chosenChannel() ? gOffer : kNone;
+}
+const char* otaLastResult() { return gOfferFor == chosenChannel() ? gLast : ""; }
 void otaSetMenuHook(void (*h)(const char*, bool)) { gHook = h; }
 
-static int offerJson(char* out, size_t n, const OtaOffer& o) {
-    return snprintf_P(out, n, PSTR("{\"version\":\"%s\",\"channel\":\"%s\",\"older\":%u,\"moves\":%u}"),
-                      o.any ? o.m.version : "", o.any ? otaChannelName(o.channel) : "", o.any && o.older ? 1u : 0u,
-                      o.any && o.moves ? 1u : 0u);
-}
-
+// "channel": the running build's; "follows": the chosen one (system.update_channel)
 int otaInfoJson(char* out, size_t n) {
-    int w = snprintf_P(out, n, PSTR("{\"channel\":\"%s\",\"last\":\"%s\",\"offer\":"), otaChannelName(GBS_FW_CHANNEL), gLast);
-    if (w > 0 && (size_t)w < n) w += offerJson(out + w, n - w, gRec);
-    if (w > 0 && (size_t)w < n) w += snprintf_P(out + w, n - w, PSTR(",\"manual\":"));
-    if (w > 0 && (size_t)w < n) w += offerJson(out + w, n - w, gMan);
-    if (w > 0 && (size_t)w < n) w += snprintf_P(out + w, n - w, PSTR("}"));
-    return w;
+    const OtaOffer& o = otaOffer();
+    return snprintf_P(out, n, PSTR("{\"channel\":\"%s\",\"follows\":\"%s\",\"last\":\"%s\",\"offer\":{\"version\":\"%s\","
+                                   "\"channel\":\"%s\",\"older\":%u}}"),
+                      otaChannelName(GBS_FW_CHANNEL), otaChannelName(chosenChannel()), otaLastResult(),
+                      o.any ? o.m.version : "", o.any ? otaChannelName(o.channel) : "", o.any && o.older ? 1u : 0u);
 }

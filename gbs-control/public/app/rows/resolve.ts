@@ -12,7 +12,7 @@ export const LIVE_NAMES = ["adc_gain", "position", "size", "borders", "htotal", 
   "sync_polarity", "ota", "border_pos"];
 // text:<source> rows: fields of /api/info and /api/wifi the pages print
 export const TEXT_SOURCES = ["wifi.mode", "wifi.ssid", "wifi.ip", "wifi.hostname", "wifi.ap_password", "wifi.extra_hosts", "info.fw",
-  "info.adv_controller", "info.update.channel", "info.update.last", "info.update.offer", "info.update.manual", "info.signal",
+  "info.adv_controller", "info.update.channel", "info.update.last", "info.update.offer", "info.signal",
   "info.input", "profile.active"];
 
 export function splitRef(ref: Ref): [string, string] {

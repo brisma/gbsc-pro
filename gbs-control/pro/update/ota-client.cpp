@@ -23,6 +23,7 @@ const char* gReason = "";
 AsyncClient* gClient = nullptr;   // the fetch's client, or a zombie still waiting for its connect or error
 OtaClientLife gLife;
 HttpResponse gResp;
+int gStatus = 0;
 OtaPull gPull;
 HttpSink gSink = nullptr;
 void* gCtx = nullptr;
@@ -63,6 +64,7 @@ void finish(int result) {
     // A client still connecting is kept (ESPAsyncTCP has not got its pcb yet, lwIP would call a freed object):
     // it is deleted once its late connect (closed in the callback) or error arrives
     if (gClient && gLife.finish()) dropClient();
+    gStatus = gResp.status();                         // 404 on a manifest: nothing published on that channel
     gResp.end();
     gResult = result;
     gReason = result == HTTP_DONE ? "" : reasonOf(result);
@@ -110,6 +112,7 @@ bool otaFetchStart(const char* url, uint32_t maxBody, HttpSink sink, void* ctx) 
     gGen++;
     gResolved = gDnsFailed = gConnected = gGotData = gClosed = false;
     gParser = HTTP_MORE;
+    gStatus = 0;
     gBusy = true;
     gPull.start(millis());
     ip_addr_t addr;
@@ -150,3 +153,4 @@ void otaFetchLoop() {
 bool otaFetchBusy() { return gBusy; }
 int otaFetchResult() { return gResult; }
 const char* otaFetchReason() { return gReason; }
+int otaFetchStatus() { return gStatus; }

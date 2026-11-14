@@ -3,7 +3,7 @@ import type { Sim } from "./server.ts";
 import type { Board } from "./types.ts";
 
 export const SCENARIOS = ["pro-rgbs", "pro-svideo-ntsc", "pro-composite-pal", "pro-composite-ntsc", "pro-vga", "pro-component",
-  "pro-no-signal", "pro-auto-search", "standard-rgbs", "standard-vga", "unsaved-profile", "update-offer", "adv-update-offer",
+  "pro-no-signal", "pro-auto-search", "standard-rgbs", "standard-vga", "unsaved-profile", "update-offer", "update-channels", "adv-update-offer",
   "adv-absent", "adv-old-image", "profiles-full", "safe-mode", "low-memory", "long-texts"];
 
 export function applyScenario(sim: Sim, name: string): boolean {
@@ -25,7 +25,9 @@ export function applyScenario(sim: Sim, name: string): boolean {
       sim.profiles.run("saveas", -1, "Saturn", "NTSC-J");
       sim.profiles.modified = true;
       break;
-    case "update-offer": st.updateOffer = { version: "3.0.1", channel: "stable" }; st.updateLast = "3.0.1"; st.serverOffer = st.updateOffer; break;
+    case "update-offer": st.updateOffer = { version: "3.0.1", channel: "stable" }; st.updateLast = "3.0.1"; st.serverBuilds = { stable: "3.0.1" }; break;
+    // the server as it is after a few releases: an older Stable than the running Beta build, a newer Beta
+    case "update-channels": st.serverBuilds = { stable: "2.9.0", beta: "3.1.0-beta2" }; break;
     case "adv-update-offer": st.advUpdate = true; break;
     case "adv-absent": st.advStatus = "no_reply"; break;
     case "adv-old-image": st.advCaps = ["signal"]; break;

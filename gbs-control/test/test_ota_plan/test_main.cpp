@@ -47,74 +47,102 @@ void test_urls(void) {
     TEST_ASSERT_FALSE(otaManifestUrl("http://gbsc.brisma.it/v1/", 7, u, sizeof(u)));
 }
 
-static OtaOffer recommend(const char* running, uint8_t build, const char* const* versions, const uint8_t* channels,
-                          uint8_t n) {
+// A check: the manifests read for the chosen channel (nullptr = that one failed or has nothing), then the verdict
+static OtaOffer check(const char* running, const char* const* versions, const uint8_t* channels, uint8_t n) {
     OtaOffer best = {};
     for (uint8_t i = 0; i < n; i++) if (versions[i]) otaConsider(best, channels[i], man(versions[i]));
-    otaFinishRecommended(best, running, build);
+    otaFinishCheck(best, running);
     return best;
 }
+static const uint8_t kBetaReads[] = {OTA_BETA, OTA_STABLE}, kStableReads[] = {OTA_STABLE};
 
-// A newer Stable beats the Beta builds: users drift towards Stable, the row names the move
-void test_recommend_newer_stable_wins(void) {
+// Channel = Beta: the newest of Beta and Stable wins, whichever channel it is on
+void test_beta_takes_the_newest_of_both(void) {
     const char* v[] = {"3.1.0-beta7", "3.1.0"};
-    const uint8_t c[] = {OTA_BETA, OTA_STABLE};
-    OtaOffer o = recommend("3.1.0-beta7", OTA_BETA, v, c, 2);
+    OtaOffer o = check("3.1.0-beta7", v, kBetaReads, 2);
     TEST_ASSERT_TRUE(o.any);
     TEST_ASSERT_EQUAL_UINT8(OTA_STABLE, o.channel);
     TEST_ASSERT_EQUAL_STRING("3.1.0", o.m.version);
-    TEST_ASSERT_TRUE(o.moves);
     TEST_ASSERT_FALSE(o.older);
     const char* v2[] = {"3.1.0-beta8", "3.0.0"};
-    o = recommend("3.1.0-beta7", OTA_BETA, v2, c, 2);
+    o = check("3.1.0-beta7", v2, kBetaReads, 2);
     TEST_ASSERT_TRUE(o.any);
     TEST_ASSERT_EQUAL_UINT8(OTA_BETA, o.channel);
-    TEST_ASSERT_FALSE(o.moves);
-}
-
-void test_recommend_never_older(void) {
-    const char* v[] = {"3.1.0-beta3", "3.0.0"};
-    const uint8_t c[] = {OTA_BETA, OTA_STABLE};
-    TEST_ASSERT_FALSE(recommend("3.1.0-beta3", OTA_BETA, v, c, 2).any);   // same and older only
+    const char* v3[] = {"3.1.1-beta1", "3.1.0"};
+    o = check("3.1.0", v3, kBetaReads, 2);                               // a Stable build that follows Beta
+    TEST_ASSERT_TRUE(o.any);
+    TEST_ASSERT_EQUAL_STRING("3.1.1-beta1", o.m.version);
+    TEST_ASSERT_FALSE(check("3.1.0", v, kBetaReads, 2).any);             // the newest of both already runs
 }
 
 // A local build (X.Y.Z-dev0, Beta channel) sorts below every release of its X.Y.Z: it is offered the Beta
-void test_recommend_beta_over_local_build(void) {
+void test_beta_over_local_build(void) {
     const char* v[] = {"3.1.0-beta2", "3.0.0"};
-    const uint8_t c[] = {OTA_BETA, OTA_STABLE};
-    OtaOffer o = recommend("3.1.0-dev0", OTA_BETA, v, c, 2);
+    OtaOffer o = check("3.1.0-dev0", v, kBetaReads, 2);
     TEST_ASSERT_TRUE(o.any);
     TEST_ASSERT_EQUAL_UINT8(OTA_BETA, o.channel);
     TEST_ASSERT_EQUAL_STRING("3.1.0-beta2", o.m.version);
-    TEST_ASSERT_FALSE(o.moves);
+    TEST_ASSERT_FALSE(o.older);
 }
 
-void test_recommend_skips_failed_channel(void) {
+void test_check_skips_a_failed_channel(void) {
     const char* v[] = {nullptr, "3.1.0"};
-    const uint8_t c[] = {OTA_BETA, OTA_STABLE};
-    OtaOffer o = recommend("3.0.0", OTA_BETA, v, c, 2);
+    OtaOffer o = check("3.0.0", v, kBetaReads, 2);
     TEST_ASSERT_TRUE(o.any);
     TEST_ASSERT_EQUAL_STRING("3.1.0", o.m.version);
 }
 
-// Other channels: any different build, flagged
-void test_manual_older_flag(void) {
-    OtaOffer o = otaManual(OTA_STABLE, man("3.0.0"), "3.1.0-beta4", OTA_BETA);
-    TEST_ASSERT_TRUE(o.any);
-    TEST_ASSERT_TRUE(o.older);
-    TEST_ASSERT_TRUE(o.moves);
-    TEST_ASSERT_EQUAL_STRING("fw/gbsc-pro-3.0.0.bin.gz", o.m.file);
-    o = otaManual(OTA_BETA, man("3.1.0-beta5"), "3.1.0-beta4", OTA_BETA);
+// Channel = Stable on a Stable build: a newer Stable, nothing when it runs already
+void test_stable_on_stable(void) {
+    const char* v[] = {"3.1.0"};
+    OtaOffer o = check("3.0.0", v, kStableReads, 1);
     TEST_ASSERT_TRUE(o.any);
     TEST_ASSERT_FALSE(o.older);
-    TEST_ASSERT_FALSE(o.moves);
+    TEST_ASSERT_FALSE(check("3.1.0", v, kStableReads, 1).any);
+    const char* none[] = {nullptr};
+    TEST_ASSERT_FALSE(check("3.1.0", none, kStableReads, 1).any);        // nothing published
 }
 
-void test_manual_same_version_none(void) {
-    TEST_ASSERT_FALSE(otaManual(OTA_BETA, man("3.1.0-beta2"), "3.1.0-beta2", OTA_BETA).any);
+// Channel = Stable on a Beta build: the latest Stable, newer or older (the way back from a Beta)
+void test_stable_on_a_beta_offers_the_stable(void) {
+    const char* v[] = {"3.0.0"};
+    OtaOffer o = check("3.1.0-beta4", v, kStableReads, 1);
+    TEST_ASSERT_TRUE(o.any);
+    TEST_ASSERT_TRUE(o.older);
+    TEST_ASSERT_EQUAL_UINT8(OTA_STABLE, o.channel);
+    TEST_ASSERT_EQUAL_STRING("fw/gbsc-pro-3.0.0.bin.gz", o.m.file);
+    const char* v2[] = {"3.1.0"};
+    o = check("3.1.0-beta4", v2, kStableReads, 1);
+    TEST_ASSERT_TRUE(o.any);
+    TEST_ASSERT_FALSE(o.older);
 }
 
-// Daily check: 2 min after boot, then 24 h; a check that could not run retries after 10 min, doubling to 2 h
+// A channel rolled back by its publisher: the units already on the withdrawn build are offered the one before
+void test_rolled_back_channel_offers_the_build_before(void) {
+    const char* v[] = {"3.1.0-beta2", "3.0.0"};
+    OtaOffer o = check("3.1.0-beta3", v, kBetaReads, 2);                 // beta3 withdrawn, beta2 published again
+    TEST_ASSERT_TRUE(o.any);
+    TEST_ASSERT_TRUE(o.older);
+    TEST_ASSERT_EQUAL_STRING("3.1.0-beta2", o.m.version);
+    const char* s[] = {"3.1.0"};
+    o = check("3.2.0", s, kStableReads, 1);
+    TEST_ASSERT_TRUE(o.any);
+    TEST_ASSERT_TRUE(o.older);
+}
+
+// The install says whether the user confirmed an older build: an offer that changed meanwhile is not installed
+void test_install_wants_the_confirmed_kind(void) {
+    OtaOffer o = {};
+    o.any = true;
+    TEST_ASSERT_TRUE(otaInstallMatches(o, false));
+    TEST_ASSERT_FALSE(otaInstallMatches(o, true));         // asked about an older one, a newer one is there now
+    o.older = true;
+    TEST_ASSERT_TRUE(otaInstallMatches(o, true));
+    TEST_ASSERT_FALSE(otaInstallMatches(o, false));        // a downgrade never goes without its question
+    o.any = false;
+    TEST_ASSERT_FALSE(otaInstallMatches(o, false));
+}
+
 void test_auto_clock(void) {
     OtaAutoClock c;
     TEST_ASSERT_FALSE(c.due(119999, true));
@@ -209,46 +237,60 @@ void test_reason_words_rom_safe(void) {
     }
 }
 
-// Menu texts of an offer: OSD ROM characters, the 24-character row value, the 20-character confirm
+// Menu texts of an offer: OSD ROM characters, the 24-character row value, the 28-character confirm and toast
 void test_offer_texts_rom_safe(void) {
     for (uint8_t ch = 0; ch < OTA_CHANNELS; ch++)
-        for (int older = 0; older < 2; older++)
-            for (int moves = 0; moves < 2; moves++) {
-                OtaOffer o = {};
-                o.any = true; o.channel = ch; o.older = older; o.moves = moves;
-                strcpy(o.m.version, "10.10.10-beta9");
-                char t[32], c[32];
-                otaOfferText(o, t, sizeof(t));
-                otaConfirmText(o, c, sizeof(c));
-                TEST_ASSERT_TRUE(strlen(t) > 0 && strlen(t) <= 24);
-                TEST_ASSERT_TRUE(strlen(c) <= 28);
-                for (const char* p = t; *p; p++) TEST_ASSERT_TRUE(menuCharOk(*p));
-                for (const char* p = c; *p; p++) TEST_ASSERT_TRUE(menuCharOk(*p));
-                TEST_ASSERT_TRUE(!*c || c[strlen(c) - 1] == '?');
-            }
+        for (int older = 0; older < 2; older++) {
+            OtaOffer o = {};
+            o.any = true; o.channel = ch; o.older = older;
+            strcpy(o.m.version, "10.10.10-beta99");
+            char t[32], c[32], toast[40];
+            otaOfferText(o, t, sizeof(t));
+            otaConfirmText(o, c, sizeof(c));
+            otaCheckToast(o, true, "", toast, sizeof(toast));
+            TEST_ASSERT_TRUE(strlen(t) > 0 && strlen(t) <= 24);
+            TEST_ASSERT_TRUE(strlen(c) <= 28);
+            TEST_ASSERT_TRUE_MESSAGE(strlen(toast) > 0 && strlen(toast) <= 28, toast);
+            for (const char* p = t; *p; p++) TEST_ASSERT_TRUE(menuCharOk(*p));
+            for (const char* p = c; *p; p++) TEST_ASSERT_TRUE(menuCharOk(*p));
+            for (const char* p = toast; *p; p++) TEST_ASSERT_TRUE(menuCharOk(*p));
+            TEST_ASSERT_TRUE(!*c || c[strlen(c) - 1] == '?');
+        }
     OtaOffer o = {};
-    o.any = true; o.channel = OTA_STABLE; o.moves = true;
-    char c[32];
+    o.any = true; o.channel = OTA_STABLE;
+    strcpy(o.m.version, "3.0.0");
+    char c[32], t[32];
     otaConfirmText(o, c, sizeof(c));
-    TEST_ASSERT_EQUAL_STRING("Move to the Stable channel?", c);
+    TEST_ASSERT_EQUAL_STRING("", c);                   // the node's own question ("Install the update now?")
+    otaOfferText(o, t, sizeof(t));
+    TEST_ASSERT_EQUAL_STRING("Stable", t);             // a build from a more stable channel moves nobody
+    otaCheckToast(o, true, "", t, sizeof(t));
+    TEST_ASSERT_EQUAL_STRING("3.0.0 available", t);
     o.older = true;
     otaConfirmText(o, c, sizeof(c));
     TEST_ASSERT_EQUAL_STRING("Install an older version?", c);
-    o.older = o.moves = false;
-    otaConfirmText(o, c, sizeof(c));
-    TEST_ASSERT_EQUAL_STRING("", c);                   // the node's own question ("Install the update now?")
-    char t[32];
-    o.channel = OTA_BETA; o.older = true; o.moves = true;
     otaOfferText(o, t, sizeof(t));
-    TEST_ASSERT_EQUAL_STRING("Beta older switch", t);
+    TEST_ASSERT_EQUAL_STRING("Stable older", t);
+    otaCheckToast(o, true, "", t, sizeof(t));
+    TEST_ASSERT_EQUAL_STRING("3.0.0 older", t);
+    o.any = false;
+    otaCheckToast(o, true, "", t, sizeof(t));
+    TEST_ASSERT_EQUAL_STRING("Up to date", t);
+    otaCheckToast(o, false, "timeout", t, sizeof(t));
+    TEST_ASSERT_EQUAL_STRING("Check failed: timeout", t);
 }
 
-// The daily check never puts "Up to date" or a failure on the TV: only a found update
+// The daily check never puts "Up to date", a failure or an older Stable on the TV: only a newer version
 void test_auto_check_quiet(void) {
-    TEST_ASSERT_TRUE(otaToastWanted(true, false));
-    TEST_ASSERT_TRUE(otaToastWanted(true, true));
-    TEST_ASSERT_TRUE(otaToastWanted(false, true));
-    TEST_ASSERT_FALSE(otaToastWanted(false, false));
+    OtaOffer none = {}, newer = {}, older = {};
+    newer.any = true;
+    older.any = older.older = true;
+    TEST_ASSERT_TRUE(otaToastWanted(true, none));
+    TEST_ASSERT_TRUE(otaToastWanted(true, newer));
+    TEST_ASSERT_TRUE(otaToastWanted(true, older));
+    TEST_ASSERT_TRUE(otaToastWanted(false, newer));
+    TEST_ASSERT_FALSE(otaToastWanted(false, none));
+    TEST_ASSERT_FALSE(otaToastWanted(false, older));       // shown in the page, never announced
 }
 
 // ESPAsyncTCP sets the client's pcb only on connect: a client that has not reported connect or an error must not be
@@ -333,12 +375,13 @@ int main(int, char**) {
     RUN_TEST(test_channel_names);
     RUN_TEST(test_channels_to_read);
     RUN_TEST(test_urls);
-    RUN_TEST(test_recommend_newer_stable_wins);
-    RUN_TEST(test_recommend_never_older);
-    RUN_TEST(test_recommend_beta_over_local_build);
-    RUN_TEST(test_recommend_skips_failed_channel);
-    RUN_TEST(test_manual_older_flag);
-    RUN_TEST(test_manual_same_version_none);
+    RUN_TEST(test_beta_takes_the_newest_of_both);
+    RUN_TEST(test_beta_over_local_build);
+    RUN_TEST(test_check_skips_a_failed_channel);
+    RUN_TEST(test_stable_on_stable);
+    RUN_TEST(test_stable_on_a_beta_offers_the_stable);
+    RUN_TEST(test_rolled_back_channel_offers_the_build_before);
+    RUN_TEST(test_install_wants_the_confirmed_kind);
     RUN_TEST(test_auto_clock);
     RUN_TEST(test_pull_timeouts);
     RUN_TEST(test_pull_verdicts);

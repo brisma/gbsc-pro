@@ -9,6 +9,7 @@ public:
     bool connect() override { return true; }
     void display() override { frames++; }
     int getBufferOffset() override { return 0; }
+    void sendCommand(uint8_t c) override { if (c == 0xAE) off = true; else if (c == 0xAF) off = false; }   // SSD1306 display off / on
     bool pixel(int x, int y) const { return (buffer[x + (y / 8) * 128] >> (y & 7)) & 1; }
     std::string pbm() const {
         std::string s = "P1\n128 64\n";
@@ -19,4 +20,5 @@ public:
         return s;
     }
     int frames = 0;
+    bool off = false;                  // the panel is asleep
 };

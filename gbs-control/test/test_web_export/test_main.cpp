@@ -37,12 +37,12 @@ void tearDown(void) { platformSetCaps(CAPS_DEFAULT); }
 // ---- enum names (a new enum value without a name fails the build) ----
 static const char* const kPredNames[] = {"none", "devmode", "svav", "sv", "av", "sv_wy", "av_ntsc", "av_pal", "rgb_sync",
     "rgbs", "ace_on", "scanlines_ok", "profile_active", "update_available", "adv_controller_update", "vga", "i2p_on",
-    "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd", "update_manual"};
+    "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd"};
 static_assert(sizeof(kPredNames) / sizeof(kPredNames[0]) == P_COUNT, "a MenuPred has no name");
 static const char* const kFnNames[] = {"none", "open_info", "decoder_reset", "geometry_reset", "wifi_reset", "check_update",
     "profile_save_active", "profile_load_list", "profile_manage_list", "edit_ota", "edit_hosts",
     "profile_name_list", "geometry_keep", "adv_controller_skip", "geometry_undo", "picture_reset", "quick_profile",
-    "tv_osd", "check_channel_stable", "check_channel_beta", "install_manual", "profile_discard"};
+    "tv_osd", "profile_discard"};
 static_assert(sizeof(kFnNames) / sizeof(kFnNames[0]) == FN_COUNT, "a MenuFn has no name");
 static const char* const kLiveNames[] = {"none", "adc_gain", "position", "size", "borders", "htotal", "pll_div", "sdram",
     "osr", "adc_filter", "debug_view", "freeze", "if_offset", "sog", "out_rate", "syncwatcher", "osd_always_on",
@@ -50,8 +50,7 @@ static const char* const kLiveNames[] = {"none", "adc_gain", "position", "size",
 static_assert(sizeof(kLiveNames) / sizeof(kLiveNames[0]) == LV_COUNT, "a MenuLive has no name");
 static const char* const kTextNames[] = {"none", "wifi_mode", "wifi_ssid", "wifi_ip", "update_version", "update_result",
     "fw_gbs", "fw_adv", "ota_password", "extra_hosts", "profile_active", "wifi_pass", "wifi_host", "source_name",
-    "adv_controller_new", "profile_label", "profile_save", "fw_channel", "update_offer", "update_confirm",
-    "manual_version", "manual_offer", "manual_confirm"};
+    "adv_controller_new", "profile_label", "profile_save", "update_offer", "update_confirm"};
 static_assert(sizeof(kTextNames) / sizeof(kTextNames[0]) == LT_COUNT, "a MenuText has no name");
 static const char* const kTypeNames[] = {"sub", "setting", "choice", "stepper", "action", "live", "adjust2d",
                                          "header"};
@@ -408,14 +407,14 @@ static uint32_t countNodes(const MenuNode& n) {
 // ---- predicates truth table ----
 struct Scenario {
     const char* name; const char* board; uint8_t input; uint8_t menuMode; bool dev; int profile; bool wifiAp;
-    bool noSignal, interlaced, scanlinesOk, advNtsc, updateAvailable, updateManual, advUpdate; uint8_t preset; uint16_t srcHz10;
+    bool noSignal, interlaced, scanlinesOk, advNtsc, updateAvailable, advUpdate; uint8_t preset; uint16_t srcHz10;
     std::vector<std::pair<uint8_t, uint16_t>> values;
 };
 
 static std::vector<Scenario> scenarios() {
     std::vector<Scenario> v;
     auto base = [](const char* name, const char* board, uint8_t input, uint8_t mode) {
-        Scenario s{name, board, input, mode, false, -1, false, false, false, true, false, false, false, false, 1, 600, {}};
+        Scenario s{name, board, input, mode, false, -1, false, false, false, true, false, false, false, 1, 600, {}};
         return s;
     };
     static char names[12][24];
@@ -438,7 +437,6 @@ static std::vector<Scenario> scenarios() {
     { Scenario s = base("composite-ntsc", "pro", 6, 1); s.advNtsc = true; v.push_back(s); }
     { Scenario s = base("composite-pal", "pro", 6, 1); s.advNtsc = false; s.srcHz10 = 500; v.push_back(s); }
     { Scenario s = base("update-available", "pro", 1, 1); s.updateAvailable = true; v.push_back(s); }
-    { Scenario s = base("update-manual", "pro", 1, 1); s.updateManual = true; v.push_back(s); }
     { Scenario s = base("adv-controller-update", "pro", 1, 1); s.advUpdate = true; v.push_back(s); }
     { Scenario s = base("hotspot", "pro", 1, 1); s.wifiAp = true; v.push_back(s); }
     { Scenario s = base("profile-active", "pro", 1, 1); s.profile = 0; v.push_back(s); }
@@ -461,7 +459,7 @@ static std::string exportPredicates() {
         be.active = sc.profile;
         be.texts[LT_WIFI_MODE] = sc.wifiAp ? "AP" : "Client";
         be.sig.noSignal = sc.noSignal; be.sig.interlaced = sc.interlaced; be.sig.scanlinesAllowed = sc.scanlinesOk;
-        be.sig.advNtsc = sc.advNtsc; be.sig.updateAvailable = sc.updateAvailable; be.sig.updateManual = sc.updateManual;
+        be.sig.advNtsc = sc.advNtsc; be.sig.updateAvailable = sc.updateAvailable;
         be.sig.advControllerUpdateAvailable = sc.advUpdate; be.sig.presetId = sc.preset; be.sig.srcHzX10 = sc.srcHz10;
         std::string vals;
         for (auto& p : sc.values) {
@@ -474,7 +472,7 @@ static std::string exportPredicates() {
              num(sc.profile) + ",\"wifi_ap\":" + (sc.wifiAp ? "true" : "false") + ",\"signal\":{\"no_signal\":" +
              (sc.noSignal ? "true" : "false") + ",\"interlaced\":" + (sc.interlaced ? "true" : "false") + ",\"scanlines_ok\":" +
              (sc.scanlinesOk ? "true" : "false") + ",\"adv_ntsc\":" + (sc.advNtsc ? "true" : "false") + ",\"update_available\":" +
-             (sc.updateAvailable ? "true" : "false") + ",\"update_manual\":" + (sc.updateManual ? "true" : "false") +
+             (sc.updateAvailable ? "true" : "false") +
              ",\"adv_controller_update\":" + (sc.advUpdate ? "true" : "false") + ",\"preset_id\":" + num(sc.preset) +
              ",\"src_hz10\":" + num(sc.srcHz10) + "},\"values\":{" + vals + "}},\"visible\":[";
         std::string disabled;
@@ -539,15 +537,14 @@ static std::string exportValidate() {
             const char* txt = hasData ? data->s.c_str() : "";
             if ((d.flags & ACTION_PARAM_HEX) && (!hasData || !actionsParseHexTriplets(txt, buf, sizeof(buf), len))) status = 400;
             else if ((d.flags & ACTION_PARAM_OPT_BYTES) && hasData && !actionsParseHexBytes(txt, buf, sizeof(buf), len)) status = 400;
-            else if ((d.flags & (ACTION_PARAM_TEXT | ACTION_PARAM_OPT_TEXT)) && (hasData || (d.flags & ACTION_PARAM_TEXT)) &&
-                     !(hasData && actionsParseText(txt, buf, sizeof(buf), len))) status = 400;
+            else if ((d.flags & ACTION_PARAM_OPT_TEXT) && hasData && !actionsParseText(txt, buf, sizeof(buf), len)) status = 400;
             else if ((d.flags & ACTION_PARAM_BYTES) && (!hasData || !actionsParseHexBytes(txt, buf, sizeof(buf), len))) status = 400;
             else if (actionsValidateParams(d, buf, len) != ACT_PARAM_OK) status = 400;
         }
         if (i) s += ",";
         s += "{\"name\":" + q(strOf(t.get("name"))) + ",\"action\":" + q(name) + ",\"data\":" + (hasData ? q(data->s) : "null") +
              ",\"status\":" + num(status) + ",\"parsed\":";
-        if (status == 200 && len && !(d.flags & (ACTION_PARAM_TEXT | ACTION_PARAM_OPT_TEXT))) {
+        if (status == 200 && len && !(d.flags & ACTION_PARAM_OPT_TEXT)) {
             s += "[";
             for (uint8_t b = 0; b < len; b++) s += std::string(b ? "," : "") + num(buf[b]);
             s += "]";

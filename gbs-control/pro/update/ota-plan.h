@@ -15,25 +15,29 @@ int otaChannelParse(const char* s);        // the name back to the channel, -1 w
 // "<base><channel>/manifest.txt" and "<base><file>"; false when out does not hold it or the channel is unknown
 bool otaManifestUrl(const char* base, uint8_t ch, char* out, size_t n);
 bool otaImageUrl(const char* base, const char* file, char* out, size_t n);
-// What a check reads: the build channel first, then each more stable one (Beta: beta, stable)
-uint8_t otaChannelsToRead(uint8_t buildChannel, uint8_t out[OTA_CHANNELS]);
+// What a check reads: the chosen channel first, then each more stable one (Beta: beta, stable)
+uint8_t otaChannelsToRead(uint8_t chosen, uint8_t out[OTA_CHANNELS]);
 
 struct OtaOffer {
     bool any;        // an install is offered
     uint8_t channel; // the channel the build comes from
-    bool older;      // lower than the running version (manual offers only)
-    bool moves;      // another channel than the running build's: the device follows it after the install
+    bool older;      // lower than the running version: shown in the Update page, never announced
     Manifest m;      // what the install downloads and checks
 };
-// Recommended update: feed each manifest read, then finish (offered only when newer than the running version)
+// A check: feed each manifest read for the chosen channel (the newest stays), then finish: the newest version
+// available is offered whenever it differs from the running one, flagged older when it is lower.
+//   Stable chosen: the latest Stable (on a unit that runs a Beta it may be older: the way back)
+//   Beta chosen:   the newest of Beta and Stable; the choice stays Beta
+//   a channel rolled back by its publisher: the build before, older, for the units already on the withdrawn one
 void otaConsider(OtaOffer& best, uint8_t channel, const Manifest& m);
-void otaFinishRecommended(OtaOffer& best, const char* running, uint8_t buildChannel);
+void otaFinishCheck(OtaOffer& best, const char* running);
 // The offer after a check: a check that read no manifest at all (an outage) keeps the previous one
 inline OtaOffer otaAfterCheck(const OtaOffer& previous, const OtaOffer& fresh, uint8_t manifestsRead) {
     return manifestsRead ? fresh : previous;
 }
-// Other channels: any build that differs from the running one, flagged older/moves
-OtaOffer otaManual(uint8_t channel, const Manifest& m, const char* running, uint8_t buildChannel);
+// An older build installs only when the request says the user confirmed an older one (web: the word "older"), a
+// newer one only when it does not: an offer that changed between the question and the install is refused
+bool otaInstallMatches(const OtaOffer& o, bool olderConfirmed);
 
 // Daily check: first 2 min after boot, then every 24 h; a check that could not run (Wi-Fi down, busy, server error)
 // retries after 10 min, doubling up to 2 h. millis()-wrap safe
@@ -94,9 +98,13 @@ void otaInstallFailText(const char* code, char* out, size_t n);
 // System > Update > Last result from the stored result ("" / "none" / a version / "error:<code>"): "Not checked",
 // "Up to date", the offered version or the reason words with a capital (<= 14, OSD ROM characters), as the web app
 void otaLastResultText(const char* last, char* out, size_t n);
-// Menu texts (OSD characters): the Offer row "<Label>[ older][ switch]" (<= 24) and the Install confirm question
-// "Install an older version?" / "Move to the <Label> channel?" (<= 28; "" = the node's own question)
+// Menu texts (OSD characters): the Found on row "<Label>[ older]" (<= 24) and the Install confirm question
+// "Install an older version?" (<= 28; "" = the node's own question)
 void otaOfferText(const OtaOffer& o, char* out, size_t n);
 void otaConfirmText(const OtaOffer& o, char* out, size_t n);
-// A check result goes to the TV only when the user asked, or when an update was found (the daily check stays quiet)
-inline bool otaToastWanted(bool fromUser, bool available) { return fromUser || available; }
+// What a check answers on the TV (<= 28): "Check failed: <words>", "<version> available", "<version> older",
+// "Up to date"
+void otaCheckToast(const OtaOffer& o, bool read, const char* err, char* out, size_t n);
+// A check result goes to the TV when the user asked, or when a newer version was found: the daily check stays quiet
+// about failures, "Up to date" and an older Stable (that one is shown in the page only)
+inline bool otaToastWanted(bool fromUser, const OtaOffer& o) { return fromUser || (o.any && !o.older); }

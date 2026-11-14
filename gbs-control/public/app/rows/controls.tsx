@@ -244,7 +244,6 @@ export function textValue(src: string): string {
     case "info.update.channel": return i?.update?.channel ?? "";
     case "info.update.last": return i?.update?.last ?? "";
     case "info.update.offer": return i?.update?.offer?.version ?? "";
-    case "info.update.manual": return i?.update?.manual?.version ?? "";
     case "profile.active": return device.profiles.value?.profiles.find((p) => p.id === device.profiles.value?.active)?.name ?? "";
     default: return "";
   }

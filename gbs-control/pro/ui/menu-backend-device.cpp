@@ -78,8 +78,7 @@ void DeviceMenuBackend::refreshSignal() {
     sig_.palSource = regMode == 2 || regMode == 4;
     if (!autoloadStageBusy(rto->applyPresetDoneStage)) profileGeneratedNameNow(srcName_);   // reads the line count
     sig_.sogLevel = rto->currentLevelSOG;
-    sig_.updateAvailable = otaRecommended().any;
-    sig_.updateManual = otaManualOffer().any;
+    sig_.updateAvailable = otaOffer().any;
     sig_.advControllerUpdateAvailable = advLinkControllerUpdateAvailable();
 }
 
@@ -140,6 +139,10 @@ bool DeviceMenuBackend::applyMany(const MenuWrite* w, uint8_t n) {
 bool DeviceMenuBackend::run(uint8_t aid) {
     ActionRequest r = {};
     r.index = aid;
+    if (aid == AID_sys_install_update && otaOffer().older) {   // the confirm just asked "Install an older version?"
+        memcpy(r.data, "older", 5);
+        r.len = 5;
+    }
     return apiQueueAction(r);
 }
 
@@ -147,9 +150,6 @@ bool DeviceMenuBackend::fn(uint8_t menuFn) {
     MenuWrite w[12];
     uint8_t n;
     switch (menuFn) {
-        case FN_CHECK_CHANNEL_STABLE: otaCheckChannel(OTA_STABLE); return true;   // the result arrives as a message
-        case FN_CHECK_CHANNEL_BETA: otaCheckChannel(OTA_BETA); return true;
-        case FN_INSTALL_MANUAL: otaInstall(true); return true;   // a refusal shows its own toast
         case FN_DECODER_RESET:
             n = menuDecoderResetWrites(w);
             if (!applyMany(w, n)) return false;
@@ -233,15 +233,11 @@ void DeviceMenuBackend::text(uint8_t lt, char* out, size_t n) {
         case LT_WIFI_PASS: copyStr(out, n, ap ? ap_password : "-"); break;   // needed to join the AP only
         case LT_WIFI_HOST: copyStr(out, n, device_hostname_full); break;
         case LT_SOURCE_NAME: copyStr(out, n, srcName_); break;
-        case LT_UPDATE_VERSION: copyStr(out, n, otaRecommended().any ? otaRecommended().m.version : ""); break;
+        case LT_UPDATE_VERSION: copyStr(out, n, otaOffer().any ? otaOffer().m.version : ""); break;
         case LT_ADV_CONTROLLER_NEW: copyStr(out, n, advControllerImageVersion()); break;
         case LT_UPDATE_RESULT: otaLastResultText(otaLastResult(), out, n); break;
-        case LT_FW_CHANNEL: copyStr(out, n, otaChannelLabel(GBS_FW_CHANNEL)); break;
-        case LT_UPDATE_OFFER: if (otaRecommended().any) otaOfferText(otaRecommended(), out, n); else copyStr(out, n, ""); break;
-        case LT_UPDATE_CONFIRM: if (otaRecommended().any) otaConfirmText(otaRecommended(), out, n); else copyStr(out, n, ""); break;
-        case LT_MANUAL_VERSION: copyStr(out, n, otaManualOffer().any ? otaManualOffer().m.version : ""); break;
-        case LT_MANUAL_OFFER: if (otaManualOffer().any) otaOfferText(otaManualOffer(), out, n); else copyStr(out, n, ""); break;
-        case LT_MANUAL_CONFIRM: if (otaManualOffer().any) otaConfirmText(otaManualOffer(), out, n); else copyStr(out, n, ""); break;
+        case LT_UPDATE_OFFER: if (otaOffer().any) otaOfferText(otaOffer(), out, n); else copyStr(out, n, ""); break;
+        case LT_UPDATE_CONFIRM: if (otaOffer().any) otaConfirmText(otaOffer(), out, n); else copyStr(out, n, ""); break;
         case LT_FW_GBS: copyStr(out, n, GBS_FW_FULL_VERSION); break;
         case LT_FW_ADV:                                           // read from the ADV Controller (link v3 INFO)
             if (hwHas(CAP_ADV)) advControllerMenuText(advLinkController(), out, n);

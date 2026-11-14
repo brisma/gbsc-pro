@@ -186,15 +186,33 @@ test("ADV Controller update only when offered on Pro", async ({ page, sim }) => 
   await expect(section(page, "update").locator('[data-row$="adv-controller"]')).toHaveCount(0);
 });
 
-test("another channel offers its build to install", async ({ page, sim }) => {
+test("picking a channel writes the setting and checks; the older Stable is offered with its warning", async ({ page, sim }) => {
+  await sim.post("/__sim/scenario", { name: "update-channels" });
   await open(page, "update", "advanced");
   const s = section(page, "update");
-  await expect(s.getByRole("radiogroup", { name: "Channel" }).getByRole("radio")).toHaveText(["Stable", "Beta"]);   // two channels
-  await s.getByRole("radio", { name: "Stable" }).click();                 // the simulated build follows Beta
-  await expect.poll(() => posts(sim, "/api/actions/system.check_channel")).toEqual(["data=stable"]);
-  const offerRow = s.locator('[data-row$="other-channels/offer"]');     // the Stable build, offered with Install
-  await expect(offerRow).toContainText("3.0.0");
-  await expect(offerRow.getByRole("button", { name: "Install" })).toBeVisible();
+  const channel = s.getByRole("radiogroup", { name: "Channel" });
+  await expect(channel.getByRole("radio")).toHaveText(["Stable", "Beta"]);
+  await expect(channel.getByRole("radio", { name: "Beta" })).toBeChecked();   // the simulated build is a Beta one
+  await channel.getByRole("radio", { name: "Stable" }).click();
+  await expect.poll(() => posts(sim, "/api/settings")).toEqual(["system.update_channel=0"]);
+  await expect.poll(() => posts(sim, "/api/actions/system.check_update")).toEqual([""]);
+  const offer = s.locator('[data-row$="update/install"]');                    // the Stable, older than the running build
+  await expect(offer).toContainText("GBS-Control 2.9.0");
+  await expect(offer).toContainText("older than");
+  await expect(page.locator(".btn.upd")).toHaveCount(0);                      // never announced in the header
+  await offer.getByRole("button", { name: "Install", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("Install an older version?");
+  await page.getByRole("dialog").getByRole("button", { name: "Install" }).click();
+  await expect.poll(() => posts(sim, "/api/actions/system.install_update")).toEqual(["data=older"]);
+});
+
+test("on Beta the newest of Beta and Stable is offered", async ({ page, sim }) => {
+  await sim.post("/__sim/scenario", { name: "update-channels" });
+  await open(page, "update");
+  const s = section(page, "update");
+  await s.getByRole("button", { name: "Check now" }).click();
+  await expect(s.locator('[data-row$="update/install"]')).toContainText("GBS-Control 3.1.0-beta2");
+  await expect(s.locator('[data-row$="update/install"]')).not.toContainText("older than");
 });
 
 // ---- Backup ----
@@ -287,11 +305,11 @@ test("system sections in order, standard board shows Changes on TV", async ({ pa
 test("check now reports the result; Advanced shows the last result and Auto check", async ({ page, sim }) => {
   await open(page, "update", "advanced");
   const s = section(page, "update");
-  await expect(s.locator('[data-row$="last-result"]')).toContainText("Not checked yet");
+  await expect(s.locator('[data-row$="last-check"]')).toContainText("Not checked yet");
   await s.getByRole("button", { name: "Check now" }).click();   // the button of the card
   await expect.poll(() => posts(sim, "/api/actions/system.check_update")).toEqual([""]);
   await expect(page.getByText("Up to date").first()).toBeVisible();
-  await expect(s.locator('[data-row$="last-result"]')).toContainText("Up to date");
+  await expect(s.locator('[data-row$="last-check"]')).toContainText("Up to date");
   await s.locator('[data-row$="auto-check"]').getByRole("radio", { name: "Off" }).click();   // Daily is the default
   await expect.poll(() => posts(sim, "/api/settings")).toEqual(["system.auto_update_check=0"]);
 });

@@ -212,9 +212,12 @@ ESP8266: 2.4.1 does not read the 3.0 settings. Take a backup first if you plan t
 ### Release channels
 
 - **Stable**: the recommended releases.
-- **Beta**: release candidates, already tested, waiting for users' feedback before they become Stable. A Beta build
-  is offered the newest Beta or Stable; System > Update > Other channels moves a unit from one channel to the other
-  or back to an older version.
+- **Beta**: release candidates, already tested, waiting for users' feedback before they become Stable.
+
+System > Update > Channel chooses which one a unit follows; it starts as the channel of the firmware it runs. On
+Stable the latest Stable release is offered; on Beta the newest of Beta and Stable, and the unit stays on Beta. A
+version older than the installed one (the latest Stable for a unit on a Beta, or the release before one that was
+withdrawn) is shown in the Update page and never announced.
 
 ## Hardware
 

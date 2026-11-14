@@ -1,7 +1,7 @@
 // OLED renderer: draws the engine view on the 128x64 SSD1306 through ThingPulse OLEDDisplay.
 // Title bar + 5 list rows taken around the cursor from the view's 7, full-screen overlays, an idle status
-// home screen while the menu is closed and, after 3 minutes without input, a screensaver with the resolution
-// path that moves every 30 s.
+// home screen while the menu is closed and, after the idle time without input (system.oled_idle_after, 1 minute by
+// default), a screensaver with the resolution path that moves every 10 s, or the panel off (system.oled_idle).
 #pragma once
 #include <stdint.h>
 #include "oled-display.h"
@@ -16,6 +16,8 @@ uint8_t oledInfoRows(const MenuView& v, OledInfoRow out[5]);
 // "<lines>p <rate>" ("1920x1200 59.9Hz" -> "1200p 59.9Hz") when the whole resolution does not fit, then clips
 void oledInfoShownValue(OLEDDisplay& d, const OledInfoRow& r, char* out, size_t n);
 
+uint32_t oledIdleAfterMs(uint8_t option);   // system.oled_idle_after: 30 s, 1 min, 3 min, 10 min
+
 class OledRenderer {
 public:
     explicit OledRenderer(OLEDDisplay& d) : d_(d) {}
@@ -23,10 +25,13 @@ public:
     // Draws and sends a frame when the content changed, at most every kMinFrameMs; true when it sent one
     bool render(const MenuView& v, const MenuIdle& idle, uint32_t nowMs);
     void activity(uint32_t nowMs) { lastActivity_ = nowMs; }   // a key or encoder event
+    // What the closed menu becomes after `afterMs` without a key: the screensaver, or the panel off (any key, an
+    // open menu or an overlay turns it on again)
+    void setIdle(bool panelOff, uint32_t afterMs) { idleOff_ = panelOff; idleAfterMs_ = afterMs; }
     // Label + value (+ slider) of one row within the list width, measured with the real font
     static bool rowFits(OLEDDisplay& d, const char* label, const char* value, uint8_t kind);
 
-    static const uint32_t kSaverMs = 180000, kSaverStepMs = 30000, kMinFrameMs = 50;
+    static const uint32_t kIdleAfterMs = 60000, kSaverStepMs = 10000, kMinFrameMs = 50;
     static const uint8_t kRows = 5;
 
 private:
@@ -57,6 +62,8 @@ private:
     uint16_t rev_ = 0;
     uint8_t mode_ = 0xFF;
     bool saver_ = false;
+    bool idleOff_ = false, asleep_ = false;
+    uint32_t idleAfterMs_ = kIdleAfterMs;
     uint32_t step_ = 0;
     uint32_t lcg_ = 0x2545F491u;
     MenuIdle idle_ = {};

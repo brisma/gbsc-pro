@@ -210,9 +210,13 @@ static const MenuNode kProfiles[] SET_PROGMEM = {
 };
 
 // ---- System ----
-static const MenuNode kSound[] SET_PROGMEM = {
+// Device and TV and OLED menu hold the same rows as the web app's sections of those names
+static const MenuNode kDevice[] SET_PROGMEM = {
     SET(S_VOLUME, H_VOLUME, audio_volume, P_NONE, 102, NF_PERCENT),   // percent, 2 per step
     SET(S_MUTE, H_MUTE, audio_mute, P_NONE, 0, 0),
+    SET(S_ENCODER_DIR, H_ENCODER_DIR, sys_encoder_dir, P_NONE, 0, 0),
+    SET(S_ENCODER_STEPS, H_ENCODER_STEPS, sys_encoder_steps, P_NONE, 0, NF_ADVANCED),
+    SET(S_BOARD, H_BOARD, sys_board, P_NONE, 0, NF_ADVANCED | NF_RESTART_NOTE),   // Auto / Standard / Pro
 };
 static const MenuNode kWifi[] SET_PROGMEM = {
     LIVE(S_MODE, H_MODE, LT_WIFI_MODE, P_NONE, 0),
@@ -224,46 +228,36 @@ static const MenuNode kWifi[] SET_PROGMEM = {
     NODE(N_ACTION, NF_FN | NF_ADVANCED, S_EXTRA_HOSTS, H_EXTRA_HOSTS, FN_EDIT_HOSTS, LV_NONE, P_NONE, LT_EXTRA_HOSTS),
     FNA(S_RESET_AP, H_RESET_AP, FN_WIFI_RESET, P_NONE, NF_CONFIRM),
 };
-// OTA over plain HTTP: Other channels is the only way onto Beta or an older build
-static const MenuNode kUpdateChannels[] SET_PROGMEM = {
-    FNA(S_CH_STABLE, H_CH_CHECK, FN_CHECK_CHANNEL_STABLE, P_NONE, 0),
-    FNA(S_CH_BETA, H_CH_CHECK, FN_CHECK_CHANNEL_BETA, P_NONE, 0),
-    NODE(N_ACTION, NF_FN | NF_CONFIRM, S_INSTALL, H_INSTALL_MANUAL, FN_INSTALL_MANUAL, LV_NONE, P_UPDATE_MANUAL,
-         LT_MANUAL_VERSION),
-    LIVE(S_OFFER, H_OFFER, LT_MANUAL_OFFER, P_UPDATE_MANUAL, 0),
-};
-static const MenuNode kUpdate[] SET_PROGMEM = {   // both firmware versions stay visible
-    LIVE(S_CHANNEL, H_CHANNEL, LT_FW_CHANNEL, P_NONE, 0),
-    FNA(S_CHECK_NOW, H_CHECK_NOW, FN_CHECK_UPDATE, P_NONE, 0),
-    ACTV(S_INSTALL, H_INSTALL, sys_install_update, P_UPDATE_AVAILABLE, LT_UPDATE_VERSION),
-    LIVE(S_OFFER, H_OFFER, LT_UPDATE_OFFER, P_UPDATE_AVAILABLE, 0),
-    SUB(S_OTHER_CHANNELS, H_OTHER_CHANNELS, P_NONE, kUpdateChannels),
+static const MenuNode kUpdate[] SET_PROGMEM = {   // the installed versions together, then what can be done (the two installs together), then the rest
     LIVE(S_FW_GBS, H_FW_GBS, LT_FW_GBS, P_NONE, 0),
     LIVE(S_UPDATE_ADV_CONTROLLER, H_FW_GBS, LT_FW_ADV, P_NONE, 0),
+    SET(S_CHANNEL, H_CHANNEL, sys_update_channel, P_NONE, 0, 0),      // the channel the checks follow
+    FNA(S_CHECK_NOW, H_CHECK_NOW, FN_CHECK_UPDATE, P_NONE, 0),
+    LIVE(S_OFFER, H_OFFER, LT_UPDATE_OFFER, P_UPDATE_AVAILABLE, 0),   // read in a row: Check now, Found on, Install
+    ACTV(S_INSTALL, H_INSTALL, sys_install_update, P_UPDATE_AVAILABLE, LT_UPDATE_VERSION),
     ACTV(S_ADV_UPDATE, H_UPDATE_ADV_CONTROLLER, sys_update_adv_controller, P_ADV_CONTROLLER_UPDATE, LT_ADV_CONTROLLER_NEW),
-    SET(S_DAILY_CHECK, H_DAILY_CHECK, sys_auto_update, P_NONE, 0, NF_ADVANCED),
     LIVE(S_LAST_RESULT, H_LAST_RESULT, LT_UPDATE_RESULT, P_NONE, NF_ADVANCED),
+    SET(S_DAILY_CHECK, H_DAILY_CHECK, sys_auto_update, P_NONE, 0, NF_ADVANCED),
 };
-static const MenuNode kOsd[] SET_PROGMEM = {
-    SET(S_MENU_POSITION, H_POSITION_OSD, osd_position, P_NONE, 0, 0),
-    SET(S_OSD_THEME, H_OSD_THEME, osd_theme, P_NONE, 0, 0),
-    SET(S_OSD_POPUP_POS, H_OSD_POPUP_POS, osd_popup_pos, P_NONE, 0, 0),
-    SET(S_OSD_TIMEOUT, H_OSD_TIMEOUT, osd_timeout, P_NONE, 0, 0),
-};
-static const MenuNode kSystem[] SET_PROGMEM = {
-    FNA(S_SIGNAL_INFO, H_SIGNAL_INFO, FN_OPEN_INFO, P_NONE, 0),
-    SUB(S_AUDIO, H_AUDIO, P_NONE, kSound),
-    SUB(S_WIFI, H_WIFI, P_NONE, kWifi),
-    SUB(S_UPDATE, H_UPDATE, P_NONE, kUpdate),
+static const MenuNode kTvOled[] SET_PROGMEM = {
     SET(S_STATUS_POPUP, H_STATUS_POPUP, osd_status_popup, P_NONE, 0, 0),
     SET(S_TV_CHANGES, H_TV_CHANGES, osd_tv_changes, P_NONE, 0, 0),   // standard board: TV5725 icons while adjusting
-    SET(S_ENCODER_DIR, H_ENCODER_DIR, sys_encoder_dir, P_NONE, 0, 0),   // Easy
-    ACT(S_RESTART, H_RESTART, sys_restart, LV_NONE, P_NONE, 0),
-    ACT(S_FACTORY_RESET, H_FACTORY_RESET, sys_factory_reset, LV_NONE, P_NONE, 0),
-    SUBF(S_OSD, H_OSD, P_NONE, kOsd, NF_ADVANCED),
-    SET(S_BOARD, H_BOARD, sys_board, P_NONE, 0, NF_ADVANCED | NF_RESTART_NOTE),   // Auto / Standard / Pro
-    SET(S_ENCODER_STEPS, H_ENCODER_STEPS, sys_encoder_steps, P_NONE, 0, NF_ADVANCED),
+    SET(S_OLED_IDLE, H_OLED_IDLE, sys_oled_idle, P_NONE, 0, 0),      // screensaver or panel off
+    SET(S_OLED_AFTER, H_OLED_AFTER, sys_oled_after, P_NONE, 0, 0),   // ... and when, right under it
+    SET(S_OSD_THEME, H_OSD_THEME, osd_theme, P_NONE, 0, NF_ADVANCED),
+    SET(S_MENU_POSITION, H_POSITION_OSD, osd_position, P_NONE, 0, NF_ADVANCED),
+    SET(S_OSD_POPUP_POS, H_OSD_POPUP_POS, osd_popup_pos, P_NONE, 0, NF_ADVANCED),
+    SET(S_OSD_TIMEOUT, H_OSD_TIMEOUT, osd_timeout, P_NONE, 0, NF_ADVANCED),
+};
+static const MenuNode kSystem[] SET_PROGMEM = {   // the pages first, then the rows that act
+    SUB(S_WIFI, H_WIFI, P_NONE, kWifi),
+    SUB(S_DEVICE, H_DEVICE, P_NONE, kDevice),
+    SUB(S_TV_OLED, H_TV_OLED, P_NONE, kTvOled),
+    SUB(S_UPDATE, H_UPDATE, P_NONE, kUpdate),
+    FNA(S_SIGNAL_INFO, H_SIGNAL_INFO, FN_OPEN_INFO, P_NONE, 0),
     SET(S_DEV_MODE, H_DEV_MODE, sys_devmode, P_NONE, 0, NF_ADVANCED),
+    ACT(S_RESTART, H_RESTART, sys_restart, LV_NONE, P_NONE, 0),         // the two last, always
+    ACT(S_FACTORY_RESET, H_FACTORY_RESET, sys_factory_reset, LV_NONE, P_NONE, 0),
 };
 
 // ---- Developer ----   (Advanced + System > Developer menu)

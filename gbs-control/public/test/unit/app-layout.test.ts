@@ -18,7 +18,7 @@ function state(over: Partial<PredState> & { values?: Record<string, number> } = 
   for (const e of registry.settings) if (e.type !== "str") values[e.key] = e.def ?? 0;
   return {
     caps: BOARD_CAPS.pro, input: 1, menuMode: 1, devmode: false, profileActive: false, wifiAp: false,
-    signal: { noSignal: false, interlaced: false, scanlinesOk: true, advNtsc: false, updateAvailable: false, updateManual: false,
+    signal: { noSignal: false, interlaced: false, scanlinesOk: true, advNtsc: false, updateAvailable: false,
               advControllerUpdate: false, presetId: 1, srcHz10: 600 },
     ...over, values: { ...values, ...(over.values ?? {}) },
   };
@@ -54,7 +54,6 @@ test("every menu node has a binding", () => {
   assert.ok(byFn("open_info").every((b) => b.web === "status-page"));
   assert.ok(byFn("wifi_reset").every((b) => b.web === "wifi-page"));
   assert.ok(byFn("check_update").every((b) => b.web === "update-page"));
-  assert.ok(byFn("install_manual").every((b) => b.web === "update-page"));
   assert.ok(byFn("edit_hosts").every((b) => b.web === "wifi-page"));
   assert.ok(byFn("edit_ota").every((b) => b.web === "row"));
   assert.ok(byFn("quick_profile").every((b) => b.web === "row"));
@@ -90,7 +89,7 @@ test("values formatted as on the TV", () => {
   assert.equal(formatLive("sdram", 3), "162MHz");
   assert.equal(formatLive("out_rate", 600), "60Hz");
   assert.equal(formatLive("freeze", 1), "On");
-  assert.equal(formatSetting(nodeById("system/sound/volume")!, 40), "40%");
+  assert.equal(formatSetting(nodeById("system/device/volume")!, 40), "40%");
   assert.equal(formatSetting(nodeById("input/source")!, 5), "S-Video");
 });
 

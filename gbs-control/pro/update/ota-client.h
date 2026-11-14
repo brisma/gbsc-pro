@@ -16,3 +16,4 @@ void otaFetchLoop();                  // loop(): timeouts, completion, client te
 bool otaFetchBusy();
 int otaFetchResult();                 // after the fetch: HTTP_DONE, an HTTP_E_* or an OTA_E_* code
 const char* otaFetchReason();         // the failure as a reason code for otaReasonWords ("" after HTTP_DONE)
+int otaFetchStatus();                 // the HTTP status of the last answer, 0 when none came

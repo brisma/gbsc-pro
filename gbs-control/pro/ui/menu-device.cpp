@@ -315,6 +315,7 @@ void menuDeviceLoop() {
         static uint32_t idleAt = 0;
         static bool haveIdle = false;
         if (!haveIdle || now - idleAt >= 1000) { gEngine.idle(idle); idleAt = now; haveIdle = true; }
+        oled().setIdle(uopt->oledIdle == 1, oledIdleAfterMs(uopt->oledIdleAfter));
         oled().render(gEngine.view(), idle, now);
     }
 }

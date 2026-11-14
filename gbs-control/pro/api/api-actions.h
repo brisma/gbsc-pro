@@ -14,13 +14,13 @@ enum ActionId : uint8_t { ACTIONS_TABLE(ACTION_ENUM) AID_COUNT };
 enum : uint8_t { ACT_SERIAL = 0, ACT_USER = 1, ACT_FUNC = 2 };
 enum : uint8_t { ACTION_DEV = 1 << 0, ACTION_CONFIRM = 1 << 1, ACTION_PARAM_HEX = 1 << 2, ACTION_PARAM_BYTES = 1 << 3, ACTION_PARAM_OPT_BYTES = 1 << 4,
                  ACTION_REGS = 1 << 5,     // changes captured scaler registers: the active profile becomes Unsaved
-                 ACTION_PARAM_TEXT = 1 << 6, ACTION_PARAM_OPT_TEXT = 1 << 7 };   // data = a short [a-z0-9_] word
+                 ACTION_PARAM_OPT_TEXT = 1 << 7 };   // data = a short [a-z0-9_] word, may be left out
 enum : uint8_t { AF_ACE_DEFAULTS = 1, AF_FILTERS_DEFAULTS, AF_ADV_I2C, AF_CRASH,
                  AF_CHECK_UPDATE, AF_INSTALL_UPDATE,
                  AF_OSD_TEST, AF_OSD_ROM_DUMP, AF_OSD_ALWAYS_ON, AF_OSD_TIMING, AF_ADV_CONTROLLER_UPDATE,
                  AF_MENU_KEY, AF_SCREEN_SNAPSHOT,
        AF_BORDER_MOVE_LEFT, AF_BORDER_MOVE_RIGHT, AF_BORDER_MOVE_UP, AF_BORDER_MOVE_DOWN,
-                 AF_SOG_UP, AF_SOG_DOWN, AF_TV5725_REG, AF_CHECK_CHANNEL,
+                 AF_SOG_UP, AF_SOG_DOWN, AF_TV5725_REG,
                  AF_PICTURE_RESET, AF_SCREEN_RESET, AF_DECODER_RESET, AF_TV5725_READ, AF_ADV_READ, AF_CLOCKGEN, AF_LOOP_PAUSE, AF_SI5351, AF_CONTENT_PROBE, AF_LISTEN };
 
 struct ActionDef { const char* name; uint8_t caps; uint8_t flags; uint8_t kind; uint8_t arg; };

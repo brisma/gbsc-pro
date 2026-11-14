@@ -179,7 +179,8 @@ void test_caps_and_devmode_hide_nodes(void) {
     TEST_ASSERT_TRUE(menuVisible(menuFind("Developer"), be));
     platformSetCaps(CAP_OLED | CAP_ENCODER);
     TEST_ASSERT_FALSE(menuVisible(menuFind("Input/75 ohm sync"), be));
-    TEST_ASSERT_FALSE(menuVisible(menuFind("System/Sound"), be));
+    TEST_ASSERT_FALSE(menuVisible(menuFind("System/Device/Volume"), be));   // no audio on that board
+    TEST_ASSERT_TRUE(menuVisible(menuFind("System/Device"), be));           // the knob rows stay
 }
 
 void test_streaming_option_parser_beyond_160_chars(void) {
@@ -201,8 +202,8 @@ void test_value_formats(void) {
     TEST_ASSERT_EQUAL_STRING("Auto", fmt(menuFind("Output/HDMI range"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("Method 1", fmt(menuFind("Output/Lock method"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("Auto: RGB SCART", fmt(menuFind("Input/Source"), be).c_str());   // Auto + the found input
-    TEST_ASSERT_EQUAL_STRING("Center", fmt(menuFind("System/OSD settings/Menu position"), be).c_str());
-    TEST_ASSERT_EQUAL_STRING("15s", fmt(menuFind("System/OSD settings/Auto close"), be).c_str());
+    TEST_ASSERT_EQUAL_STRING("Center", fmt(menuFind("System/TV and OLED menu/Menu position"), be).c_str());
+    TEST_ASSERT_EQUAL_STRING("15s", fmt(menuFind("System/TV and OLED menu/Auto close"), be).c_str());
     be.dev = true;
     be.lives[LV_SDRAM] = 0;
     TEST_ASSERT_EQUAL_STRING("108MHz", fmt(menuFind("Developer/Clock / ADC/SDRAM clock"), be).c_str());
@@ -253,14 +254,14 @@ void test_step_values(void) {
     be.apply(SID_input_source, 4);
     TEST_ASSERT_TRUE(menuStepValue(src, be, +1, v)); TEST_ASSERT_EQUAL_UINT16(0, v);   // S-Video/Composite need CAP_ADV: wraps to Auto
     platformSetCaps(CAPS_DEFAULT);
-    MenuNode theme = menuFind("System/OSD settings/Theme");
+    MenuNode theme = menuFind("System/TV and OLED menu/Theme");
     be.apply(SID_osd_theme, 0);
     TEST_ASSERT_TRUE(menuStepValue(theme, be, -1, v)); TEST_ASSERT_EQUAL_UINT16(3, v);   // wraps: GBSC PRO -> Retro
 }
 
 void test_slider_and_changed(void) {
     FakeBackend be;
-    MenuNode vol = menuFind("System/Sound/Volume");
+    MenuNode vol = menuFind("System/Device/Volume");
     be.apply(SID_audio_volume, 50);                           // percent: half way
     TEST_ASSERT_EQUAL_INT(10, menuSliderHalves(vol, be));
     TEST_ASSERT_TRUE(menuIsChanged(vol, be));

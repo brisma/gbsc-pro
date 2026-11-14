@@ -248,10 +248,9 @@ void actionsPost(AsyncWebServerRequest* req, uint8_t) {
         sendJson(req, 400, F("{\"ok\":0,\"errors\":{\"data\":\"invalid\"}}"));
         return;
     }
-    if ((d.flags & (ACTION_PARAM_TEXT | ACTION_PARAM_OPT_TEXT)) && (req->hasArg("data") || (d.flags & ACTION_PARAM_TEXT))) {
-        bool ok = req->hasArg("data") && actionsParseText(req->arg("data").c_str(), r.data, sizeof(r.data), r.len);
-        if (ok && d.kind == ACT_FUNC && d.arg == AF_CHECK_CHANNEL) ok = otaChannelParse((const char*)r.data) >= 0;
-        if (ok && d.kind == ACT_FUNC && d.arg == AF_INSTALL_UPDATE) ok = !strcmp((const char*)r.data, "manual");
+    if ((d.flags & ACTION_PARAM_OPT_TEXT) && req->hasArg("data")) {
+        bool ok = actionsParseText(req->arg("data").c_str(), r.data, sizeof(r.data), r.len);
+        if (ok && d.kind == ACT_FUNC && d.arg == AF_INSTALL_UPDATE) ok = !strcmp((const char*)r.data, "older");
         if (!ok) { sendJson(req, 400, F("{\"ok\":0,\"errors\":{\"data\":\"invalid\"}}")); return; }
     }
     if (d.flags & ACTION_PARAM_BYTES) {

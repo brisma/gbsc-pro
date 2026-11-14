@@ -52,9 +52,9 @@ export class DeviceState {
   advCaps = ["signal", "reg_read"];
   advStatus = "ok";
   advUpdate = false;
-  updateOffer: { version: string; channel: string } | null = null;        // the recommended offer (RAM on the device)
-  serverOffer: { version: string; channel: string } | null = null;        // what a check finds on the update server
-  manualOffer: { version: string; channel: string } | null = null;        // Other channels (status.update_channel_check)
+  updateOffer: { version: string; channel: string; older?: boolean } | null = null;   // the offer (RAM on the device)
+  updateFor = "beta";                                                      // the channel the offer and last result are for
+  serverBuilds: Record<string, string> = {};                               // the update server: channel -> published version
   updateLast = "";                                                         // update.last: version, none or error:<code>
   advUpdateState = "idle";                                                 // idle, running, done, failed:<step>
   heap = 21000;
@@ -192,7 +192,7 @@ export class DeviceState {
 
   // After a restart: persisted settings stay; runtime state, rings and boot id start again
   reboot(fw?: string): void {
-    if (fw && fw !== this.fw) { this.updateOffer = null; this.manualOffer = null; this.updateLast = ""; }   // a new image starts clean
+    if (fw && fw !== this.fw) { this.updateOffer = null; this.updateLast = ""; }   // a new image starts clean
     if (fw) this.fw = fw;
     this.started = Date.now();
     this.boot = 1 + Math.floor(Math.random() * 65534);
@@ -205,8 +205,8 @@ export class DeviceState {
     this.event("input_found", this.runtime.activeInput, 0);
   }
 
-  // another channel than the running build's (a local build is on dev): the device follows it after the install
-  private offerMoves(o: { channel: string } | null): number { return o && o.channel !== "beta" ? 1 : 0; }   // a local build follows Beta
+  // system.update_channel as a name; the offer and the last result count only for the channel they were worked out for
+  updateChannel(): string { return ["stable", "beta"][this.num("system.update_channel")] ?? "stable"; }
 
   presetChar(): string {
     const low = this.runtime.presetId & 0x0f;
@@ -236,8 +236,11 @@ export class DeviceState {
                 interlaced: rt.interlaced ? 1 : 0, scanlines_ok: rt.scanlinesOk ? 1 : 0, adv_ntsc: rt.advNtsc ? 1 : 0, preset: rt.presetId },
       crash: null,
       upload: { ...this.upload },
-      update: { channel: "beta", last: this.updateLast, offer: { version: this.updateOffer?.version ?? "", channel: this.updateOffer?.channel ?? "", older: 0, moves: this.offerMoves(this.updateOffer) },
-                manual: { version: this.manualOffer?.version ?? "", channel: this.manualOffer?.channel ?? "", older: this.manualOffer && compareVersions(this.manualOffer.version, this.fw) < 0 ? 1 : 0, moves: this.offerMoves(this.manualOffer) } },
+      update: (() => {
+        const mine = this.updateFor === this.updateChannel(), o = mine ? this.updateOffer : null;
+        return { channel: "beta", follows: this.updateChannel(), last: mine ? this.updateLast : "",
+                 offer: { version: o?.version ?? "", channel: o?.channel ?? "", older: o?.older ? 1 : 0 } };
+      })(),
     };
   }
 }

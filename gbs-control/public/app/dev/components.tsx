@@ -17,7 +17,7 @@ const GROUPS: Group[] = [
   { title: "Choices", rows: [
     { kind: "toggle", ref: "menu:output/always-60hz", icon: "speed" },
     { kind: "inline", ref: "menu:output/hdmi-range", icon: "hd" },
-    { kind: "inline", ref: "menu:system/osd-settings/menu-position", icon: "picture_in_picture" },
+    { kind: "inline", ref: "menu:system/tv-and-oled-menu/menu-position", icon: "picture_in_picture" },
     { kind: "toggle", ref: "menu:input/2x-smooth", icon: "blur_on" },
   ] },
   { title: "Cards and pickers", rows: [

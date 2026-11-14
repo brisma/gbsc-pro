@@ -1,19 +1,19 @@
 OSD on page=0x000 LD=55 DD=32 CH=40 PP=13 FM=10
 S 255
 S 105
-R 1D2 - | ⑪ System                7/12 |
+R 1D2 - | ⑪ System                 7/8 |
         |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|
-R 210 - | Signal info               OK⑯|
+R 210 - | WiFi                       ⑫⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
-R 24E - | Sound                      ⑫⑯|
+R 24E - | Device                     ⑫⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
-R 28C - | WiFi                       ⑫⑯|
+R 28C - | TV and OLED menu           ⑫⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
 R 2CA - | Update                     ⑫⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
-R 308 - | Status pop-up     Input only⑮|
+R 308 - | Signal info               OK⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
-R 346 - | Knob direction        Normal⑮|
+R 346 - | Developer menu           Off⑯|
         |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB|
 R 384 - | Restart the GBSC PRO?        |
         |AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|

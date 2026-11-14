@@ -15,7 +15,7 @@ export interface EventEntry { seq: number; ms: number; type: string; a: number; 
 // olds: values written before this one whose echoes may still arrive (a late echo must not undo the newer value)
 export interface Pending { value: Value; prev: Value | undefined; at: number; sent: boolean; sentRev: number; olds?: Value[] }
 export interface Toast { id: number; text: string; kind: "info" | "error" }
-export interface UpdateState { available: string; channelCheck: string; progress: string; restore: string }
+export interface UpdateState { available: string; progress: string; restore: string }
 export interface ProfileEntry { id: string; name: string; region: string; fp: string; lastused: number; match?: number; modes: string[] }
 // base: the output.preset value behind the active profile's Custom resolution
 export interface ProfilesJson { active: string; modified: number; autoload: number; base?: number; profiles: ProfileEntry[] }
@@ -78,7 +78,7 @@ export function createDeviceStore(d: StoreDeps) {
   const events = signal<EventEntry[]>([]);
   const connection = signal<Connection>("connecting");
   const toasts = signal<Toast[]>([]);
-  const update = signal<UpdateState>({ available: "", channelCheck: "", progress: "", restore: "" });
+  const update = signal<UpdateState>({ available: "", progress: "", restore: "" });
   const preset = signal("");
   const profileOp = signal<{ seq: number; result: string }>({ seq: 0, result: "" });
   const advStore = signal<{ seq: number; result: string }>({ seq: 0, result: "" });   // s:status.adv_store
@@ -321,7 +321,6 @@ export function createDeviceStore(d: StoreDeps) {
         return;
       }
       case "status.update_available": update.value = { ...update.value, available: raw }; return;
-      case "status.update_channel_check": update.value = { ...update.value, channelCheck: raw }; return;
       case "status.update": update.value = { ...update.value, progress: raw }; return;
       case "status.restore": update.value = { ...update.value, restore: raw }; return;
       case "status.preset": preset.value = raw; return;

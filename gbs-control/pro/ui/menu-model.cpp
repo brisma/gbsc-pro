@@ -33,7 +33,6 @@ static bool predVisible(uint8_t pred, MenuBackend& be) {
         case P_RGBS: return (be.caps() & CAP_ADV) != 0;
         case P_PROFILE_ACTIVE: return be.profileActive() >= 0;
         case P_UPDATE_AVAILABLE: return be.signal().updateAvailable;
-        case P_UPDATE_MANUAL: return be.signal().updateManual;
         case P_ADV_CONTROLLER_UPDATE: return be.signal().advControllerUpdateAvailable;
         case P_VGA: return in == InputTypeVGA;
         case P_SOG: return in == InputTypeRGsB || in == InputTypeYUV;

@@ -1,5 +1,5 @@
 // Update words: the device's reason codes (ota-plan.cpp kWords, update-device.cpp, update-trailer.cpp) said in
-// full, the channel names and the "Last result" line
+// full, the channel names and the "Last check" line
 export const CHANNELS = ["stable", "beta"] as const;
 export type Channel = (typeof CHANNELS)[number];
 export const channelLabel = (c: string) => (c ? c[0].toUpperCase() + c.slice(1) : "");

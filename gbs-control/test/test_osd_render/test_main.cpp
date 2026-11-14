@@ -606,14 +606,14 @@ void test_menus_use_chevrons_not_rom_arrows(void) {
     Scene s;
     s.key(K_MENU);
     TEST_ASSERT_FALSE(hasRomArrow(s));                          // submenu arrows
-    s.enter("System"); s.enter("OSD settings"); s.select("Theme");
+    s.enter("System"); s.enter("TV and OLED menu"); s.select("Theme");
     TEST_ASSERT_FALSE(hasRomArrow(s));                          // title back arrow, cycle arrows
     TEST_ASSERT_EQUAL_HEX8(s.d.glyph(UDC_CHEV_L), s.d.shadow().code(0, 1));
 }
 
 void test_deep_list_with_bar_fits_the_glyph_slots(void) {
     Scene s;
-    s.key(K_MENU); s.enter("System"); s.enter("Sound");          // volume slider and %
+    s.key(K_MENU); s.enter("System"); s.enter("Device");         // volume slider and %
     s.key(K_BACK); s.enter("Picture");                          // sliders, bar, back chevron
     s.select("Deinterlace");                                    // cycle chevrons
     TEST_ASSERT_EQUAL_UINT16(0, s.d.glyphMisses());
@@ -838,7 +838,7 @@ void test_keyboard_comma_is_a_drawn_glyph(void) {
 // Volume in percent: the STV9426 ROM has no '%', a UDC glyph (shown as ⑩ by the simulator) draws it
 void test_volume_percent_uses_the_percent_glyph(void) {
     Scene s;
-    s.key(K_MENU); s.enter("System"); s.enter("Sound");
+    s.key(K_MENU); s.enter("System"); s.enter("Device");
     TEST_ASSERT_TRUE(s.screen().find("80\u2469") != std::string::npos);   // "80⑩"
     s.key(K_MENU);
     s.key(K_VOLUP);

@@ -25,7 +25,6 @@ enum MenuPred : uint8_t {
     P_WIFI_AP,                // hotspot mode only
     P_SOG,                    // sync on green or luma: RGB SoG and Component
     P_TV_OSD,                 // standard board with a source the scaler draws (tvOsdAllowed)
-    P_UPDATE_MANUAL,          // Other channels: a checked build can be installed
     P_COUNT };
 
 enum MenuFn : uint8_t {
@@ -36,8 +35,6 @@ enum MenuFn : uint8_t {
     FN_PICTURE_RESET,     // every Picture page setting back to its default
     FN_QUICK_PROFILE,     // Quick menu Profile row: Left/Right cycle this signal's profiles, OK opens Load
     FN_TV_OSD,            // Quick menu TV OSD row (standard board): the TV5725 icons
-    FN_CHECK_CHANNEL_STABLE, FN_CHECK_CHANNEL_BETA,   // Other channels: read that channel
-    FN_INSTALL_MANUAL,    // Other channels: install the checked build
     FN_PROFILE_DISCARD,   // Discard changes: the profile in use loaded again as it was saved
     FN_COUNT };
 
@@ -52,9 +49,7 @@ enum MenuText : uint8_t {
     LT_OTA_PASSWORD, LT_EXTRA_HOSTS, LT_PROFILE_ACTIVE, LT_WIFI_PASS, LT_WIFI_HOST, LT_SOURCE_NAME, LT_ADV_CONTROLLER_NEW,
     LT_PROFILE_LABEL,     // active profile "<name> <region>" or "Defaults": formatted by menu-model (backends: "")
     LT_PROFILE_SAVE,      // Save changes: the active profile's label, empty when none (menu-model)
-    LT_FW_CHANNEL,        // the installed build's channel: "Stable" | "Beta" | "Dev"
-    LT_UPDATE_OFFER, LT_UPDATE_CONFIRM,                        // recommended: "Stable switch", "Switch to Stable"
-    LT_MANUAL_VERSION, LT_MANUAL_OFFER, LT_MANUAL_CONFIRM,     // Other channels: the checked build
+    LT_UPDATE_OFFER, LT_UPDATE_CONFIRM,   // the offer: "Stable older", "Install an older version?"
     LT_COUNT };
 
 enum MenuKey : uint8_t { K_UP, K_DOWN, K_LEFT, K_RIGHT, K_OK, K_BACK, K_MENU, K_INFO, K_SAVE, K_MUTE, K_VOLUP,
@@ -98,7 +93,6 @@ struct MenuSignal {
     bool palSource;               // a 50 Hz source, also under Always 60Hz (register mode 2 or 4): region default
     uint8_t sogLevel;
     bool updateAvailable;
-    bool updateManual;            // Other channels: a checked build can be installed
     int8_t updatePct;             // -1: no upload in progress (ESP image or ADV Controller update)
     bool updateAdvController;              // the running update is the ADV Controller one (overlay title)
     uint8_t updateStage;          // UPD_*: receiving, verifying the image, done (restarting)

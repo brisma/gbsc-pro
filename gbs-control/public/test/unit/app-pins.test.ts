@@ -36,5 +36,5 @@ test("rows for pinned nodes", () => {
   assert.equal(rowForNode(nodeById("screen/position")!)!.kind, "pad");
   assert.ok(pinnable(nodeById("picture/brightness")!));
   assert.ok(!pinnable(nodeById("picture/reset-picture")!));               // actions are not offered
-  assert.ok(!pinnable(nodeById("system/sound/volume")!));                 // only Settings sections
+  assert.ok(!pinnable(nodeById("system/device/volume")!));                 // only Settings sections
 });
