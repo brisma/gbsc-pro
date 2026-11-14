@@ -20,9 +20,9 @@ const AREAS: { id: Area; label: string; icon: string }[] = [
 function Job() {
   if (!busy.value && !log.value.length) return null;
   return (
-    <div class="job">
-      {pct.value !== null && <div class="bar"><i style={{ width: `${pct.value}%` }} /></div>}
-      <div class="lines mono">{log.value.slice(-6).map((l) => <div>{l}</div>)}</div>
+    <div class="f-job">
+      {pct.value !== null && <div class="f-bar"><i style={{ width: `${pct.value}%` }} /></div>}
+      <div class="f-lines mono">{log.value.slice(-6).map((l) => <div>{l}</div>)}</div>
     </div>
   );
 }
@@ -32,11 +32,11 @@ function Confirm() {
   if (!a) return null;
   const answer = (yes: boolean) => { asking.value = null; a.resolve(yes); };
   return (
-    <div class="scrim" onClick={() => answer(false)}>
-      <div class="dlg" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+    <div class="f-scrim" onClick={() => answer(false)}>
+      <div class="f-dlg" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <h2>{a.title}</h2>
         <p>{a.body}</p>
-        <div class="btns"><button class="btn" onClick={() => answer(false)}>Cancel</button><button class="btn pri" onClick={() => answer(true)}>{a.ok}</button></div>
+        <div class="f-btns"><button class="btn" onClick={() => answer(false)}>Cancel</button><button class="btn pri" onClick={() => answer(true)}>{a.ok}</button></div>
       </div>
     </div>
   );
@@ -49,7 +49,7 @@ export function App() {
       <header class="hd">
         <Logo height={26} />
         <span class="ttl">Flasher</span>
-        <nav class="areas">
+        <nav class="f-areas">
           {AREAS.map((a) => (
             <button class={area.value === a.id ? "on" : ""} disabled={!!busy.value} onClick={() => { if (area.value !== a.id) clearJob(); area.value = a.id; }}>
               <Icon name={a.icon} />{a.label}

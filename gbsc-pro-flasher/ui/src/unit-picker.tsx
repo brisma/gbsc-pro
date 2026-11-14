@@ -37,14 +37,14 @@ export function UnitPicker({ onConnected }: { onConnected?: () => void }) {
   const join = async (h: string) => { if (await connect(h)) onConnected?.(); };
   const search = async () => { searching.value = true; found.value = await api.findUnits().catch(() => []); searching.value = false; if (found.value.length === 1) join(found.value[0]); };
   return (
-    <div class="stack">
+    <div class="f-stack">
       <input value={host.value} onInput={(e) => setHost((e.target as HTMLInputElement).value)} placeholder="IP address, e.g. 192.168.1.50" aria-label="GBSC address" />
-      <div class="pair">
+      <div class="f-pair">
         <button class="btn" disabled={!host.value || !!busy.value} onClick={() => join(host.value)}><Icon name="link" />Connect</button>
         <button class="btn" disabled={searching.value || !!busy.value} onClick={search}><Icon name="search" />{searching.value ? "Searching" : "Find on the network"}</button>
       </div>
-      {found.value && found.value.length !== 1 && <p class="hint">{found.value.length ? "Several answers, choose one:" : notFoundHint(WINDOWS)}</p>}
-      {found.value && found.value.length > 1 && <div class="pair">{found.value.map((h) => <button class="btn" onClick={() => join(h)}>{h}</button>)}</div>}
+      {found.value && found.value.length !== 1 && <p class="f-hint">{found.value.length ? "Several answers, choose one:" : notFoundHint(WINDOWS)}</p>}
+      {found.value && found.value.length > 1 && <div class="f-pair">{found.value.map((h) => <button class="btn" onClick={() => join(h)}>{h}</button>)}</div>}
       {connectError.value && <div class="warnbox"><Icon name="error" /><span>{connectError.value}</span></div>}
     </div>
   );

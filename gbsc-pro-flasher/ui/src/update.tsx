@@ -60,7 +60,7 @@ export function Update() {
   const s2 = s1 !== "done" ? "wait" : f && !pickingFile.value ? "done" : "now";
   const s3 = s2 !== "done" ? "wait" : "now";
   return (
-    <div class="steps">
+    <div class="f-steps">
       <Step n={1} title="GBSC" state={s1} summary={u ? unitSummary(u) : ""} onChange={() => { pickingUnit.value = true; result.value = null; }}>
         <UnitPicker onConnected={() => (pickingUnit.value = false)} />
         {u && <button class="btn pri wide" onClick={() => (pickingUnit.value = false)}><Icon name="check" />Use {host.value}</button>}
@@ -75,18 +75,18 @@ export function Update() {
         {fileError.value && <div class="warnbox"><Icon name="error" /><span>{fileError.value}</span></div>}
       </Step>
       <Step n={3} title="Install" state={s3} summary="Then install it">
-        <div class="stack">
+        <div class="f-stack">
           <SafeModeNote />
-          {busy.value === "update" && <div class="bar"><i style={{ width: `${pct.value ?? 0}%` }} /></div>}
+          {busy.value === "update" && <div class="f-bar"><i style={{ width: `${pct.value ?? 0}%` }} /></div>}
           <button class="btn pri wide big" disabled={!u || !f || !!busy.value} onClick={install}><Icon name="system_update" />{busy.value === "update" ? `Installing ${pct.value ?? 0} %` : "Install"}</button>
           {u?.advUpdateAvailable && <button class="btn wide" disabled={!!busy.value} onClick={installAdv}><Icon name="developer_board" />Update the ADV Controller</button>}
-          <p class="hint">The GBSC checks the image, restarts, and the flasher reads the version it came back with.</p>
+          <p class="f-hint">The GBSC checks the image, restarts, and the flasher reads the version it came back with.</p>
         </div>
       </Step>
       <Step n="end" title="Done" state={result.value ? "now" : "wait"} summary="The version after the restart comes here">
         {result.value?.includes("did not finish")
           ? <div class="warnbox"><Icon name="error" /><span>{result.value}</span></div>
-          : <div class="okbox"><Icon name="check_circle" /><span>{result.value}</span></div>}
+          : <div class="f-okbox"><Icon name="check_circle" /><span>{result.value}</span></div>}
       </Step>
     </div>
   );

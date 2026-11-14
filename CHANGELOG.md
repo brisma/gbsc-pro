@@ -52,6 +52,8 @@ refer to brisma/gbsc-pro.
   does not show. (#72)
 - Profiles: auto-load no longer loads another console's profile when the sync is unstable and the source's rate cannot
   be measured; it measures again before it decides. (#69)
+- Flasher: the steps are again one column of numbered cards; in beta1 they were squeezed side by side and overlapped
+  (a style of the web app reached them). The buttons worked.
 
 ### Source code
 - A push or a pull request is tested in the development container; Windows, macOS and Linux run their suites before

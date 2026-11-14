@@ -71,10 +71,10 @@ function end(): string {
 
 function DeviceList() {
   return (
-    <div class="stack">
-      {!devices.value.length && <div class="empty"><Icon name="usb_off" /><span>No GBSC device on USB. Connect the GBSC's USB port, or hold the ADV Controller's button while plugging its USB-C cable.</span></div>}
+    <div class="f-stack">
+      {!devices.value.length && <div class="f-empty"><Icon name="usb_off" /><span>No GBSC device on USB. Connect the GBSC's USB port, or hold the ADV Controller's button while plugging its USB-C cable.</span></div>}
       {devices.value.map((x) => (
-        <button class={`dev${x.port === selected.value ? " on" : ""}${x.refuse ? " no" : ""}`} disabled={!!busy.value}
+        <button class={`f-dev${x.port === selected.value ? " on" : ""}${x.refuse ? " no" : ""}`} disabled={!!busy.value}
                 onClick={() => { selected.value = x.port; if (usable(x)) pickingDevice.value = false; if (!fileFromUser.value) file.value = preselect(candidates.value, x); dropStaleLast(true); }}>
           <Icon name={DEV_ICON[x.kind] ?? "usb"} />
           <span><b>{x.label}</b><small class="mono">{x.port}</small></span>
@@ -91,7 +91,7 @@ function DeviceList() {
 function FilePick() {
   const f = file.value, d = device.value;
   return (
-    <div class="stack">
+    <div class="f-stack">
       <div class="drop">
         <Icon name="upload_file" />
         <span>{f ? <><b>{f.name}</b><br />{f.kind === "esp" ? "GBS-Control" : f.kind === "adv" ? "ADV Controller" : "Unknown"}{f.version ? ` ${f.version}` : ""}</> : "Drop a firmware file here"}</span>
@@ -117,7 +117,7 @@ export function Devices() {
   const s3 = s2 !== "done" ? "wait" : last.value?.ok ? "done" : "now";   // a failed write stays open for the retry
   const mismatch = f && d && usable(d) && f.kind !== d.kind;
   return (
-    <div class="steps">
+    <div class="f-steps">
       <Step n={1} title="Device" state={s1} summary={d ? `${d.label} on ${d.port}` : ""} onChange={() => (pickingDevice.value = true)}>
         <DeviceList />
       </Step>
@@ -129,28 +129,28 @@ export function Devices() {
       </Step>
       <Step n={3} title={!f && fileFromUser.value && d?.kind === "esp" ? "Erase" : "Write"} state={s3} onChange={() => (last.value = null)}
             summary={s3 === "wait" ? "Then write it" : last.value?.ok ? "Done" : ""}>
-        <div class="stack">
+        <div class="f-stack">
           {d?.kind === "esp" && (
-            <div class="choices" role="radiogroup" aria-label="Before writing">
+            <div class="f-choices" role="radiogroup" aria-label="Before writing">
               {ERASES.map((e) => <button role="radio" aria-checked={erase.value === e.id} class={erase.value === e.id ? "on" : ""} disabled={!!busy.value || (!f && e.id === "none")} onClick={() => (erase.value = e.id)}>{e.label}</button>)}
             </div>
           )}
-          {busy.value === "flash" && <div class="bar"><i style={{ width: `${pct.value ?? 0}%` }} /></div>}
+          {busy.value === "flash" && <div class="f-bar"><i style={{ width: `${pct.value ?? 0}%` }} /></div>}
           <button class="btn pri wide big" disabled={!!busy.value || !flashEnabled(d, f, erase.value)} onClick={flash}>
             <Icon name="bolt" />{busy.value === "flash" ? `Writing ${pct.value ?? 0} %` : f ? "Flash" : "Erase"}
           </button>
-          <p class="hint">{d?.kind === "adv" ? "About 10 s. The ADV Controller's bootloader gives no checksum: the version is checked over WiFi after." : stub.value ? "About 25 s, verified on the chip." : "Slow mode: the fast flasher file (esp8266-stub.json) is missing. About 90 s, not verified."}</p>
+          <p class="f-hint">{d?.kind === "adv" ? "About 10 s. The ADV Controller's bootloader gives no checksum: the version is checked over WiFi after." : stub.value ? "About 25 s, verified on the chip." : "Slow mode: the fast flasher file (esp8266-stub.json) is missing. About 90 s, not verified."}</p>
         </div>
       </Step>
       <Step n="end" title="Done" state={last.value ? "now" : "wait"} summary="What to do with the cable comes here">
-        <div class="stack">
-          <div class={last.value?.ok ? "okbox" : "warnbox"}><Icon name={last.value?.ok ? "check_circle" : "error"} /><span>{end()}</span></div>
+        <div class="f-stack">
+          <div class={last.value?.ok ? "f-okbox" : "warnbox"}><Icon name={last.value?.ok ? "check_circle" : "error"} /><span>{end()}</span></div>
           {advCheckFile(last.value) && (
             <div class="field">
               <label>GBSC address for the check</label>
-              <div class="row"><input value={host.value} onInput={(e) => setHost((e.target as HTMLInputElement).value)} placeholder="gbscontrol.local or 192.168.x.x" />
+              <div class="f-row"><input value={host.value} onInput={(e) => setHost((e.target as HTMLInputElement).value)} placeholder="gbscontrol.local or 192.168.x.x" />
                 <button class="btn" disabled={!host.value || !!busy.value} onClick={checkAdv}><Icon name="verified" />Check</button></div>
-              {advCheck.value && <p class="hint">{advCheck.value}</p>}
+              {advCheck.value && <p class="f-hint">{advCheck.value}</p>}
             </div>
           )}
         </div>

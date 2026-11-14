@@ -59,31 +59,31 @@ export function Backup() {
   const full = ready && !unit.value?.safeMode;   // safe mode: only the backup download answers
   const list = profilesFor.value === host.value && unit.value ? profiles.value : null;
   return (
-    <div class="steps page">
-      <div class="card">
-        <div class="sh"><b>GBSC</b></div>
-        {unit.value ? <div class="sum">{unitSummary(unit.value)}</div> : null}
+    <div class="f-steps">
+      <div class="f-card">
+        <div class="f-sh"><b>GBSC</b></div>
+        {unit.value ? <div class="f-sum">{unitSummary(unit.value)}</div> : null}
         <UnitPicker />
         <SafeModeNote />
       </div>
-      <div class="card">
-        <div class="sh"><b>Backup</b></div>
-        <div class="pair">
+      <div class="f-card">
+        <div class="f-sh"><b>Backup</b></div>
+        <div class="f-pair">
           <button class="btn" disabled={!ready} onClick={download}><Icon name="download" />Download backup</button>
           <button class="btn" disabled={!full} onClick={restore}><Icon name="settings_backup_restore" />Restore a backup</button>
         </div>
       </div>
-      <div class="card">
-        <div class="sh"><b>Profiles</b><button class="lnk" disabled={!full} onClick={loadProfiles}><Icon name="refresh" />Load</button></div>
-        {list && !list.length && <p class="hint">No profiles saved on this GBSC.</p>}
+      <div class="f-card">
+        <div class="f-sh"><b>Profiles</b><button class="f-lnk" disabled={!full} onClick={loadProfiles}><Icon name="refresh" />Load</button></div>
+        {list && !list.length && <p class="f-hint">No profiles saved on this GBSC.</p>}
         {list?.map((p) => (
-          <div class="prow"><span><b>{p.name}</b>{p.region ? <small> {p.region}</small> : null}</span>
+          <div class="f-prow"><span><b>{p.name}</b>{p.region ? <small> {p.region}</small> : null}</span>
             <button class="btn" disabled={!full} onClick={() => exportOne(p)}><Icon name="file_save" />Export</button></div>
         ))}
         <button class="btn wide" disabled={!full} onClick={importOne}><Icon name="upload" />Import a profile file</button>
       </div>
       {outcome.value && (
-        <div class={outcome.value.ok ? "okbox" : "warnbox"}><Icon name={outcome.value.ok ? "check_circle" : "error"} /><span>{outcome.value.text}</span></div>
+        <div class={outcome.value.ok ? "f-okbox" : "warnbox"}><Icon name={outcome.value.ok ? "check_circle" : "error"} /><span>{outcome.value.text}</span></div>
       )}
     </div>
   );
