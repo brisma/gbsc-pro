@@ -231,7 +231,8 @@ static FakeBackend& easy(uint8_t input, bool interlaced, bool ntsc) {
 }
 static void expectCommonEasyPages(FakeBackend& be) {
     TEST_ASSERT_EQUAL_STRING("Input, Output, Picture, Screen, Profiles, System, Menu mode", rows(be, "").c_str());
-    TEST_ASSERT_EQUAL_STRING("Resolution, Always 60Hz, Smooth scrolling, HDMI range", rows(be, "Output").c_str());
+    TEST_ASSERT_EQUAL_STRING("Resolution, Aspect, Integer scale, 50Hz style, Always 60Hz, Smooth scrolling, HDMI range",
+                             rows(be, "Output").c_str());
     TEST_ASSERT_EQUAL_STRING("Filter, Scanlines, Brightness, Contrast, Saturation, Deinterlace, Reset picture",
                              rows(be, "Picture").c_str());
     TEST_ASSERT_EQUAL_STRING("Position, Size, Edge mask, Reset screen", rows(be, "Screen").c_str());
@@ -241,6 +242,14 @@ static void expectCommonEasyPages(FakeBackend& be) {
     TEST_ASSERT_EQUAL_STRING("Status pop-up, OLED idle, OLED idle after", rows(be, "System/TV and OLED menu").c_str());
     TEST_ASSERT_EQUAL_STRING("Mode, Network, Address, Hostname, Reset to hotspot", rows(be, "System/WiFi").c_str());
     TEST_ASSERT_EQUAL_STRING("GBS-Control, ADV Controller, Channel, Check now", rows(be, "System/Update").c_str());
+}
+
+// The 50 Hz picture is chosen on the Output page (50Hz style): the Screen page has no row for it, in Advanced either
+void test_screen_page_has_no_50hz_row(void) {
+    FakeBackend& be = easy(1, false, false);
+    be.apply(SID_sys_menu_mode, 1);
+    be.settle();
+    TEST_ASSERT_EQUAL_STRING("Position, Size, Edge mask, Reset screen, Mask position", rows(be, "Screen").c_str());
 }
 
 void test_easy_pages_rgb_scart_240p(void) {
@@ -405,6 +414,7 @@ int main() {
     RUN_TEST(test_tree_settings_and_actions_exist);
     RUN_TEST(test_tree_no_duplicate_visible_labels);
     RUN_TEST(test_tree_every_sub_has_a_visible_child_somewhere);
+    RUN_TEST(test_screen_page_has_no_50hz_row);
     RUN_TEST(test_easy_pages_rgb_scart_240p);
     RUN_TEST(test_easy_pages_component_480i);
     RUN_TEST(test_easy_pages_svideo_ntsc);

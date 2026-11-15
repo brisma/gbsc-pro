@@ -253,7 +253,8 @@ void test_confirm_default_no(void) {
 
 void test_queue_full_shows_busy_toast(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("Output"); r.select("Force 60Hz");
+    r.key(K_MENU); r.enter("Output");
+    TEST_ASSERT_TRUE(r.select("Always 60Hz"));
     r.be.queueFull = true;
     r.key(K_OK);
     TEST_ASSERT_EQUAL_UINT8(OV_TOAST, r.v().overlay);
@@ -350,7 +351,7 @@ void test_second_revert_waits_for_settle(void) {
     MenuRig r;
     openRevert(r);
     r.key(K_BACK);                     // undo queued, not settled yet
-    r.select("Frame lock");
+    TEST_ASSERT_TRUE(r.select("Smooth scrolling"));
     r.key(K_OK);
     TEST_ASSERT_EQUAL_INT(0, countLog(r, "apply output.frame_lock=1"));
     TEST_ASSERT_EQUAL_STRING("Please wait", line0(r).c_str());
@@ -1655,7 +1656,9 @@ void test_signal_change_in_names_list(void) {
 
 // ---- Adjust undo/keep, quick slider ----
 static void openAdjust(MenuRig& r, const char* item) {
-    r.key(K_MENU); r.enter("Screen"); r.select(item); r.key(K_OK);
+    r.key(K_MENU); r.enter("Screen");
+    TEST_ASSERT_TRUE_MESSAGE(r.select(item), item);
+    r.key(K_OK);
     TEST_ASSERT_EQUAL_UINT8(OV_ADJUST, r.v().overlay);
 }
 
@@ -1745,7 +1748,7 @@ void test_borders_legend_back_keeps_nothing_ok_saves(void) {
 // Issue #27: Screen > Border position moves the masked window; like Borders: no undo, OK saves
 void test_border_position_moves_the_mask(void) {
     MenuRig r;
-    openAdjust(r, "Border position");
+    openAdjust(r, "Mask position");
     TEST_ASSERT_EQUAL_STRING("Arrows adjust  OK done", r.v().lines[2]);
     r.key(K_LEFT);
     TEST_ASSERT_EQUAL_STRING("run screen.border_move_left", r.lastLog().c_str());

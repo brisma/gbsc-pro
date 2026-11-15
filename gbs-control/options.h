@@ -35,7 +35,6 @@ struct userOptions
     uint8_t disableExternalClockGenerator;
     uint8_t matchPresetSource;
     uint8_t wantStepResponse;
-    uint8_t wantFullHeight;
     uint8_t enableCalibrationADC;
     uint8_t scanlineStrength;
     // GBSC-PRO fields (defined in pro/options-pro.h)

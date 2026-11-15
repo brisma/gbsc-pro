@@ -55,6 +55,9 @@
     S(S_RESPONSE_SPEED, "Speed") \
     S(S_RESET_DECODER, "Reset decoder") \
     S(S_RESOLUTION, "Resolution") \
+    S(S_ASPECT, "Aspect") \
+    S(S_INTEGER, "Integer scale") \
+    S(S_STYLE50, "50Hz style") \
     S(S_FORCE60, "Always 60Hz") \
     S(S_FRAME_LOCK, "Smooth scrolling") \
     S(S_LOCK_METHOD, "Lock method") \
@@ -78,7 +81,6 @@
     S(S_SIZE, "Size") \
     S(S_BORDER_POS, "Mask position") \
     S(S_BORDERS, "Edge mask") \
-    S(S_FULL_HEIGHT, "PAL full height") \
     S(S_RESET_GEOMETRY, "Reset screen") \
     S(S_LOAD, "Load") \
     S(S_MANAGE, "Manage") \
@@ -322,6 +324,9 @@
     S(H_ACE_DEFAULTS, "Puts the adaptive contrast boosts and speed back to their defaults.") \
     S(H_RESET_DECODER, "Puts every Decoder setting and 2X back to their defaults.") \
     S(H_RESOLUTION, "Sent to the TV. 1080p suits most TVs. Even scanlines: 960p/1024p on any source. 1200p on 60 Hz.") \
+    S(H_ASPECT, "Auto keeps the shape. Force 4:3 for a TV that stretches. Full fills the screen.") \
+    S(H_INTEGER, "Each console line gets the same number of TV lines. The picture may get smaller.") \
+    S(H_STYLE50, "PAL TV: as a PAL TV showed it. Full height: taller. As 60Hz: shaped as the 60Hz game.") \
     S(H_FORCE60, "Sends 50Hz PAL sources at 60Hz for TVs that dislike 50Hz. Smooth scrolling then stays off.") \
     S(H_EXT_CLOCK, "Uses the board's external clock chip when one is fitted. Applies after a restart.") \
     S(H_HDMI_RANGE, "Grey blacks: try Full. Crushed dark areas: try Limited. Auto: Limited at 720p and 1080p.") \
@@ -366,7 +371,6 @@
     S(H_SIZE, "Stretches or shrinks the picture. Open it and use the arrows or the knob.") \
     S(H_BORDER_POS, "Moves the edge mask without changing its size when it cuts one side too much.") \
     S(H_BORDERS, "Blacks out junk at the picture edges. Open it and use the arrows or the knob.") \
-    S(H_FULL_HEIGHT, "On 1080p output PAL 50Hz sources fill the whole screen height.") \
     S(H_LOAD, "Loads a saved profile or the Defaults. Match marks the profiles of this signal.") \
     S(H_VOLUME, "Volume of the audio output. The remote volume keys change it too.") \
     S(H_MUTE, "Silences the audio output. The volume stays as it was.") \

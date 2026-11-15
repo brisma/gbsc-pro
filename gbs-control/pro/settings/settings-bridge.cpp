@@ -9,7 +9,6 @@
     B(match,       "output.match_preset",      BRIDGE_SERIAL, "*Z") \
     B(scanlines,   "picture.scanlines",        BRIDGE_USER,   "*7") \
     B(line_filter, "picture.line_filter",      BRIDGE_USER,   "*m") \
-    B(full_height, "screen.full_height",       BRIDGE_USER,   "*v") \
     B(force60,     "output.force_60hz",        BRIDGE_USER,   "*0") \
     B(ext_clock,   "system.ext_clock",         BRIDGE_USER,   "*X") \
     B(adc_cal,     "system.adc_calibration",   BRIDGE_USER,   "*w") \

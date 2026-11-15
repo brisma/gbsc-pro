@@ -17,6 +17,8 @@
     OPT(OPT_OSD_POS,   "Top left|Top|Top right|Center left|Center|Center right|Bottom left|Bottom|Bottom right") \
     OPT(OPT_OSD_TIME,  "5s|10s|15s|30s|60s|10min") \
     OPT(OPT_PRESETS,   "960p=0|480p=1|Custom=2|720p=3|1024p=4|1080p=5|1200p=7|Downscale=6@original|Bypass=10@original") \
+    OPT(OPT_ASPECT,    "Auto|Force 4:3|Full")   /* the picture's width in the frame (pro/picture/geometry.h) */ \
+    OPT(OPT_STYLE50,   "PAL TV|Full height|As 60Hz")   /* the picture of a 50 Hz source */ \
     OPT(OPT_BOARD,     "Auto=0|Standard=2|Pro=1")   /* Standard = the plain gbs-control board */ \
     OPT(OPT_AUTOUPD,   "Off|Daily") \
     OPT(OPT_UPD_CHANNEL, "Stable|Beta") \
@@ -55,6 +57,8 @@
     SETTING(audio_volume,      "audio.volume",          U8,   volume,                        80,     0, 100,    Profile, APPLY_AUDIO,       nullptr,     0, CAP_AUDIO) \
     SETTING(audio_mute,        "audio.mute",            Bool, audioMuted,                    0,      0, 1,      Device,  APPLY_AUDIO,       nullptr,     0, CAP_AUDIO) \
     SETTING(output_component,  "output.component",      Bool, wantOutputComponent,           0,      0, 1,      Device,  APPLY_PRESET,      nullptr,     0, CAP_NONE) \
+    SETTING(output_aspect,     "output.aspect",         Enum, outputAspect,                  0,      0, 2,      Device,  APPLY_PRESET,      OPT_ASPECT,  0, CAP_NONE) \
+    SETTING(output_integer,    "output.integer_scale",  Bool, integerScale,                  0,      0, 1,      Device,  APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(sys_adc_cal,       "system.adc_calibration",Bool, enableCalibrationADC,          1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(sys_ext_clock,     "system.ext_clock",      Bool, disableExternalClockGenerator, 1,      0, 1,      Device,  APPLY_NONE,        nullptr,     SETTING_FLAG_INVERT, CAP_NONE) \
     SETTING(sys_board,         "system.board",          Enum, boardOverride,                 0,      0, 2,      Device,  APPLY_NONE,        OPT_BOARD,   0, CAP_NONE) \
@@ -75,6 +79,7 @@
     SETTING(output_ftl,        "output.frame_lock",     Bool, enableFrameTimeLock,           0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(output_ftl_method, "output.frame_lock_method", Enum, frameTimeLockMethod,        0,      0, 1,      Profile, APPLY_NONE,        OPT_FTL,     0, CAP_NONE) \
     SETTING(output_force60,    "output.force_60hz",     Bool, PalForce60,                    0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
+    SETTING(output_style50,    "output.style_50hz",     Enum, style50Hz,                     0,      0, 2,      Profile, APPLY_PRESET,      OPT_STYLE50, 0, CAP_NONE) \
     SETTING(output_match,      "output.match_preset",   Bool, matchPresetSource,             1,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(output_hdmi,       "output.hdmi_range",     Enum, hdmiLimitedRange,              1,      0, 3,      Profile, APPLY_COLOR,       OPT_HDMI,    0, CAP_NONE) \
     /* ---- Profile: input ---- */ \
@@ -96,7 +101,6 @@
     SETTING(pic_brightness,    "picture.brightness",    U8,   picBrightness,                 50,     0, 100,    Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
     SETTING(pic_contrast,      "picture.contrast",      U8,   picContrast,                   50,     0, 100,    Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
     SETTING(pic_saturation,    "picture.saturation",    U8,   picSaturation,                 50,     0, 100,    Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
-    SETTING(screen_full_h,     "screen.full_height",    Bool, wantFullHeight,                1,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     /* ---- Profile: ADV7280 decoder ---- */ \
     SETTING(adv_format_sv,     "adv.format_sv",         Enum, svVideoFormat,                 0,      0, 12,     Profile, APPLY_ADV_FORMAT,  OPT_FORMATS, 0, CAP_ADV) \
     SETTING(adv_format_av,     "adv.format_av",         Enum, avVideoFormat,                 0,      0, 12,     Profile, APPLY_ADV_FORMAT,  OPT_FORMATS, 0, CAP_ADV) \

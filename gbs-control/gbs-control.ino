@@ -3223,30 +3223,6 @@ void doPostPresetLoadSteps()
         // most cases will use osr 2
         setOverSampleRatio(2, true); // prepare only = true
 
-        // full height option
-        if (uopt->wantFullHeight) {
-            if (rto->videoStandardInput == 1 || rto->videoStandardInput == 3) {
-                //if (rto->presetID == 0x5)
-                //{ // out 1080p 60
-                //  GBS::VDS_DIS_VB_ST::write(GBS::VDS_VSYNC_RST::read() - 1);
-                //  GBS::VDS_DIS_VB_SP::write(42);
-                //  GBS::VDS_VB_SP::write(42 - 10); // is VDS_DIS_VB_SP - 10 = 32 // watch for vblank overflow (ps3)
-                //  GBS::VDS_VSCALE::write(455);
-                //  GBS::IF_VB_SP::write(GBS::IF_VB_SP::read() + 4);
-                //  GBS::IF_VB_ST::write(GBS::IF_VB_ST::read() + 4);
-                //  SerialM.println(F("full height"));
-                //}
-            } else if (rto->videoStandardInput == 2 || rto->videoStandardInput == 4) {
-                if (rto->presetID == 0x15) { // out 1080p 50
-                    GBS::VDS_VSCALE::write(455);
-                    GBS::VDS_DIS_VB_ST::write(GBS::VDS_VSYNC_RST::read()); // full = 1125 of 1125
-                    GBS::VDS_DIS_VB_SP::write(42);
-                    GBS::IF_VB_SP::write(GBS::IF_VB_SP::read() + 22);
-                    GBS::IF_VB_ST::write(GBS::IF_VB_ST::read() + 22);
-                    SerialM.println(F("full height"));
-                }
-            }
-        }
 
         if (rto->videoStandardInput == 1 || rto->videoStandardInput == 2) {
             //GBS::PLLAD_ICP::write(5);         // 5 rather than 6 to work well with CVBS sync as well as CSync
@@ -9576,16 +9552,6 @@ void handleType2Command(char argument)
             delay(30);
             ESP.reset();
             break;
-        case 'v': {
-            uopt->wantFullHeight = !uopt->wantFullHeight;
-            saveUserPrefs();
-            uint8_t vidMode = getVideoMode();
-            if (uopt->presetPreference == 5) {
-                if (GBS::GBS_PRESET_ID::read() == 0x05 || GBS::GBS_PRESET_ID::read() == 0x15) {
-                    applyPresets(vidMode);
-                }
-            }
-        } break;
         case 'w':
             uopt->enableCalibrationADC = !uopt->enableCalibrationADC;
             saveUserPrefs();

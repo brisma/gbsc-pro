@@ -158,6 +158,9 @@ static const MenuNode kInput[] SET_PROGMEM = {
 // ---- Output ----
 static const MenuNode kOutput[] SET_PROGMEM = {
     CHO(S_RESOLUTION, H_RESOLUTION, CH_RESOLUTION, P_NONE, NF_REVERT | NF_COMMIT),
+    SET(S_ASPECT, H_ASPECT, output_aspect, P_NONE, 0, 0),
+    SET(S_INTEGER, H_INTEGER, output_integer, P_NONE, 0, 0),
+    SET(S_STYLE50, H_STYLE50, output_style50, P_NONE, 0, 0),
     SET(S_FORCE60, H_FORCE60, output_force60, P_NONE, 0, 0),
     SET(S_FRAME_LOCK, H_FTL, output_ftl, P_FTL_OK, 0, NF_REVERT),
     SET(S_LOCK_METHOD, H_LOCK_METHOD, output_ftl_method, P_FTL_ON, 0, NF_ADVANCED),
@@ -194,7 +197,6 @@ static const MenuNode kScreen[] SET_PROGMEM = {
     ADJ(S_BORDERS, H_BORDERS, AJ_BORDERS, LV_BORDERS, 0),
     FNA(S_RESET_GEOMETRY, H_RESET_GEOMETRY, FN_GEOMETRY_RESET, P_NONE, NF_CONFIRM),
     ADJ(S_BORDER_POS, H_BORDER_POS, AJ_BORDER_MOVE, LV_BORDER_POS, NF_ADVANCED),
-    SET(S_FULL_HEIGHT, H_FULL_HEIGHT, screen_full_h, P_NONE, 0, NF_ADVANCED),
 };
 
 // ---- Profiles ----

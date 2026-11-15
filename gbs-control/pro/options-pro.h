@@ -77,6 +77,9 @@
     char     otaPassword[33];       /* system.ota_password: ArduinoOTA password (write-only over HTTP) */ \
     char     extraHosts[64];        /* system.extra_hosts: extra Host names, comma-separated (guardExtraHostsValid) */ \
     char     advControllerSkip[9];  /* system.adv_controller_skip: ADV Controller build id the boot prompt skips */ \
-    uint8_t  syncwatcherMode;       /* dev.syncwatcher: per-profile override, 0 inherit, 1 on, 2 off */
+    uint8_t  syncwatcherMode;       /* dev.syncwatcher: per-profile override, 0 inherit, 1 on, 2 off */ \
+    uint8_t  outputAspect;          /* output.aspect: GeoAspect (0 Auto, 1 Force 4:3, 2 Full) */ \
+    uint8_t  integerScale;          /* output.integer_scale: whole vertical multiples of the source's lines */ \
+    uint8_t  style50Hz;             /* output.style_50hz: GeoStyle50 (0 PAL TV, 1 Full height, 2 As 60Hz) */
 
 #endif // OPTIONS_PRO_H_
