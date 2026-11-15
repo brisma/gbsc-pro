@@ -104,6 +104,26 @@ bool stvTimeConstantsOk(uint8_t a, uint8_t b, uint8_t ld) {
     return false;
 }
 
+bool stvBypassWindow(uint16_t lines, uint32_t fhHz, StvWindow& w) {
+    w = {0, 0, 0, 0, false};
+    if (!fhHz || !lines) return false;
+    uint32_t rate = (fhHz + lines / 2) / lines;         // fields a second (1080i: 60 or 50; 1080p: 60, 50, 30, 25, 24)
+    uint16_t active, porch, total;
+    if (lines >= 740 && lines <= 760) {                 // 720p: 750 lines
+        active = 1280; porch = 220;
+        total = rate >= 55 ? 1650 : 1980;
+    } else if ((lines >= 555 && lines <= 570) || (lines >= 1115 && lines <= 1135)) {   // 1080i field, 1080p frame
+        active = 1920; porch = 148;
+        total = rate >= 55 || (rate >= 28 && rate <= 32) ? 2200 : rate >= 45 || rate == 25 ? 2640 : 2750;
+    } else return false;
+    w.htotal = total;
+    w.hsSp = 0;
+    w.act0 = porch;
+    w.act1 = (uint16_t)(porch + active);
+    w.valid = true;
+    return true;
+}
+
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz) { return stvTimingForRate(s, 0, xtalHz); }
 
 StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz, uint16_t activeLines) {

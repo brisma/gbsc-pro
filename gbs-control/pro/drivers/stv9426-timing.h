@@ -23,6 +23,11 @@ enum : uint8_t { STV_ALIGN_LEFT, STV_ALIGN_CENTER, STV_ALIGN_RIGHT };
 // DD that puts the 30-cell panel at the left (5 % margin), centre or right (5 % margin) of the active window;
 // refOffsetPx: data-path delay between VDS_HS_SP and the edge the chip sees. No usable window: stvDdFor(ld)
 int stvDdForWindow(uint8_t ld, const StvWindow& w, uint8_t align, int16_t refOffsetPx);
+// An HD video source passed through (720p, 1080i, 1080p) has no scaler window: the standard timing of its format
+// stands for it, from the source's lines (a frame's, or a field's for 1080i) and line rate. The picture starts a back
+// porch after the end of the sync pulse, the edge the chip locks on. false (w.valid false): no rate, or another
+// format (the fixed stvDdFor placement stays)
+bool stvBypassWindow(uint16_t lines, uint32_t fhHz, StvWindow& w);
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz);
 // fhHz 0 = the nominal rate. Bypass (the output is the source): activeLines, the visible lines of a field, give the
 // rows their height (18 lines at 480, as the scaled outputs); 0 = not known, 480p rows

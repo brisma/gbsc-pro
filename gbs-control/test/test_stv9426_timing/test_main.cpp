@@ -134,6 +134,54 @@ void test_bypass_rows_follow_the_visible_lines(void) {
     TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_1080P60, STV_XTAL_HZ).chMenu, t.chMenu);
 }
 
+// An HD source passed through has no scaler window: the standard timing of its format stands for it (the output is
+// the source: the picture starts a back porch after the end of the sync pulse). Seen on a TV at 720p60: with the
+// fixed DD 38 the panel started about 6 % into the picture and ended at two thirds of it
+void test_bypass_window_of_hd_formats(void) {
+    StvWindow w;
+    TEST_ASSERT_TRUE(stvBypassWindow(749, 44895, w));                    // 720p60 as the scaler counts it
+    TEST_ASSERT_TRUE(w.valid);
+    TEST_ASSERT_EQUAL_UINT16(1650, w.htotal);
+    TEST_ASSERT_EQUAL_UINT16(220, w.act0 - w.hsSp);
+    TEST_ASSERT_EQUAL_UINT16(1280, w.act1 - w.act0);
+    TEST_ASSERT_TRUE(stvBypassWindow(750, 37500, w));                    // 720p50
+    TEST_ASSERT_EQUAL_UINT16(1980, w.htotal);
+    TEST_ASSERT_TRUE(stvBypassWindow(562, 33750, w));                    // 1080i60: the lines of a field
+    TEST_ASSERT_EQUAL_UINT16(2200, w.htotal);
+    TEST_ASSERT_EQUAL_UINT16(148, w.act0 - w.hsSp);
+    TEST_ASSERT_EQUAL_UINT16(1920, w.act1 - w.act0);
+    TEST_ASSERT_TRUE(stvBypassWindow(562, 28125, w));                    // 1080i50
+    TEST_ASSERT_EQUAL_UINT16(2640, w.htotal);
+    TEST_ASSERT_TRUE(stvBypassWindow(1125, 67500, w));                   // 1080p60
+    TEST_ASSERT_EQUAL_UINT16(2200, w.htotal);
+    TEST_ASSERT_TRUE(stvBypassWindow(1125, 56250, w));                   // 1080p50
+    TEST_ASSERT_EQUAL_UINT16(2640, w.htotal);
+    TEST_ASSERT_FALSE(stvBypassWindow(749, 0, w));                       // no rate: nothing to stand on
+    TEST_ASSERT_FALSE(w.valid);
+    TEST_ASSERT_FALSE(stvBypassWindow(806, 48363, w));                   // 1024x768: not an HD video format
+    TEST_ASSERT_FALSE(stvBypassWindow(525, 31469, w));                   // 480p: left as it is (not measured)
+}
+
+// ... and the panel is then centred in the picture (and follows Left / Right) as on a scaled output
+void test_bypass_panel_is_centred_in_the_picture(void) {
+    struct { uint16_t lines; uint32_t fh; } k[] = {{749, 44895}, {750, 37500}, {562, 33750}, {562, 28125}, {1125, 67500}};
+    for (auto& m : k) {
+        StvWindow w;
+        TEST_ASSERT_TRUE(stvBypassWindow(m.lines, m.fh, w));
+        uint8_t ld = stvTimingForRate(OUT_BYPASS, m.fh, STV_XTAL_HZ).ld;
+        int px = 12 * (ld + 1);                                          // STV pixels a line
+        int act0 = (w.act0 - w.hsSp) * px / w.htotal, act1 = (w.act1 - w.hsSp) * px / w.htotal;
+        int left = (stvDdForWindow(ld, w, STV_ALIGN_CENTER, 0) + 8) * 3, right = left + 30 * 12;
+        TEST_ASSERT_TRUE_MESSAGE(left >= act0 && right <= act1, "the panel leaves the picture");
+        TEST_ASSERT_INT_WITHIN_MESSAGE(8, left - act0, act1 - right, "not centred");
+        int l = (stvDdForWindow(ld, w, STV_ALIGN_LEFT, 0) + 8) * 3, r = (stvDdForWindow(ld, w, STV_ALIGN_RIGHT, 0) + 8) * 3;
+        TEST_ASSERT_TRUE(l <= left && left <= r);
+    }
+    StvWindow w;
+    stvBypassWindow(749, 44895, w);                                      // the photo: DD 38 was far left of centre
+    TEST_ASSERT_TRUE(stvDdForWindow(63, w, STV_ALIGN_CENTER, 0) > 38 + 10);
+}
+
 // The line rate of a bypass is asked again while it is unknown, a few times
 void test_bypass_rate_is_asked_again(void) {
     StvRateRetry r;
@@ -228,6 +276,8 @@ int main() {
     RUN_TEST(test_compat_menu_fits_the_line_for_every_ld);
     RUN_TEST(test_bypass_uses_the_measured_rate);
     RUN_TEST(test_bypass_rows_follow_the_visible_lines);
+    RUN_TEST(test_bypass_window_of_hd_formats);
+    RUN_TEST(test_bypass_panel_is_centred_in_the_picture);
     RUN_TEST(test_bypass_rate_is_asked_again);
     RUN_TEST(test_menu_fits_the_line_for_ld_35_to_63);
     RUN_TEST(test_dd_centres_the_panel_on_the_active_window);

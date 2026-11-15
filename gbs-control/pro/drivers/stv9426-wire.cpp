@@ -54,8 +54,12 @@ void osdDriverBegin() {
     gStarted = true;
 }
 
-// The scaler's output line: the STV9426 locks on the falling edge of HS_OUT, which is VDS_HS_SP; bypass presets
-// have no VDS window (DD from stvDdFor)
+// The lines and the line rate of the source last measured in a bypass (osdDriverLoop): the window of an HD format
+static uint16_t gBypassLines = 0;
+static uint32_t gBypassFh = 0;
+
+// The scaler's output line: the STV9426 locks on the falling edge of HS_OUT, which is VDS_HS_SP. Bypass presets have
+// no VDS window: an HD video format gets its standard one (stvBypassWindow), anything else the fixed stvDdFor edge
 void osdReadWindow() {
     if (!gStarted) return;
     StvWindow w = {0, 0, 0, 0, false};
@@ -65,6 +69,8 @@ void osdReadWindow() {
         w.act0 = GBS::VDS_DIS_HB_SP::read();
         w.act1 = GBS::VDS_DIS_HB_ST::read();
         w.valid = w.htotal > 0 && w.hsSp < w.htotal && w.act0 < w.htotal && w.act1 < w.htotal;
+    } else if (rto->presetID != 0x22) {
+        stvBypassWindow(gBypassLines, gBypassFh, w);
     }
     gDriver.setWindow(w);
 }
@@ -92,8 +98,12 @@ void osdDriverLoop() {
         uint32_t fh = s == OUT_BYPASS ? osdSourceLineHz() : 0;
         if (s == OUT_BYPASS && !fh && lastPreset != 0x22 && !again) rateRetry.start(millis());
         if (fh) rateRetry.stop();
-        if (!again || fh)
+        if (!again || fh) {
+            gBypassLines = s == OUT_BYPASS ? lines : 0;
+            gBypassFh = fh;
             gDriver.setOutput(s, fh, lines >= 200 && lines <= 1250 ? (uint16_t)(lines * 96 / 100) : 0);
+            if (again) osdReadWindow();   // the rate came late: place the panel with it now
+        }
     }
     gDriver.service(millis());
 }

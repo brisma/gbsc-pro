@@ -5,6 +5,12 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
+## 3.0.0-beta3
+
+### Fixed
+- TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
+  moves it left and right; it sat at the left. (#72)
+
 ## 3.0.0-beta2 - 2026-11-14
 
 What came out of the first beta's reports: a more careful Auto input, a System menu and an Update page that are
