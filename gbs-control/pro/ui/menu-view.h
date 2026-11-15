@@ -60,6 +60,7 @@ struct MenuIdle {
     char profile[25];                   // active profile, "" without one
     char region[8];                     // the profile's region ("NTSC-U", "PAL60"...), else "NTSC"/"PAL" from the source rate, else ""
     char net[24];                       // IP, "AP 192.168.4.1" in access-point mode
+    bool hasVolume;                     // the board has a volume control (CAP_AUDIO): else no volume is shown
     uint8_t volume;                     // percent
     bool muted;                         // muted or 0 %
     int8_t rssi;                        // Wi-Fi dBm, 0 = unknown (AP mode)

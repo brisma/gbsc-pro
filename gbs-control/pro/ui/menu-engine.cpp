@@ -1774,6 +1774,7 @@ void MenuEngine::idle(MenuIdle& o) {
     be_.text(LT_WIFI_IP, ip, sizeof(ip));
     be_.text(LT_WIFI_MODE, mode, sizeof(mode));
     snprintf(o.net, sizeof(o.net), "%s%s", strcmp(mode, "AP") ? "" : "AP ", ip);
+    o.hasVolume = (be_.caps() & CAP_AUDIO) != 0;
     o.volume = (uint8_t)be_.value(SID_audio_volume);
     o.muted = be_.value(SID_audio_mute) != 0 || o.volume == 0;
     o.rssi = (int8_t)be_.live(LV_WIFI_RSSI);

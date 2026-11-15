@@ -156,6 +156,23 @@ void test_oled_idle_no_signal_hides_the_region(void) {
     plain.r.be.sig.searching = true; s.r.be.sig.searching = true;
     TEST_ASSERT_TRUE(plain.shot() == s.shot());
 }
+// A board without the volume chip: the home screen shows no speaker and no percentage
+static bool litAtTheVolume(OScene& s) {
+    s.shot();
+    for (int16_t x = 96; x < 128; x++)
+        for (int16_t y = 53; y < 64; y++)
+            if (s.d.pixel(x, y)) return true;
+    return false;
+}
+void test_oled_idle_without_a_volume_control(void) {
+    OScene pro;
+    TEST_ASSERT_TRUE(litAtTheVolume(pro));
+    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);
+    OScene standard;
+    bool lit = litAtTheVolume(standard);
+    platformSetCaps(CAPS_DEFAULT);
+    TEST_ASSERT_FALSE(lit);
+}
 void test_oled_root(void) { OScene s; s.r.openFull(); oledGolden(s, "root"); }
 void test_oled_info(void) { OScene s; s.r.key(K_INFO); oledGolden(s, "ov-info"); }
 void test_oled_confirm(void) {
@@ -575,6 +592,7 @@ int main(int, char**) {
     RUN_TEST(test_real_library_draws_text);
     RUN_TEST(test_pbm_format);
     RUN_TEST(test_oled_idle_no_signal_hides_the_region);
+    RUN_TEST(test_oled_idle_without_a_volume_control);
     RUN_TEST(test_oled_tv_osd);
     RUN_TEST(test_oled_root);
     RUN_TEST(test_oled_info);

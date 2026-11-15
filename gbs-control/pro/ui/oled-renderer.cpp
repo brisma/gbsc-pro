@@ -505,7 +505,7 @@ int16_t OledRenderer::boxed(int16_t cx, int16_t y, const char* text, int16_t lo,
 }
 
 // Home screen: band with the Wi-Fi bars; source -> output resolution in Arial 16 with the rates under them; a rule;
-// profile + region; network + volume
+// profile + region; network + volume (where the board has one)
 void OledRenderer::drawIdle(const MenuIdle& idle) {
     band(idle.title);
     d_.setColor(BLACK);
@@ -546,6 +546,10 @@ void OledRenderer::drawIdle(const MenuIdle& idle) {
             prof += marqueeOffset((uint16_t)(k + 1), 1, e, kPassScroll);
     }
     clipped(3, 42, prof, slot);
+    if (!idle.hasVolume) {                              // no volume control on this board: the address has the line
+        clipped(3, 52, idle.net, 120);
+        return;
+    }
     char vol[8];
     if (idle.muted) snprintf(vol, sizeof(vol), "Mute");
     else snprintf(vol, sizeof(vol), "%u%%", idle.volume);
