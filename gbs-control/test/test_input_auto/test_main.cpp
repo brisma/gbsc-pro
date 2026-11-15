@@ -867,6 +867,45 @@ void test_unread_sync_is_looked_at_on_vga_again(void) {
     TEST_ASSERT_TRUE(inputVgaLookAgain(true, InputAuto::kVgaLookAgainMs));
 }
 
+// A composite sync cable on the VGA connector reads "an HS and no VS" for ever. The first return gets its round of
+// looks (a VGA source may be late with its vertical sync); once a round ends as it began, later returns of that
+// source get one look
+void test_a_csync_cable_on_vga_gets_one_look_per_return(void) {
+    ReturnLooks l;
+    TEST_ASSERT_FALSE(l.pending());
+    l.begin();
+    TEST_ASSERT_TRUE(l.looked(false, true));        // HS, no VS: look again
+    TEST_ASSERT_TRUE(l.looked(false, true));
+    TEST_ASSERT_FALSE(l.looked(false, true));       // third and last of the round
+    TEST_ASSERT_FALSE(l.pending());
+    l.begin();                                      // the next sync return
+    TEST_ASSERT_TRUE(l.pending());
+    TEST_ASSERT_FALSE(l.looked(false, true));       // one look, no more
+    l.begin();
+    TEST_ASSERT_FALSE(l.looked(false, true));
+
+    l.begin();                                      // the connector reads something else: a full round next time
+    TEST_ASSERT_FALSE(l.looked(false, false));
+    l.begin();
+    TEST_ASSERT_TRUE(l.looked(false, true));
+    TEST_ASSERT_TRUE(l.looked(true, true) == false);   // the scan moved to VGA: nothing left
+    TEST_ASSERT_FALSE(l.pending());
+
+    ReturnLooks m;                                  // a SCART console: no HS on the VGA connector, one look, never held
+    m.begin();
+    TEST_ASSERT_FALSE(m.looked(false, false));
+    m.begin();
+    TEST_ASSERT_FALSE(m.looked(false, false));
+
+    ReturnLooks n;                                  // another source: the round starts over
+    n.begin(); n.looked(false, true); n.looked(false, true); n.looked(false, true);
+    n.reset();
+    n.begin();
+    TEST_ASSERT_TRUE(n.looked(false, true));
+    n.cancel();                                     // no look possible now: nothing pending, nothing learned
+    TEST_ASSERT_FALSE(n.pending());
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_paths_pro_order);
@@ -927,5 +966,6 @@ int main(int, char**) {
     RUN_TEST(test_a_found_sog_source_may_be_looked_at_on_vga_too);
     RUN_TEST(test_no_vga_look_where_it_cannot_help);
     RUN_TEST(test_the_look_is_repeated_only_when_scart_is_silent);
+    RUN_TEST(test_a_csync_cable_on_vga_gets_one_look_per_return);
     return UNITY_END();
 }

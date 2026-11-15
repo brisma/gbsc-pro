@@ -630,30 +630,28 @@ static void rateWatch(bool link, uint8_t active, uint32_t now) {
 // Auto on the Pro, a source found on RGB SCART or RGB SoG, VGA searched: when its sync returns from a gap the VGA
 // connector is looked at (ReturnWatch); a source there (H and V sync) moves the scan to VGA, anything else leaves
 // the found source alone. An HS alone with no sync on SCART pin 20 either is a VGA source that has not started its
-// VS yet: looked at again, kReturnLooks in all
+// VS yet: looked at again, ReturnLooks::kLooks in all. A composite sync cable on that connector reads the same for
+// ever: once a round ends that way, the returns that follow get one look (ReturnLooks)
 static ReturnWatch gReturn;
-static const uint8_t kReturnLooks = 3;
-static uint8_t gReturnLooks = 0;              // looks left for this return
+static ReturnLooks gReturnLooks;
 static uint32_t gReturnLookAt = 0;
 static void returnLook(uint32_t now) {
-    gReturnLooks--;
-    if (inputAutoLookAtVga()) { gReturnLooks = 0; return; }    // scanning on VGA now
-    if (gReturnLooks && inputVgaReturnLookAgain(gAuto.found(), uopt->advSyncStripper != 0, gLook.hs, gLook.vs,
-                                                gLook.pathMeasured, gLook.pathVs))
-        gReturnLookAt = now + InputAuto::kVgaLookAgainMs;
-    else gReturnLooks = 0;
+    bool moved = inputAutoLookAtVga();                         // true: scanning on VGA now
+    bool again = !moved && inputVgaReturnLookAgain(gAuto.found(), uopt->advSyncStripper != 0, gLook.hs, gLook.vs,
+                                                   gLook.pathMeasured, gLook.pathVs);
+    if (gReturnLooks.looked(moved, again)) gReturnLookAt = now + InputAuto::kVgaLookAgainMs;
 }
 static void returnWatch(bool link, uint8_t active, bool judging, uint32_t now) {
     if (!link || !gAuto.vgaReturnLookWanted() || gAuto.found() != active || rto->sourceDisconnected) {
         gReturn.reset();
-        gReturnLooks = 0;
+        gReturnLooks.reset();
         return;
     }
     if (judging || advLinkChecking() || advLinkController().status != ADV_CONTROLLER_OK) {   // no look now
-        gReturnLooks = 0;
+        gReturnLooks.cancel();
         return;
     }
-    if (gReturnLooks) {
+    if (gReturnLooks.pending()) {
         if ((int32_t)(now - gReturnLookAt) >= 0) returnLook(now);
         return;
     }
@@ -662,7 +660,7 @@ static void returnWatch(bool link, uint8_t active, bool judging, uint32_t now) {
     if (!gReturn.feed(sync, mode, now)) return;
     logPrintf(LC_INPUT, LL_INFO, PSTR("%s: sync back after a %lu.%lu s gap, looking at the VGA connector"), inputLongName(active),
               (unsigned long)(gReturn.gapMs() / 1000), (unsigned long)(gReturn.gapMs() % 1000 / 100));
-    gReturnLooks = kReturnLooks;
+    gReturnLooks.begin();
     returnLook(now);
 }
 

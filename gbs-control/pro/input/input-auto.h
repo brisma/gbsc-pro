@@ -80,6 +80,24 @@ private:
 // sync: the sync watcher has the sync (it also counts none while a new format's preset loads); mode: the 15 kHz mode
 // (1, 2), 0 = another. Not after a format change (a region switch: RateWatch's business), and looks are kQuietMs
 // apart: an unstable sync must not get one at every dropout, and the return that had to wait is looked at then
+// The looks at the VGA connector that follow a ReturnWatch report. A round is up to kLooks looks, one more while
+// each reads "an HS and no VS" (inputVgaReturnLookAgain: a VGA source can show its horizontal sync first). A round
+// that ends still reading that is a composite sync cable on that connector: the sync the picture runs on. It will
+// read the same at every return, so later returns of that source get one look, enough to see a real VGA source.
+class ReturnLooks {
+public:
+    static const uint8_t kLooks = 3;
+    void reset() { left_ = 0; hsOnly_ = false; }       // another source, or none
+    void cancel() { left_ = 0; }                       // no look can be taken now
+    void begin() { left_ = hsOnly_ ? 1 : kLooks; }     // a sync return
+    bool pending() const { return left_ != 0; }
+    // After a look. moved: the scan went to VGA; again: inputVgaReturnLookAgain(). True: look once more later
+    bool looked(bool moved, bool again);
+private:
+    uint8_t left_ = 0;
+    bool hsOnly_ = false;
+};
+
 class ReturnWatch {
 public:
     static const uint32_t kGapMs = 400, kQuietMs = 10000;

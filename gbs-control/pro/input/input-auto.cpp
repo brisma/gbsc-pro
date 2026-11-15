@@ -278,6 +278,15 @@ bool inputVgaReturnLookAgain(uint8_t found, bool cleanupOn, bool hs, bool vs, bo
     return found == InputTypeRGBs && cleanupOn && hs && !vs && pathMeasured && !pathVs;
 }
 
+bool ReturnLooks::looked(bool moved, bool again) {
+    if (left_) left_--;
+    if (moved) { left_ = 0; return false; }
+    if (!again) { left_ = 0; hsOnly_ = false; return false; }
+    if (left_) return true;
+    hsOnly_ = true;                                    // the round ended as it began
+    return false;
+}
+
 void InputAuto::setBoard(const InputAutoBoard& b, uint32_t now) {
     if (!(b != board_)) return;
     board_ = b;
