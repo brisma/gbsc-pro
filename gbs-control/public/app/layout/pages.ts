@@ -14,6 +14,11 @@ const m = (id: string) => `menu:${id}` as const;
 const notDecoder = (s: { input: number }) => s.input !== IN.SV && s.input !== IN.AV;
 const DECODER_NOTE: Row = { kind: "note", icon: "info", showIf: notDecoder,
   text: "Video standard, 2X and Decoder appear with S-Video or Composite, as on the TV." };
+// Outputs whose frame is 4:3 or 5:4 (scaler table ids): a TV may stretch them to the whole screen
+const FRAME_43 = [0x01, 0x02, 0x04, 0x11, 0x12, 0x14];
+const ASPECT_NOTE: Row = { kind: "note", icon: "info",
+  showIf: (s) => FRAME_43.includes(s.signal.presetId) && Number(s.values["output.aspect"] ?? 0) === 0,
+  text: "If your TV stretches this resolution to the whole screen, choose Force 4:3." };
 
 // Settings follow the signal chain, one stage per section: Input, Scaler, Picture, Output
 const INPUT: Section = { id: "input", title: "Input", icon: "cable", hint: "The cable and its signal", groups: [
@@ -73,7 +78,6 @@ const SCALER: Section = { id: "scaler", title: "Scaler", icon: "memory", hint: "
     { kind: "pad", ref: m("screen/size"), icon: "zoom_out_map" },
     { kind: "pad", ref: m("screen/edge-mask"), icon: "crop_free" },
     { kind: "pad", ref: m("screen/mask-position"), icon: "crop" },
-    { kind: "toggle", ref: m("screen/pal-full-height"), icon: "height" },
     { kind: "action", ref: m("screen/reset-screen"), icon: "settings_backup_restore", head: true },
   ] },
   { title: "Clock and presets", rows: [
@@ -107,6 +111,10 @@ const PICTURE: Section = { id: "picture", title: "Picture", icon: "image", hint:
 const OUTPUT: Section = { id: "output", title: "Output", icon: "tv", hint: "What goes to the TV", groups: [
   { title: "Resolution", rows: [
     { kind: "picker", ref: m("output/resolution"), icon: "hd", look: "resolution" },
+    { kind: "inline", ref: m("output/aspect"), icon: "aspect_ratio" },
+    ASPECT_NOTE,
+    { kind: "toggle", ref: m("output/integer-scale"), icon: "grid_4x4" },
+    { kind: "inline", ref: m("output/50hz-style"), icon: "crop_16_9" },
     { kind: "toggle", ref: m("output/always-60hz"), icon: "60fps" },
   ] },
   { title: "Connection to the TV", rows: [

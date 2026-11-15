@@ -7,6 +7,27 @@ refer to brisma/gbsc-pro.
 
 ## 3.0.0-beta3
 
+The shape of the picture becomes a choice: three new rows in Output, under Resolution. One thing changes without
+being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz style).
+
+### Output
+- **Aspect**: Auto keeps the picture's shape, as before. **Force 4:3** puts side bars on 480p, 576p, 960p and 1024p,
+  for a TV that stretches every signal to the whole screen. **Full** fills the screen's width at 720p, 1080p and
+  1200p; it is the only value that changes the shape. (#49, #66)
+- **Integer scale**: every line of the console becomes the same number of lines on the TV, and the width follows so
+  that the shape stays. At 60 Hz it changes 1080p (x4, 960 lines, bars above and below); 720p, 960p and 1200p are
+  whole multiples already. (#49)
+- **50Hz style** replaces Screen > PAL full height and works at every resolution. **PAL TV**, the new default, shows
+  a 50 Hz source the way a PAL TV did: nothing is stretched, and a game that draws 224 or 240 lines has black bands
+  above and below. **Full height** is the picture of earlier versions (taller, a little wide). **As 60Hz** fills the
+  height and narrows the width to the shape of the game's 60 Hz version.
+- Coming from an earlier version with a 50 Hz console: the bands above and below are the new default, not a fault;
+  50Hz style = Full height brings the earlier picture back. A profile saved at 1080p from a 50 Hz source with PAL
+  full height on still holds that picture: run Screen > Reset screen on it (or delete and save it again) before
+  choosing its 50Hz style, otherwise Full height is applied on top of it. The active profile shows as changed once.
+- The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
+  grid are welcome.
+
 ### Fixed
 - TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
   moves it left and right; it sat at the left. (#72)
