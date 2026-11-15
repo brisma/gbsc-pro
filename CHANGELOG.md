@@ -29,6 +29,12 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   grid are welcome.
 
 ### Fixed
+- After an update the active profile no longer shows unsaved changes when nothing was changed: a profile is compared
+  with its own file when the settings of the new version differ from the old one's. (#72)
+- Standard board: the OLED home screen no longer shows a volume, which that board does not have. (#72)
+- Source = Auto with a composite sync cable on the VGA connector: after a short sync loss the VGA connector was
+  looked at three times, 0.65 s each; once it has read the same three times, the later sync losses of that source
+  get one look. (#69)
 - TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
   moves it left and right; it sat at the left. (#72)
 
