@@ -18,6 +18,7 @@
 #include "ofw_RGBS.h"
 #include "options.h"
 #include "pro/screen/screen-borders.h"
+#include "pro/picture/geometry.h"
 #include "pro/clock/si5351-lab.h"
 #include "pro/api/api-router.h"
 #include "pro/profiles/profile-store.h"
@@ -823,6 +824,8 @@ void setResetParameters()
     GBS::ADC_UNUSED_67::write(0);
     GBS::GBS_PRESET_CUSTOM::write(0);
     GBS::GBS_PRESET_ID::write(0);
+    GBS::GBS_GEOMETRY::write(0);
+    GBS::GBS_GEOMETRY_BAR::write(0);
     GBS::GBS_OPTION_SCALING_RGBHV::write(0);
     GBS::GBS_OPTION_PALFORCED60_ENABLED::write(0);
 
@@ -3039,6 +3042,87 @@ static void applyProfileSyncWatcher()
     if (!was && rto->syncWatcherEnabled) logPrintf(LC_SYNC, LL_INFO, PSTR("sync watcher on (profile)"));
 }
 
+// The picture the settings ask for (output.aspect, output.integer_scale, output.style_50hz) on the preset just
+// loaded, table or profile. Its registers say which picture they hold (GBS_GEOMETRY); the step applies the
+// difference. It runs while the display clock is still the scaler's own code, so a clock step is one register: the
+// clock generator and the line total are set up after it. Sources that share the tables with other vertical scales
+// (medium resolution, scaled RGBHV) and bypass modes are left alone.
+static void geometryStep()
+{
+    if (rto->outModeHdBypass || rto->videoStandardInput < 1 || rto->videoStandardInput > 4 ||
+        GBS::GBS_OPTION_SCALING_RGBHV::read() == 1) {
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: not at this resolution"));
+        return;
+    }
+    GeoRegs was = {};
+    was.hTotal = GBS::VDS_HSYNC_RST::read();
+    was.hsSt = GBS::VDS_HS_ST::read();
+    was.hsSp = GBS::VDS_HS_SP::read();
+    was.hbSt = GBS::VDS_HB_ST::read();
+    was.hbSp = GBS::VDS_HB_SP::read();
+    was.disHbSt = GBS::VDS_DIS_HB_ST::read();
+    was.disHbSp = GBS::VDS_DIS_HB_SP::read();
+    was.hScale = GBS::VDS_HSCALE::read();
+    was.hScaleByps = GBS::VDS_HSCALE_BYPS::read() != 0;
+    was.vTotal = GBS::VDS_VSYNC_RST::read();
+    was.vScale = GBS::VDS_VSCALE::read();
+    was.vbSp = GBS::VDS_VB_SP::read();
+    was.disVbSt = GBS::VDS_DIS_VB_ST::read();
+    was.disVbSp = GBS::VDS_DIS_VB_SP::read();
+    was.ifVbSt = GBS::IF_VB_ST::read();
+    was.ifVbSp = GBS::IF_VB_SP::read();
+    was.clock = GBS::PLL648_CONTROL_01::read();
+    was.mark = GBS::GBS_GEOMETRY::read();
+    was.bar = GBS::GBS_GEOMETRY_BAR::read();
+
+    GeoRegs now = was;
+    GeoState want = {uopt->outputAspect, uopt->integerScale != 0, uopt->style50Hz};
+    GeoResult g = geometryApply(now, rto->presetID, want);
+    if (!g.acted) {
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: not at this resolution"));
+        return;
+    }
+    // The TV menu is placed on the shown window. A reload under the same preset id may have changed it even when
+    // this step has nothing to do (back to the table's own picture)
+    if (hwHas(CAP_OSD)) osdWindowSoon();
+    if (g.failed) {
+        logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: step refused, picture left as loaded"));
+        return;
+    }
+    if (!g.changed) {
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: nothing to do"));
+        return;
+    }
+    if (now.clock != was.clock) GBS::PLL648_CONTROL_01::write(now.clock);
+    if (now.hTotal != was.hTotal) GBS::VDS_HSYNC_RST::write(now.hTotal);
+    if (now.hsSt != was.hsSt) GBS::VDS_HS_ST::write(now.hsSt);
+    if (now.hsSp != was.hsSp) GBS::VDS_HS_SP::write(now.hsSp);
+    if (now.hbSt != was.hbSt) GBS::VDS_HB_ST::write(now.hbSt);
+    if (now.hbSp != was.hbSp) GBS::VDS_HB_SP::write(now.hbSp);
+    if (now.disHbSt != was.disHbSt) GBS::VDS_DIS_HB_ST::write(now.disHbSt);
+    if (now.disHbSp != was.disHbSp) GBS::VDS_DIS_HB_SP::write(now.disHbSp);
+    if (now.hScale != was.hScale) GBS::VDS_HSCALE::write(now.hScale);
+    if (now.hScaleByps != was.hScaleByps) GBS::VDS_HSCALE_BYPS::write(now.hScaleByps ? 1 : 0);
+    if (now.vScale != was.vScale) GBS::VDS_VSCALE::write(now.vScale);
+    if (now.vbSp != was.vbSp) GBS::VDS_VB_SP::write(now.vbSp);
+    if (now.disVbSt != was.disVbSt) GBS::VDS_DIS_VB_ST::write(now.disVbSt);
+    if (now.disVbSp != was.disVbSp) GBS::VDS_DIS_VB_SP::write(now.disVbSp);
+    if (now.ifVbSt != was.ifVbSt) GBS::IF_VB_ST::write(now.ifVbSt);
+    if (now.ifVbSp != was.ifVbSp) GBS::IF_VB_SP::write(now.ifVbSp);
+    if (now.mark != was.mark) GBS::GBS_GEOMETRY::write(now.mark);
+    if (now.bar != was.bar) GBS::GBS_GEOMETRY_BAR::write(now.bar);
+
+    static const char* const kAspect[] = {"Auto", "Force 4:3", "Full"};
+    static const char* const kStyle[] = {"PAL TV", "Full height", "As 60Hz"};
+    GeoState held = geoNormalise(rto->presetID, want);
+    logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: aspect %s, integer %s, 50Hz %s: width x%u.%03u, clock 0x%02X -> 0x%02X, vertical %u -> %u"),
+              kAspect[held.aspect], held.integer ? "on" : "off", (rto->presetID & 0x10) ? kStyle[held.style50] : "-",
+              (unsigned)(g.widthPm / 1000), (unsigned)(g.widthPm % 1000), g.clockFrom, g.clockTo, (unsigned)was.vScale,
+              (unsigned)g.vScale);
+    if (now.clamps)
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: %u edge(s) held inside the line"), (unsigned)now.clamps);
+}
+
 void doPostPresetLoadSteps()
 {
     //unsigned long postLoadTimer = millis();
@@ -3528,6 +3612,8 @@ void doPostPresetLoadSteps()
     } else {
         GBS::VDS_UV_STEP_BYPS::write(1);
     }
+
+    geometryStep();   // before the clock generator takes the preset's display clock: the step may change it
 
     // transfer preset's display clock to ext. gen
     externalClockGenResetClock();

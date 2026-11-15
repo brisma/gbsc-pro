@@ -75,19 +75,21 @@ void osdReadWindow() {
     gDriver.setWindow(w);
 }
 
+// A window to read later: a preset's registers are still being written when the change is known
+static uint32_t gWindowAt = 0;
+static bool gWindowDue = false;
+void osdWindowSoon() { gWindowDue = true; gWindowAt = millis() + 500; }
+
 void osdDriverLoop() {
     if (!gStarted) return;
     static uint8_t lastPreset = 0xFF;
-    static uint32_t windowAt = 0;
-    static bool windowDue = false;
-    if (windowDue && (int32_t)(millis() - windowAt) >= 0) { windowDue = false; osdReadWindow(); }
+    if (gWindowDue && (int32_t)(millis() - gWindowAt) >= 0) { gWindowDue = false; osdReadWindow(); }
     static StvRateRetry rateRetry;
     bool again = rateRetry.due(millis());
     if (rto->presetID != lastPreset || again) {
         if (rto->presetID != lastPreset) {
             lastPreset = rto->presetID;
-            windowDue = true;              // the new preset's window, once its registers are written
-            windowAt = millis() + 500;
+            osdWindowSoon();               // the new preset's window, once its registers are written
             rateRetry.stop();
         }
         StvOutStd s = stvOutStdOf(lastPreset);

@@ -259,6 +259,8 @@ public:
     typedef UReg<0x01, 0x2C, 3, 1> GBS_RUNTIME_UNUSED_BIT;
     typedef UReg<0x01, 0x2C, 4, 1> GBS_RUNTIME_FTL_ADJUSTED;
     typedef UReg<0x01, 0x2D, 0, 8> GBS_PRESET_DISPLAY_CLOCK;
+    typedef UReg<0x01, 0x2E, 0, 8> GBS_GEOMETRY;       // which picture the geometry registers hold (pro/picture/geometry.h)
+    typedef UReg<0x01, 0x2F, 0, 8> GBS_GEOMETRY_BAR;   // lines of bar the vertical step added above and below
 
     // HDBypass
     typedef UReg<0x01, 0x30, 1, 1> HD_MATRIX_BYPS;

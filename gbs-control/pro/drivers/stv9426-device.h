@@ -7,3 +7,4 @@ OsdBus& osdBus();         // the chip itself (Developer readback)
 void osdDriverBegin();   // always binds the compat layer; programs the chip only when CAP_OSD is present
 void osdDriverLoop();    // loop(): follows the running output preset, pending power-on, flush
 void osdReadWindow();    // TV5725 output window -> horizontal placement (on OSD open and after Screen adjust)
+void osdWindowSoon();    // the window changed under the same preset id: read it once the load has settled
