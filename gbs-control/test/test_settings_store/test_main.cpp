@@ -183,6 +183,31 @@ void test_serialize_without_schema_and_scope_crc(void) {
     TEST_ASSERT_TRUE(a != settingsScopeCrc(u, SettingScope::Profile));
 }
 
+// A profile saved by another firmware version: keys added since are missing, keys dropped since are unknown. Loaded
+// into a copy it still equals a working state that was not touched, and differs from one that was
+void test_stored_scope_from_another_version_against_the_working_state(void) {
+    u.advBrightness = 77;                              // a value the profile was saved with
+    std::string file;
+    settingsSerializeEx(u, SettingScope::Profile, false, appendSink, &file);
+    size_t at = file.find("output.style_50hz=");       // as a version without this key wrote it
+    TEST_ASSERT_TRUE(at != std::string::npos);
+    file.erase(at, file.find('\n', at) - at + 1);
+    file += "screen.full_height=1\n";                  // and with a key this version no longer has
+
+    userOptions copy = u;
+    SettingsLoadReport rep;
+    settingsLoadBegin(copy, SettingScope::Profile, rep);
+    std::string line;
+    for (char c : file) { if (c == '\n') { settingsLoadLine(copy, SettingScope::Profile, line.c_str(), rep); line.clear(); } else line += c; }
+    TEST_ASSERT_EQUAL_HEX32(settingsScopeCrc(u, SettingScope::Profile), settingsScopeCrc(copy, SettingScope::Profile));
+
+    u.advBrightness = 78;                              // an unsaved change in the working state
+    TEST_ASSERT_TRUE(settingsScopeCrc(u, SettingScope::Profile) != settingsScopeCrc(copy, SettingScope::Profile));
+    u.advBrightness = 77;
+    u.style50Hz = 2;                                   // or the new key away from its default
+    TEST_ASSERT_TRUE(settingsScopeCrc(u, SettingScope::Profile) != settingsScopeCrc(copy, SettingScope::Profile));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_serialize_device_scope_only);
@@ -197,6 +222,7 @@ int main(int, char**) {
     RUN_TEST(test_load_keeps_value_of_unavailable_setting);
     RUN_TEST(test_schema_and_values_filter_by_caps_and_devmode);
     RUN_TEST(test_serialize_without_schema_and_scope_crc);
+    RUN_TEST(test_stored_scope_from_another_version_against_the_working_state);
     RUN_TEST(test_schema_entries_compose_to_schema);
     RUN_TEST(test_schema_streamer_chunks);
     return UNITY_END();

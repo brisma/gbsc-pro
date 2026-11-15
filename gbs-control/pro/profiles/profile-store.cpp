@@ -243,6 +243,24 @@ bool profileModifiedNow() {
     return gModified;
 }
 
+// The stored hash is of the text of every Profile key, so a firmware that adds or drops a key reads an untouched
+// profile as changed. The profile's own file settles it: its Profile settings, loaded into a copy, against the
+// working state. A working state that was changed stays different.
+static void fileLine(const char* line, void* ctx) {
+    if (!strncmp(line, "profile.", 8) || !strncmp(line, "reg.", 4) || !strncmp(line, "schema=", 7)) return;
+    SettingsLoadReport rep;
+    settingsLoadLine(*(userOptions*)ctx, SettingScope::Profile, line, rep);
+}
+static bool workingStateIsTheFile(uint8_t index) {
+    std::unique_ptr<userOptions> copy(new (std::nothrow) userOptions(*uopt));
+    if (!copy) return false;
+    SettingsLoadReport rep;
+    settingsLoadBegin(*copy, SettingScope::Profile, rep);
+    char path[24]; profilePath(index, path);
+    if (!settingsFs().readLines(path, fileLine, copy.get(), PROFILE_MAX_FILE_BYTES)) return false;
+    return settingsScopeCrc(*copy, SettingScope::Profile) == settingsScopeCrc(*uopt, SettingScope::Profile);
+}
+
 void profileStoreInit() {
     LittleFS.mkdir("/profiles");
     LittleFS.remove(PROFILE_IMPORT_TMP);                 // an import aborted by a reset or a lost client
@@ -265,6 +283,12 @@ void profileStoreInit() {
     gActive = (a >= 0 && gList.at((uint8_t)a).used) ? a : -1;
     if (gActive < 0 && uopt->profileActive[0]) setActive(-1);
     gModified = computeModified();
+    if (gModified && gActive >= 0 && workingStateIsTheFile((uint8_t)gActive)) {
+        logPrintf(LC_PROFILE, LL_INFO, PSTR("profile %s: unchanged, its hash is of another firmware version: stored again"),
+                  uopt->profileActive);
+        storeHash();
+        settingsMarkDirty(SettingScope::Device);       // profile.hash lives in device.cfg
+    }
 }
 
 void profileReloadList() {
