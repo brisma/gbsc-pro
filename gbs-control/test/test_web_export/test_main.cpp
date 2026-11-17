@@ -227,7 +227,8 @@ static std::string exportRegistry() {
             char name[40]; uint16_t v; uint8_t oc;
             for (uint8_t o = 0; settingsEnumAtEx(d, o, name, sizeof(name), v, oc); o++) {
                 if (o) s += ",";
-                s += "{\"n\":" + q(name) + ",\"v\":" + num(v) + ",\"caps\":" + num(oc) + ",\"advanced\":" +
+                char id[40]; settingsIdFromLabel(name, id, sizeof(id));
+                s += "{\"n\":" + q(name) + ",\"v\":" + num(v) + ",\"id\":" + q(id) + ",\"caps\":" + num(oc) + ",\"advanced\":" +
                      (settingsOptionAdvanced(d, v) ? "true" : "false") + "}";
             }
         }

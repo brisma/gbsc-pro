@@ -2,7 +2,7 @@
 export type Board = "pro" | "standard";
 export type ScenarioName = string;
 
-export interface RegOption { n: string; v: number; caps: number; advanced: boolean }
+export interface RegOption { n: string; v: number; id: string; caps: number; advanced: boolean }
 export interface RegEntry {
   key: string; type: "bool" | "u8" | "u16" | "enum" | "str"; scope: "device" | "profile";
   min?: number; max?: number; def?: number; maxLen?: number;

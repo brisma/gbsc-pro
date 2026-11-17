@@ -92,7 +92,7 @@ void test_schema_json_has_enum_options(void) {
     std::string out;
     settingsSchemaJson(true, appendSink, &out);
     TEST_ASSERT_TRUE(out.find("\"key\":\"osd.theme\"") != std::string::npos);
-    TEST_ASSERT_TRUE(out.find("{\"n\":\"Bypass\",\"v\":10}") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("{\"n\":\"Bypass\",\"v\":10,\"id\":\"bypass\"}") != std::string::npos);
     TEST_ASSERT_TRUE(out.find("\"key\":\"adv.hue\",\"type\":\"u8\",\"scope\":\"profile\",\"min\":0,\"max\":100,\"def\":50,\"caps\":1") != std::string::npos);
 }
 
@@ -178,7 +178,7 @@ void test_schema_and_values_filter_by_caps_and_devmode(void) {
     TEST_ASSERT_TRUE(src != std::string::npos);
     std::string srcEntry = schema.substr(src, schema.find('}', schema.find("]", src)) - src);
     TEST_ASSERT_TRUE(srcEntry.find("{\"n\":\"Composite\"") == std::string::npos);
-    TEST_ASSERT_TRUE(schema.find("{\"n\":\"Bypass\",\"v\":10}") != std::string::npos);
+    TEST_ASSERT_TRUE(schema.find("{\"n\":\"Bypass\",\"v\":10,\"id\":\"bypass\"}") != std::string::npos);
     TEST_ASSERT_TRUE(values.find("\"adv.brightness\"") == std::string::npos);
     TEST_ASSERT_TRUE(values.find("\"picture.scanlines\"") != std::string::npos);
     TEST_ASSERT_EQUAL_CHAR('{', values[0]);
@@ -258,8 +258,19 @@ void test_scope_crc_stable_across_serialisations(void) {
 }
 
 
+
+// Schema options carry the id that files hold, next to the label and the value
+void test_schema_options_have_ids(void) {
+    std::string schema;
+    settingsSchemaJson(true, appendSink, &schema);
+    TEST_ASSERT_TRUE(schema.find("{\"n\":\"Force 4:3\",\"v\":1,\"id\":\"force_4_3\"}") != std::string::npos);
+    TEST_ASSERT_TRUE(schema.find("\"id\":\"ntsc_wn3\"") != std::string::npos);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_schema_options_have_ids);
     RUN_TEST(test_serialize_writes_ids);
     RUN_TEST(test_scope_crc_stable_across_serialisations);
     RUN_TEST(test_serialize_device_scope_only);
