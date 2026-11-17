@@ -265,6 +265,7 @@ void test_schema_options_have_ids(void) {
     settingsSchemaJson(true, appendSink, &schema);
     TEST_ASSERT_TRUE(schema.find("{\"n\":\"Force 4:3\",\"v\":1,\"id\":\"force_4_3\"}") != std::string::npos);
     TEST_ASSERT_TRUE(schema.find("\"id\":\"ntsc_wn3\"") != std::string::npos);
+    TEST_ASSERT_TRUE(schema.find("{\"n\":\"PAL-Nc 7.5IRE\",\"v\":10,\"id\":\"pal_nc_7_5_ire\"}") != std::string::npos);
 }
 
 

@@ -61,8 +61,8 @@ picture.blue
 picture.brightness
 picture.contrast
 picture.saturation
-adv.format_sv auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
-adv.format_av auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
+adv.format_sv auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5_ire=10 secam=11
+adv.format_av auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5_ire=10 secam=11
 adv.i2p on=1 off=0
 adv.smooth on=1 off=0
 adv.ace on=1 off=0

@@ -8,6 +8,8 @@
   {"name": "new enum unlisted number", "board": "pro", "devmode": false, "keys": ["adv.comb_luma_ntsc"], "values": ["2"]},
   {"name": "bool On", "board": "pro", "devmode": false, "keys": ["profiles.autoload"], "values": ["On"]},
   {"name": "signed number", "board": "pro", "devmode": false, "keys": ["system.encoder_steps"], "values": ["-1"]},
+  {"name": "explicit id", "board": "pro", "devmode": false, "keys": ["adv.format_sv"], "values": ["pal_nc_7_5_ire"]},
+  {"name": "label of an option with an explicit id", "board": "pro", "devmode": false, "keys": ["adv.format_sv"], "values": ["PAL-Nc 7.5IRE"]},
   {"name": "enum number not an option", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["8"]},
   {"name": "leading space number", "board": "pro", "devmode": false, "keys": ["adv.brightness"], "values": [" 70"]},
   {"name": "bool word on", "board": "pro", "devmode": false, "keys": ["profiles.autoload"], "values": ["on"]},

@@ -36,6 +36,8 @@ size_t settingsFormatStored(const SettingDef& d, uint16_t value, char* buf, size
 // An option's id: its label in lower case, every run of other characters than a-z and 0-9 one '_', none at the ends;
 // 0 (and "") when it does not fit
 size_t settingsIdFromLabel(const char* label, char* out, size_t n);
+// The id files hold for an Enum option: its explicit "~id", else its derived id; false when value is not an option
+bool settingsOptionId(const SettingDef& d, uint16_t value, char* id, size_t n);
 
 uint8_t settingsEnumCount(const SettingDef& d);
 bool settingsEnumAt(const SettingDef& d, uint8_t i, char* name, size_t n, uint16_t& value);

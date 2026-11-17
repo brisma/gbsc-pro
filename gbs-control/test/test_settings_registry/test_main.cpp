@@ -336,8 +336,10 @@ void test_ids_distinct_per_setting(void) {
         char name[48]; uint16_t v;
         for (uint8_t k = 0; settingsEnumAt(d, k, name, sizeof(name), v); k++) {
             TEST_ASSERT_TRUE_MESSAGE(strlen(name) < 40, key);   // the option reader's token buffer is 48 B
-            char id[48]; TEST_ASSERT_TRUE_MESSAGE(settingsIdFromLabel(name, id, sizeof(id)) > 0, key);
-            for (auto& o : ids) TEST_ASSERT_TRUE_MESSAGE(o != id, key);
+            char id[48]; TEST_ASSERT_TRUE_MESSAGE(settingsOptionId(d, v, id, sizeof(id)), key);
+            char lid[48]; TEST_ASSERT_TRUE_MESSAGE(settingsIdFromLabel(name, lid, sizeof(lid)) > 0, key);
+            for (auto& o : ids) { TEST_ASSERT_TRUE_MESSAGE(o != id, key); TEST_ASSERT_TRUE_MESSAGE(o != lid, key); }
+            if (strcmp(lid, id)) ids.push_back(lid);   // the label is read too: it must not name another option
             bool digits = true; for (const char* c = id; *c; c++) if (*c < '0' || *c > '9') digits = false;
             if (digits) TEST_ASSERT_EQUAL_UINT16_MESSAGE(v, (uint16_t)atoi(id), key);
             ids.push_back(id);
@@ -460,7 +462,7 @@ static std::string idListing() {
         if (d.type != SettingType::Enum && d.type != SettingType::Bool) { out += "\n"; continue; }   // a quantity: the key
         if (d.type == SettingType::Bool) out += " on=1 off=0";
         else { char n[48], id[48]; uint16_t v;
-               for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) { settingsIdFromLabel(n, id, sizeof(id)); out += std::string(" ") + id + "=" + std::to_string(v); } }
+               for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) { settingsOptionId(d, v, id, sizeof(id)); out += std::string(" ") + id + "=" + std::to_string(v); } }
         out += "\n";
     }
     for (uint8_t i = 0; i < settingsStrCount(); i++) {   // string settings: the key
@@ -481,6 +483,25 @@ void test_frozen_ids(void) {
 }
 
 
+
+// An explicit id ("Label=value~id"): the label stays as shown, the file holds the id; the label is still read
+void test_explicit_option_id(void) {
+    TEST_ASSERT_EQUAL_STRING("pal_nc_7_5_ire", stored("adv.format_sv", 10).c_str());
+    TEST_ASSERT_TRUE(parses("adv.format_sv", "pal_nc_7_5_ire", 10));
+    TEST_ASSERT_TRUE(parses("adv.format_sv", "PAL-Nc 7.5IRE", 10));
+    char n[32], b[32]; uint16_t v;
+    TEST_ASSERT_TRUE(settingsEnumAt(defOf("adv.format_sv"), 9, n, sizeof(n), v));   // 0,12,1,2,3,4,5,6,7,8,9,10,11
+    settingsFormat(defOf("adv.format_sv"), 10, b, sizeof(b));
+    TEST_ASSERT_EQUAL_STRING("PAL-Nc 7.5IRE", b);                                   // no "~id" on screen
+    TEST_ASSERT_EQUAL_UINT8(1, settingsOptionAdvanced(defOf("adv.format_sv"), 10));   // the '#a' after the id still counts
+    char id[32];
+    TEST_ASSERT_TRUE(settingsOptionId(defOf("adv.format_sv"), 10, id, sizeof(id)));
+    TEST_ASSERT_EQUAL_STRING("pal_nc_7_5_ire", id);
+    TEST_ASSERT_TRUE(settingsOptionId(defOf("output.aspect"), 1, id, sizeof(id)));
+    TEST_ASSERT_EQUAL_STRING("force_4_3", id);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_id_from_label);
@@ -496,6 +517,7 @@ int main(int, char**) {
     RUN_TEST(test_converted_choices_are_enums);
     RUN_TEST(test_new_enum_rejects_unlisted_number);
     RUN_TEST(test_frozen_ids);
+    RUN_TEST(test_explicit_option_id);
     RUN_TEST(test_advanced_mark_stripped_and_long_lists_complete);
     RUN_TEST(test_setting_ids_match_table_order);
     RUN_TEST(test_adv_apply_groups_are_granular);

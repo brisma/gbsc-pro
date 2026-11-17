@@ -52,7 +52,7 @@ export function parseSetting(e: RegEntry, input: string): number | null {
   const id = idFromLabel(input);
   if (!id || /^[0-9]+$/.test(id)) return null;
   if (e.type === "bool") return id === "on" || id === "true" ? 1 : id === "off" || id === "false" ? 0 : null;
-  const hit = e.options.find((o) => o.id === id);
+  const hit = e.options.find((o) => o.id === id || idFromLabel(o.n, 48) === id);   // the id, or the label read as one
   return hit ? hit.v : null;
 }
 

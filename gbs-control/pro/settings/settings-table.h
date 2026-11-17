@@ -8,7 +8,8 @@
 #define GBS_FW_CHANNEL 1
 #endif
 
-// Enum options, "Name|Name=value|..." (a "@cap" suffix needs that capability, "#a" is Advanced only). The registry
+// Enum options, "Name|Name=value|..." (a "~id" suffix is the id files hold when the derived one is not wanted, a "@cap"
+// suffix needs that capability, "#a" is Advanced only; in that order). The registry
 // turns each into a flash array named after it (settings-registry.cpp).
 #define SETTINGS_OPTIONS(OPT) \
     OPT(OPT_INPUTS,    "Auto=0|RGB SCART=1|RGB SoG=2|VGA=3|Component=4|S-Video=5@adv|Composite=6@adv") \
@@ -44,7 +45,7 @@
     OPT(OPT_COMB_CHROMA, "Adaptive=0|Off=4|2-line upper=5|3-line=6|2-line lower=7") \
     OPT(OPT_SYNCWATCHER, "Inherit=0|On=1|Off=2") \
     OPT(OPT_INPUT_LAST, "RGB SCART=1|RGB SoG=2|VGA=3|Component=4|S-Video=5|Composite=6")   /* input.last and the profile fingerprint: no @adv (a hint, every board) */ \
-    OPT(OPT_FORMATS,   "Auto=0|Auto 7.5 IRE=12|PAL=1|NTSC 7.5 IRE=2|PAL-60=3|NTSC 4.43=4#a|NTSC-J=5|PAL-N 7.5 IRE=6#a|PAL-M 0 IRE=7#a|PAL-M 7.5 IRE=8#a|PAL-Nc=9#a|PAL-Nc 7.5IRE=10#a|SECAM=11#a")   /* index: advFormatRegister() */
+    OPT(OPT_FORMATS,   "Auto=0|Auto 7.5 IRE=12|PAL=1|NTSC 7.5 IRE=2|PAL-60=3|NTSC 4.43=4#a|NTSC-J=5|PAL-N 7.5 IRE=6#a|PAL-M 0 IRE=7#a|PAL-M 7.5 IRE=8#a|PAL-Nc=9#a|PAL-Nc 7.5IRE=10~pal_nc_7_5_ire#a|SECAM=11#a")   /* index: advFormatRegister() */
 
 #define SETTINGS_TABLE(SETTING) \
     /* ---- Device ---- */ \

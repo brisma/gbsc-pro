@@ -86,11 +86,12 @@ void settingsPut(userOptions& u, const SettingDef& d, uint16_t value) {
     if (d.type == SettingType::U16) memcpy(p, &value, 2); else *p = (uint8_t)value;
 }
 
-// Options of a "Name[=value][@cap][#a]|..." flash string, read in place: optionNext() reads the option at p and moves p
-// past it (false at the end). '#a' marks an option shown only in Advanced menu mode. Every lookup below walks the
-// string once.
+// Options of a "Name[=value][~id][@cap][#a]|..." flash string, read in place: optionNext() reads the option at p and
+// moves p past it (false at the end). '#a' marks an option shown only in Advanced menu mode; '~id' is an explicit id
+// (when the derived one is not wanted, or a renamed label keeps its old id); xid gets it, "" without. Every lookup
+// below walks the string once.
 static bool optionNext(const char*& p, uint8_t idx, char* name, size_t n, uint16_t& value, uint8_t& caps,
-                       bool& advanced) {
+                       bool& advanced, char* xid = nullptr, size_t xn = 0) {
     if (!p) return false;
     char tok[48];
     size_t len = 0;
@@ -108,6 +109,9 @@ static bool optionNext(const char*& p, uint8_t idx, char* name, size_t n, uint16
     caps = 0;
     char* at = strchr(tok, '@');
     if (at) { *at = '\0'; caps = platformCapFromName(at + 1, strlen(at + 1)); }
+    char* tilde = strchr(tok, '~');
+    if (xn) xid[0] = '\0';
+    if (tilde) { *tilde = '\0'; if (xn) { strncpy(xid, tilde + 1, xn - 1); xid[xn - 1] = '\0'; } }
     char* eq = strchr(tok, '=');
     value = idx;
     if (eq) { *eq = '\0'; value = (uint16_t)atoi(eq + 1); }
@@ -135,13 +139,28 @@ static bool enumFindValue(const SettingDef& d, uint16_t value, char* name, size_
     return false;
 }
 
-// The option whose id is id (digits-only ids are left to the number parser)
+// The option whose id (explicit, or its normalised label) is id (digits-only ids are left to the number parser)
 static bool enumFindId(const SettingDef& d, const char* id, uint16_t& value) {
     if (!d.options) return false;
     const char* p = d.options;
-    char label[48], oid[48]; uint16_t v; uint8_t caps; bool adv;
-    for (uint8_t idx = 0; optionNext(p, idx, label, sizeof(label), v, caps, adv); idx++) {
-        if (settingsIdFromLabel(label, oid, sizeof(oid)) && !strcmp(oid, id)) { value = v; return true; }
+    char label[48], oid[48], xid[32]; uint16_t v; uint8_t caps; bool adv;
+    for (uint8_t idx = 0; optionNext(p, idx, label, sizeof(label), v, caps, adv, xid, sizeof(xid)); idx++) {
+        if ((xid[0] && !strcmp(xid, id)) || (settingsIdFromLabel(label, oid, sizeof(oid)) && !strcmp(oid, id))) {
+            value = v;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool settingsOptionId(const SettingDef& d, uint16_t value, char* id, size_t n) {
+    if (d.type != SettingType::Enum || !d.options || !n) return false;
+    const char* p = d.options;
+    char label[48], xid[32]; uint16_t v; uint8_t caps; bool adv;
+    for (uint8_t idx = 0; optionNext(p, idx, label, sizeof(label), v, caps, adv, xid, sizeof(xid)); idx++) {
+        if (v != value) continue;
+        if (xid[0]) { strncpy(id, xid, n - 1); id[n - 1] = '\0'; return true; }
+        return settingsIdFromLabel(label, id, n) > 0;
     }
     return false;
 }
@@ -280,11 +299,7 @@ size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n) 
 
 size_t settingsFormatStored(const SettingDef& d, uint16_t value, char* buf, size_t n) {
     if (d.type == SettingType::Bool) { copyStr(buf, n, value ? "on" : "off"); return strlen(buf); }
-    if (d.type == SettingType::Enum) {
-        char label[48]; uint8_t caps; bool advanced;
-        if (enumFindValue(d, value, label, sizeof(label), caps, advanced) && settingsIdFromLabel(label, buf, n))
-            return strlen(buf);
-    }
+    if (d.type == SettingType::Enum && settingsOptionId(d, value, buf, n)) return strlen(buf);
     return formatNumber(value, buf, n);
 }
 

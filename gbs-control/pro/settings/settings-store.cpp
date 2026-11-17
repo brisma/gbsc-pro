@@ -147,7 +147,7 @@ bool settingsSchemaEntry(uint16_t n, bool devmode, SettingsSink sink, void* ctx)
                 if ((caps & platformCaps()) != caps) continue;
                 if (!firstOpt) sink(",", ctx);
                 firstOpt = false;
-                char id[32]; settingsIdFromLabel(name, id, sizeof(id));
+                char id[32]; settingsOptionId(d, v, id, sizeof(id));
                 sink("{\"n\":\"", ctx); sink(name, ctx); sink("\",\"v\":", ctx); emitNumber(sink, ctx, v);
                 sink(",\"id\":\"", ctx); sink(id, ctx); sink("\"}", ctx);
             }
