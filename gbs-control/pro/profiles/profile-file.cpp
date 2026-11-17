@@ -6,6 +6,7 @@
 #include "profile-modes.h"
 #include "profile-list.h"
 #include "profile-names.h"
+#include "../settings/settings-registry.h"
 
 void profileEntryFromMeta(ProfileEntry& e, const ProfileMeta& m) {
     strncpy(e.name, m.name, sizeof(e.name) - 1);
@@ -32,11 +33,34 @@ static void kvNum(SettingsSink sink, void* ctx, const char* key, unsigned v) {
     char b[8]; snprintf_P(b, sizeof(b), PSTR("%u"), v); kv(sink, ctx, key, b);
 }
 
+// The header's choices are names under keys of their own: the registry ids of output.preset and input.last, the
+// format names of profile-modes. An older firmware skips the unknown keys instead of misreading a name.
+static bool settingDef(const char* key, SettingDef& d) {
+    int i = settingsFind(key);
+    if (i < 0) return false;
+    settingsDefAt((uint8_t)i, d);
+    return true;
+}
+
+static bool idOf(const char* key, uint8_t value, char* out, size_t n) {
+    SettingDef d;
+    if (!settingDef(key, d) || !settingsValid(d, value)) return false;
+    return settingsFormatStored(d, value, out, n) > 0;
+}
+
+static bool valueOf(const char* key, const char* text, uint8_t& out) {
+    SettingDef d; uint16_t v;
+    if (!settingDef(key, d) || !settingsParse(d, text, v)) return false;
+    out = (uint8_t)v;
+    return true;
+}
+
 void profileWriteHeader(const ProfileMeta& m, SettingsSink sink, void* ctx) {
-    sink("schema=1\n", ctx);
+    sink("schema=2\n", ctx);
     kv(sink, ctx, "profile.name", m.name);
     kv(sink, ctx, "profile.region", m.region);
-    if (m.basePreset != PROFILE_BASE_NONE) kvNum(sink, ctx, "profile.base_preset", m.basePreset);
+    char id[24];
+    if (m.basePreset != PROFILE_BASE_NONE && idOf("output.preset", m.basePreset, id, sizeof(id))) kv(sink, ctx, "profile.base", id);
     char modes[80] = "";
     for (uint8_t i = 0; i < PROFILE_MODE_COUNT; i++) {
         if (!(m.modes & (1 << i))) continue;
@@ -44,11 +68,12 @@ void profileWriteHeader(const ProfileMeta& m, SettingsSink sink, void* ctx) {
         strcat(modes, profileModeName(i));
     }
     kv(sink, ctx, "profile.modes", modes);
-    if (m.hasFp) {
-        kvNum(sink, ctx, "profile.fp.input", m.fpInput);
-        kvNum(sink, ctx, "profile.fp.mode", m.fpMode);
+    const char* format = profileFormatName(m.fpMode);
+    if (m.hasFp && *format && idOf("input.last", m.fpInput, id, sizeof(id))) {   // a fingerprint without names: none
+        kv(sink, ctx, "profile.fp.source", id);
+        kv(sink, ctx, "profile.fp.format", format);
         kvNum(sink, ctx, "profile.fp.lines", m.fpLines);
-        kvNum(sink, ctx, "profile.fp.interlaced", m.fpInterlaced);
+        kv(sink, ctx, "profile.fp.scan", m.fpInterlaced ? "interlaced" : "progressive");
         if (m.fpMilliHz) kvNum(sink, ctx, "profile.fp.mhz", m.fpMilliHz);
     }
     kvNum(sink, ctx, "profile.adc_gain", m.adcGain);
@@ -83,7 +108,7 @@ bool profileParseHeaderLine(const char* line, ProfileMeta& m) {
         copyTrim(t, sizeof(t), v);
         strcpy(m.region, profileRegionName(profileRegionIndex(t)));
     }
-    else if (keyIs(line, "profile.base_preset", v)) m.basePreset = (uint8_t)atoi(v);
+    else if (keyIs(line, "profile.base", v)) { uint8_t b; if (valueOf("output.preset", v, b)) m.basePreset = b; }
     else if (keyIs(line, "profile.modes", v)) {
         m.modes = 0;
         char buf[96]; copyTrim(buf, sizeof(buf), v);
@@ -93,10 +118,12 @@ bool profileParseHeaderLine(const char* line, ProfileMeta& m) {
             if (idx >= 0) m.modes |= (uint8_t)(1 << idx);
         }
     }
-    else if (keyIs(line, "profile.fp.input", v)) { m.fpInput = (uint8_t)atoi(v); m.hasFp = true; }
-    else if (keyIs(line, "profile.fp.mode", v)) { m.fpMode = (uint8_t)atoi(v); m.hasFp = true; }
-    else if (keyIs(line, "profile.fp.lines", v)) { m.fpLines = (uint16_t)atoi(v); m.hasFp = true; }
-    else if (keyIs(line, "profile.fp.interlaced", v)) { m.fpInterlaced = (uint8_t)atoi(v); m.hasFp = true; }
+    else if (keyIs(line, "profile.fp.source", v)) {    // the fingerprint exists only with a known source
+        uint8_t in; if (valueOf("input.last", v, in)) { m.fpInput = in; m.hasFp = true; }
+    }
+    else if (keyIs(line, "profile.fp.format", v)) { char t[16]; copyTrim(t, sizeof(t), v); m.fpMode = profileFormatByName(t); }
+    else if (keyIs(line, "profile.fp.lines", v)) m.fpLines = (uint16_t)atoi(v);
+    else if (keyIs(line, "profile.fp.scan", v)) { char t[16]; copyTrim(t, sizeof(t), v); m.fpInterlaced = !strcmp(t, "interlaced") ? 1 : 0; }
     else if (keyIs(line, "profile.fp.mhz", v)) m.fpMilliHz = (uint32_t)strtoul(v, nullptr, 10);
     else if (keyIs(line, "profile.adc_gain", v)) m.adcGain = (uint8_t)atoi(v);
     return true;   // unknown profile.* keys are ignored, still header lines

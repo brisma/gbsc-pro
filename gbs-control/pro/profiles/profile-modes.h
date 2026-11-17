@@ -7,6 +7,10 @@ static const uint8_t PROFILE_MODE_COUNT = 6;   // 1 ntsc, 2 pal, 3 ntsc_480p, 4 
 int8_t profileModeIndex(uint8_t gbsMode);               // -1 when the mode has no register capture
 const char* profileModeName(uint8_t index);
 int8_t profileModeIndexByName(const char* name);
+// Names of every source format the detection reports (videoStandardInput), for the profile fingerprint; the six
+// register modes keep their profile.modes names. "" and 0 for a mode without a name.
+const char* profileFormatName(uint8_t videoMode);
+uint8_t profileFormatByName(const char* name);
 uint8_t profileModeAt(uint8_t index);
 
 // Register mode: the mode the GBS runs, with only the PalForce60 remap undone (1->2, 3->4)

@@ -14,6 +14,17 @@ int8_t profileModeIndex(uint8_t gbsMode) {
 
 const char* profileModeName(uint8_t index) { return index < PROFILE_MODE_COUNT ? kNames[index] : ""; }
 
+static const char* const kFormatNames[16] = {"", "ntsc", "pal", "ntsc_480p", "pal_576p", "720p", "1080i", "1080p",
+    "medium_res", "unrecognised", "", "", "", "hd_odd", "vga_upscale", "rgbhv_bypass"};
+
+const char* profileFormatName(uint8_t videoMode) { return videoMode < 16 ? kFormatNames[videoMode] : ""; }
+
+uint8_t profileFormatByName(const char* name) {
+    if (!name || !*name) return 0;
+    for (uint8_t i = 1; i < 16; i++) if (!strcmp(kFormatNames[i], name)) return i;
+    return 0;
+}
+
 int8_t profileModeIndexByName(const char* name) {
     for (uint8_t i = 0; i < PROFILE_MODE_COUNT; i++) if (!strcmp(kNames[i], name)) return (int8_t)i;
     return -1;

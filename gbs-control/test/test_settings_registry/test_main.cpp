@@ -8,6 +8,7 @@
 #include "settings-registry.h"
 #include "platform-caps.h"
 #include "golden.h"
+#include "profile-modes.h"
 
 static userOptions u;
 
@@ -462,6 +463,10 @@ static std::string idListing() {
                for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) { settingsIdFromLabel(n, id, sizeof(id)); out += std::string(" ") + id + "=" + std::to_string(v); } }
         out += "\n";
     }
+    // the profile header's names (profile-file.cpp): base preset and source are the registry ids above
+    out += "profile.base = output.preset\nprofile.fp.source = input.last\nprofile.fp.format";
+    for (uint8_t m = 0; m < 16; m++) if (*profileFormatName(m)) out += std::string(" ") + profileFormatName(m) + "=" + std::to_string(m);
+    out += "\nprofile.fp.scan progressive=0 interlaced=1\n";
     return out;
 }
 

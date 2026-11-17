@@ -71,3 +71,7 @@ adv.dnr on=1 off=0
 adv.cti on=1 off=0
 dev.syncwatcher inherit=0 on=1 off=2
 dev.wifi_watch on=1 off=0
+profile.base = output.preset
+profile.fp.source = input.last
+profile.fp.format ntsc=1 pal=2 ntsc_480p=3 pal_576p=4 720p=5 1080i=6 1080p=7 medium_res=8 unrecognised=9 hd_odd=13 vga_upscale=14 rgbhv_bypass=15
+profile.fp.scan progressive=0 interlaced=1

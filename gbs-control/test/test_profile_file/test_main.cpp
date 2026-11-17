@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -26,7 +27,7 @@ void test_header_round_trip(void) {
     m.hasFp = true; m.fpInput = 1; m.fpMode = 1; m.fpLines = 525; m.fpInterlaced = 1; m.fpMilliHz = 59940;
     m.adcGain = 12;
     std::string out; profileWriteHeader(m, sink, &out);
-    TEST_ASSERT_TRUE(out.find("schema=1\nprofile.name=Mega Drive NTSC\n") == 0);
+    TEST_ASSERT_TRUE(out.find("schema=2\nprofile.name=Mega Drive NTSC\n") == 0);
     TEST_ASSERT_TRUE(out.find("profile.modes=ntsc,pal\n") != std::string::npos);
     ProfileMeta r; profileMetaInit(r);
     for (const std::string& l : lines(out)) TEST_ASSERT_TRUE_MESSAGE(profileParseHeaderLine(l.c_str(), r), l.c_str());
@@ -45,6 +46,7 @@ void test_header_round_trip(void) {
     ProfileMeta old; profileMetaInit(old);
     TEST_ASSERT_TRUE(profileParseHeaderLine("profile.fp.lines=523", old));
     TEST_ASSERT_EQUAL_UINT32(0, old.fpMilliHz);
+    TEST_ASSERT_FALSE(old.hasFp);                                            // lines alone are no fingerprint
     old.hasFp = true; old.fpInput = 1; old.fpMode = 1;
     std::string plain; profileWriteHeader(old, sink, &plain);
     TEST_ASSERT_TRUE(plain.find("profile.fp.mhz") == std::string::npos);
@@ -59,7 +61,7 @@ void test_header_without_fingerprint_and_unknown_mode(void) {
     strcpy(m.name, "X");
     std::string out; profileWriteHeader(m, sink, &out);
     TEST_ASSERT_TRUE(out.find("profile.fp.") == std::string::npos);
-    TEST_ASSERT_TRUE(out.find("profile.base_preset") == std::string::npos);   // 0xFF = unknown: omitted
+    TEST_ASSERT_TRUE(out.find("profile.base=") == std::string::npos);         // 0xFF = unknown: omitted
     ProfileMeta r; profileMetaInit(r);
     profileParseHeaderLine("profile.modes=ntsc,ntsc_1080p,vga_upscale", r);
     TEST_ASSERT_EQUAL_UINT8((1 << 0) | (1 << 5), r.modes);
@@ -154,8 +156,69 @@ void test_header_name_is_sanitized(void) {
     TEST_ASSERT_EQUAL_STRING("Mega  Drive    2", m.name);
 }
 
+
+// The header's choices are names under their own keys (an older firmware skips unknown profile.* keys)
+void test_header_writes_names(void) {
+    ProfileMeta m; profileMetaInit(m);
+    strcpy(m.name, "SNES");
+    m.basePreset = 5; m.hasFp = true; m.fpInput = 1; m.fpMode = 1; m.fpLines = 262; m.fpInterlaced = 0;
+    std::string out; profileWriteHeader(m, sink, &out);
+    TEST_ASSERT_TRUE(out.find("profile.base=1080p\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.fp.source=rgb_scart\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.fp.format=ntsc\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.fp.scan=progressive\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.fp.lines=262\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.base_preset") == std::string::npos);
+    TEST_ASSERT_TRUE(out.find("profile.fp.input") == std::string::npos);
+}
+
+// Every source format the detection reports keeps the fingerprint (auto-load) through write and read
+void test_header_every_fp_format_round_trips(void) {
+    const uint8_t modes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15};
+    for (uint8_t mode : modes) {
+        ProfileMeta m; profileMetaInit(m);
+        strcpy(m.name, "P");
+        m.hasFp = true; m.fpInput = 3; m.fpMode = mode; m.fpLines = 525; m.fpInterlaced = (mode == 6) ? 1 : 0;
+        std::string out; profileWriteHeader(m, sink, &out);
+        ProfileMeta r; profileMetaInit(r);
+        for (const std::string& l : lines(out)) profileParseHeaderLine(l.c_str(), r);
+        char msg[16]; snprintf(msg, sizeof(msg), "mode %u", mode);
+        TEST_ASSERT_TRUE_MESSAGE(r.hasFp, msg);
+        TEST_ASSERT_EQUAL_UINT8_MESSAGE(3, r.fpInput, msg);
+        TEST_ASSERT_EQUAL_UINT8_MESSAGE(mode, r.fpMode, msg);
+        TEST_ASSERT_EQUAL_UINT8_MESSAGE(m.fpInterlaced, r.fpInterlaced, msg);
+    }
+}
+
+// A beta header (numbers under the old keys) is not read: no base preset, no fingerprint
+void test_header_ignores_old_keys(void) {
+    ProfileMeta r; profileMetaInit(r);
+    const char* beta[] = {"profile.base_preset=5", "profile.fp.input=1", "profile.fp.mode=1", "profile.fp.lines=262",
+                          "profile.fp.interlaced=0"};
+    for (const char* l : beta) TEST_ASSERT_TRUE(profileParseHeaderLine(l, r));
+    TEST_ASSERT_EQUAL_UINT8(PROFILE_BASE_NONE, r.basePreset);
+    TEST_ASSERT_FALSE(r.hasFp);
+}
+
+// A fingerprint whose source or format has no name is left out, not written as a number
+void test_header_without_valid_source_writes_no_fp(void) {
+    ProfileMeta m; profileMetaInit(m);
+    strcpy(m.name, "P");
+    m.hasFp = true; m.fpInput = 0; m.fpMode = 1; m.fpLines = 262;
+    std::string out; profileWriteHeader(m, sink, &out);
+    TEST_ASSERT_TRUE(out.find("profile.fp.") == std::string::npos);
+    m.fpInput = 1; m.fpMode = 11;                                   // a mode the detection never reports
+    out.clear(); profileWriteHeader(m, sink, &out);
+    TEST_ASSERT_TRUE(out.find("profile.fp.") == std::string::npos);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_header_writes_names);
+    RUN_TEST(test_header_every_fp_format_round_trips);
+    RUN_TEST(test_header_ignores_old_keys);
+    RUN_TEST(test_header_without_valid_source_writes_no_fp);
     RUN_TEST(test_header_name_is_sanitized);
     RUN_TEST(test_header_round_trip);
     RUN_TEST(test_header_without_fingerprint_and_unknown_mode);
