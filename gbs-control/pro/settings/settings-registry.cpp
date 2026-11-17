@@ -86,39 +86,81 @@ void settingsPut(userOptions& u, const SettingDef& d, uint16_t value) {
     if (d.type == SettingType::U16) memcpy(p, &value, 2); else *p = (uint8_t)value;
 }
 
-// Option i of a "Name[=value][@cap][#a]|..." flash string, read in place (no length limit); '#a' marks an option
-// shown only in Advanced menu mode. Returns false past the end.
+// Options of a "Name[=value][@cap][#a]|..." flash string, read in place: optionNext() reads the option at p and moves p
+// past it (false at the end). '#a' marks an option shown only in Advanced menu mode. Every lookup below walks the
+// string once.
+static bool optionNext(const char*& p, uint8_t idx, char* name, size_t n, uint16_t& value, uint8_t& caps,
+                       bool& advanced) {
+    if (!p) return false;
+    char tok[48];
+    size_t len = 0;
+    char c;
+    while ((c = (char)pgm_read_byte(p)) != '\0' && c != '|') {
+        if (len < sizeof(tok) - 1) tok[len++] = c;
+        p++;
+    }
+    if (c == '|') p++; else if (!len) { p = nullptr; return false; } else p = nullptr;
+    tok[len] = '\0';
+    if (!len) return false;
+    advanced = false;
+    char* hash = strchr(tok, '#');
+    if (hash) { advanced = hash[1] == 'a'; *hash = '\0'; }
+    caps = 0;
+    char* at = strchr(tok, '@');
+    if (at) { *at = '\0'; caps = platformCapFromName(at + 1, strlen(at + 1)); }
+    char* eq = strchr(tok, '=');
+    value = idx;
+    if (eq) { *eq = '\0'; value = (uint16_t)atoi(eq + 1); }
+    if (n) { strncpy(name, tok, n - 1); name[n - 1] = '\0'; }
+    return true;
+}
+
+// Option i (by position)
 static bool enumAtFull(const SettingDef& d, uint8_t i, char* name, size_t n, uint16_t& value, uint8_t& caps,
                        bool& advanced) {
     if (!d.options || n == 0) return false;
     const char* p = d.options;
-    for (uint8_t idx = 0;; idx++) {
-        char tok[48];
-        size_t len = 0;
-        char c;
-        while ((c = (char)pgm_read_byte(p)) != '\0' && c != '|') {
-            if (len < sizeof(tok) - 1) tok[len++] = c;
-            p++;
-        }
-        tok[len] = '\0';
-        if (idx == i) {
-            if (!len) return false;
-            advanced = false;
-            char* hash = strchr(tok, '#');
-            if (hash) { advanced = hash[1] == 'a'; *hash = '\0'; }
-            caps = 0;
-            char* at = strchr(tok, '@');
-            if (at) { *at = '\0'; caps = platformCapFromName(at + 1, strlen(at + 1)); }
-            char* eq = strchr(tok, '=');
-            value = idx;
-            if (eq) { *eq = '\0'; value = (uint16_t)atoi(eq + 1); }
-            strncpy(name, tok, n - 1);
-            name[n - 1] = '\0';
-            return true;
-        }
-        if (!c) return false;
-        p++;
+    for (uint8_t idx = 0; optionNext(p, idx, name, n, value, caps, advanced); idx++)
+        if (idx == i) return true;
+    return false;
+}
+
+// The option holding value
+static bool enumFindValue(const SettingDef& d, uint16_t value, char* name, size_t n, uint8_t& caps, bool& advanced) {
+    if (!d.options) return false;
+    const char* p = d.options;
+    char tmp[48]; uint16_t v;
+    for (uint8_t idx = 0; optionNext(p, idx, tmp, sizeof(tmp), v, caps, advanced); idx++)
+        if (v == value) { if (n) { strncpy(name, tmp, n - 1); name[n - 1] = '\0'; } return true; }
+    return false;
+}
+
+// The option whose id is id (digits-only ids are left to the number parser)
+static bool enumFindId(const SettingDef& d, const char* id, uint16_t& value) {
+    if (!d.options) return false;
+    const char* p = d.options;
+    char label[48], oid[48]; uint16_t v; uint8_t caps; bool adv;
+    for (uint8_t idx = 0; optionNext(p, idx, label, sizeof(label), v, caps, adv); idx++) {
+        if (settingsIdFromLabel(label, oid, sizeof(oid)) && !strcmp(oid, id)) { value = v; return true; }
     }
+    return false;
+}
+
+size_t settingsIdFromLabel(const char* label, char* out, size_t n) {
+    if (!n) return 0;
+    size_t len = 0;
+    bool gap = false;
+    for (const char* c = label; *c; c++) {
+        char ch = *c;
+        if (ch >= 'A' && ch <= 'Z') ch = (char)(ch - 'A' + 'a');
+        bool keep = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+        if (!keep) { gap = len > 0; continue; }
+        if (gap) { if (len + 1 >= n) { out[0] = '\0'; return 0; } out[len++] = '_'; gap = false; }
+        if (len + 1 >= n) { out[0] = '\0'; return 0; }
+        out[len++] = ch;
+    }
+    out[len] = '\0';
+    return len;
 }
 
 bool settingsEnumAtEx(const SettingDef& d, uint8_t i, char* name, size_t n, uint16_t& value, uint8_t& caps) {
@@ -128,10 +170,8 @@ bool settingsEnumAtEx(const SettingDef& d, uint8_t i, char* name, size_t n, uint
 
 bool settingsOptionAdvanced(const SettingDef& d, uint16_t value) {
     if (d.type != SettingType::Enum) return false;
-    char name[32]; uint16_t v; uint8_t caps; bool advanced;
-    for (uint8_t i = 0; enumAtFull(d, i, name, sizeof(name), v, caps, advanced); i++)
-        if (v == value) return advanced;
-    return false;
+    uint8_t caps; bool advanced;
+    return enumFindValue(d, value, nullptr, 0, caps, advanced) && advanced;
 }
 
 bool settingsEnumAt(const SettingDef& d, uint8_t i, char* name, size_t n, uint16_t& value) {
@@ -141,10 +181,8 @@ bool settingsEnumAt(const SettingDef& d, uint8_t i, char* name, size_t n, uint16
 
 bool settingsOptionAvailable(const SettingDef& d, uint16_t value) {
     if (d.type != SettingType::Enum) return true;
-    char name[32]; uint16_t v; uint8_t caps;
-    for (uint8_t i = 0; settingsEnumAtEx(d, i, name, sizeof(name), v, caps); i++)
-        if (v == value) return (caps & platformCaps()) == caps;
-    return false;
+    uint8_t caps; bool advanced;
+    return enumFindValue(d, value, nullptr, 0, caps, advanced) && (caps & platformCaps()) == caps;
 }
 
 uint8_t settingsEnumCount(const SettingDef& d) {
@@ -157,10 +195,8 @@ bool settingsValid(const SettingDef& d, uint16_t value) {
     if (value < d.min || value > d.max) return false;
     if (d.type == SettingType::Bool) return value <= 1;
     if (d.type == SettingType::Enum) {
-        char name[32]; uint16_t v;
-        for (uint8_t i = 0; settingsEnumAt(d, i, name, sizeof(name), v); i++)
-            if (v == value) return true;
-        return false;
+        uint8_t caps; bool advanced;
+        return enumFindValue(d, value, nullptr, 0, caps, advanced);
     }
     return true;
 }
@@ -200,32 +236,31 @@ static bool parseUnsigned(const char* s, uint16_t& out) {
     return true;
 }
 
+// A plain number (the API) first, then for an Enum or a Bool the text normalised to an id: an option's id is its
+// normalised label, so "force_4_3", "Force 4:3" and "force 4:3" are one option. Signs and marks are not numbers.
 bool settingsParse(const SettingDef& d, const char* text, uint16_t& out) {
-    while (*text == ' ' || *text == '\t') text++;
     uint16_t v;
+    if (parseUnsigned(text, v)) {
+        if (!settingsValid(d, v)) return false;
+        out = v;
+        return true;
+    }
+    if (d.type != SettingType::Enum && d.type != SettingType::Bool) return false;
+    char id[32];
+    if (!settingsIdFromLabel(text, id, sizeof(id))) return false;
+    for (const char* c = id; ; c++) {                       // digits only: a number with signs or marks around it
+        if (!*c) return false;
+        if (*c < '0' || *c > '9') break;
+    }
     if (d.type == SettingType::Bool) {
-        if (!strcmp(text, "true") || !strcmp(text, "on")) { out = 1; return true; }
-        if (!strcmp(text, "false") || !strcmp(text, "off")) { out = 0; return true; }
+        if (!strcmp(id, "on") || !strcmp(id, "true")) { out = 1; return true; }
+        if (!strcmp(id, "off") || !strcmp(id, "false")) { out = 0; return true; }
+        return false;
     }
-    if (d.type == SettingType::Enum) {
-        char name[32]; uint16_t ev;
-        size_t len = strlen(text);
-        while (len && (text[len - 1] == ' ' || text[len - 1] == '\r')) len--;
-        for (uint8_t i = 0; settingsEnumAt(d, i, name, sizeof(name), ev); i++)
-            if (strlen(name) == len && !strncmp(name, text, len)) { out = ev; return true; }
-    }
-    if (!parseUnsigned(text, v)) return false;
-    if (!settingsValid(d, v)) return false;
-    out = v;
-    return true;
+    return enumFindId(d, id, out);
 }
 
-size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n) {
-    if (d.type == SettingType::Enum) {
-        char name[32]; uint16_t ev;
-        for (uint8_t i = 0; settingsEnumAt(d, i, name, sizeof(name), ev); i++)
-            if (ev == value) { copyStr(buf, n, name); return strlen(buf); }
-    }
+static size_t formatNumber(uint16_t value, char* buf, size_t n) {
     char tmp[8]; int len = 0;
     uint16_t v = value; char rev[8];
     do { rev[len++] = (char)('0' + v % 10); v /= 10; } while (v && len < 7);
@@ -233,6 +268,24 @@ size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n) 
     tmp[len] = '\0';
     copyStr(buf, n, tmp);
     return strlen(buf);
+}
+
+size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n) {
+    if (d.type == SettingType::Enum) {
+        uint8_t caps; bool advanced;
+        if (enumFindValue(d, value, buf, n, caps, advanced)) return strlen(buf);
+    }
+    return formatNumber(value, buf, n);
+}
+
+size_t settingsFormatStored(const SettingDef& d, uint16_t value, char* buf, size_t n) {
+    if (d.type == SettingType::Bool) { copyStr(buf, n, value ? "on" : "off"); return strlen(buf); }
+    if (d.type == SettingType::Enum) {
+        char label[48]; uint8_t caps; bool advanced;
+        if (enumFindValue(d, value, label, sizeof(label), caps, advanced) && settingsIdFromLabel(label, buf, n))
+            return strlen(buf);
+    }
+    return formatNumber(value, buf, n);
 }
 
 // ---- String settings ----

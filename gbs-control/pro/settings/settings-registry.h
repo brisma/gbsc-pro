@@ -30,7 +30,12 @@ void settingsApplyDefaults(userOptions& u);
 uint16_t settingsChangedApply(const userOptions& before, const userOptions& after, SettingScope scope);
 
 bool settingsParse(const SettingDef& d, const char* text, uint16_t& out);
-size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n);
+size_t settingsFormat(const SettingDef& d, uint16_t value, char* buf, size_t n);   // labels: menus and the WebSocket echo
+// Files: an Enum's option id, a Bool's on/off, the number for the rest (and for an Enum value outside its list)
+size_t settingsFormatStored(const SettingDef& d, uint16_t value, char* buf, size_t n);
+// An option's id: its label in lower case, every run of other characters than a-z and 0-9 one '_', none at the ends;
+// 0 (and "") when it does not fit
+size_t settingsIdFromLabel(const char* label, char* out, size_t n);
 
 uint8_t settingsEnumCount(const SettingDef& d);
 bool settingsEnumAt(const SettingDef& d, uint8_t i, char* name, size_t n, uint16_t& value);

@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 #include <unity.h>
 #include "options.h"
 #include "settings-registry.h"
@@ -303,8 +306,125 @@ void test_advanced_mark_stripped_and_long_lists_complete(void) {
         if (v == 5) TEST_ASSERT_EQUAL_UINT8(CAP_ADV, caps);
 }
 
+
+// ---- Stored values: option ids (lower case, runs of other characters -> one '_') ----
+static std::string stored(const char* key, uint16_t v) {
+    char b[40]; settingsFormatStored(defOf(key), v, b, sizeof(b)); return std::string(b);
+}
+static bool parses(const char* key, const char* text, uint16_t want) {
+    uint16_t v = 0xFFFF; return settingsParse(defOf(key), text, v) && v == want;
+}
+static bool rejects(const char* key, const char* text) { uint16_t v; return !settingsParse(defOf(key), text, v); }
+
+void test_id_from_label(void) {
+    struct { const char* l; const char* id; } t[] = {{"Auto", "auto"}, {"Force 4:3", "force_4_3"}, {"As 60Hz", "as_60hz"},
+        {"RGB SCART", "rgb_scart"}, {"S-Video", "s_video"}, {"NTSC 7.5 IRE", "ntsc_7_5_ire"}, {"3-2 lines", "3_2_lines"},
+        {"GBSC PRO", "gbsc_pro"}, {"PAL-Nc 7.5IRE", "pal_nc_7_5ire"}, {" -x- ", "x"}};
+    char b[32];
+    for (auto& e : t) { settingsIdFromLabel(e.l, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING_MESSAGE(e.id, b, e.l); }
+    TEST_ASSERT_EQUAL_UINT(0, settingsIdFromLabel("a label far too long for this small buffer", b, 8));
+}
+
+void test_ids_distinct_per_setting(void) {
+    for (uint8_t i = 0; i < settingsCount(); i++) {
+        SettingDef d; settingsDefAt(i, d);
+        if (d.type != SettingType::Enum) continue;
+        char key[48]; settingsKeyCopy(d, key, sizeof(key));
+        std::vector<std::string> ids;
+        char name[48]; uint16_t v;
+        for (uint8_t k = 0; settingsEnumAt(d, k, name, sizeof(name), v); k++) {
+            TEST_ASSERT_TRUE_MESSAGE(strlen(name) < 40, key);   // the option reader's token buffer is 48 B
+            char id[48]; TEST_ASSERT_TRUE_MESSAGE(settingsIdFromLabel(name, id, sizeof(id)) > 0, key);
+            for (auto& o : ids) TEST_ASSERT_TRUE_MESSAGE(o != id, key);
+            bool digits = true; for (const char* c = id; *c; c++) if (*c < '0' || *c > '9') digits = false;
+            if (digits) TEST_ASSERT_EQUAL_UINT16_MESSAGE(v, (uint16_t)atoi(id), key);
+            ids.push_back(id);
+        }
+    }
+}
+
+void test_flash_ids_with_suffixes(void) {
+    TEST_ASSERT_EQUAL_STRING("s_video", stored("input.source", 5).c_str());      // "@adv"
+    TEST_ASSERT_EQUAL_STRING("ntsc_4_43", stored("adv.format_sv", 4).c_str());   // "#a"
+    TEST_ASSERT_EQUAL_STRING("bypass", stored("output.preset", 10).c_str());     // "@original"
+}
+
+void test_format_stored_ids_and_words(void) {
+    TEST_ASSERT_EQUAL_STRING("force_4_3", stored("output.aspect", 1).c_str());
+    TEST_ASSERT_EQUAL_STRING("auto", stored("output.hdmi_range", 1).c_str());
+    TEST_ASSERT_EQUAL_STRING("off", stored("picture.scanlines", 0).c_str());
+    TEST_ASSERT_EQUAL_STRING("on", stored("system.ext_clock", 1).c_str());       // the setting's meaning (INVERT is in uopt)
+    TEST_ASSERT_EQUAL_STRING("80", stored("audio.volume", 80).c_str());
+    TEST_ASSERT_EQUAL_STRING("2", stored("system.encoder_steps", 2).c_str());
+}
+
+void test_format_stored_value_outside_list(void) {
+    TEST_ASSERT_EQUAL_STRING("9", stored("output.aspect", 9).c_str());
+}
+
+void test_stored_round_trip_every_setting(void) {
+    for (uint8_t i = 0; i < settingsCount(); i++) {
+        SettingDef d; settingsDefAt(i, d);
+        char key[48]; settingsKeyCopy(d, key, sizeof(key));
+        std::vector<uint16_t> vals;
+        if (d.type == SettingType::Enum) { char n[48]; uint16_t v; for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) vals.push_back(v); }
+        else if (d.type == SettingType::Bool) vals = {0, 1};
+        else vals = {d.min, d.max};
+        for (uint16_t v : vals) {
+            char b[40]; settingsFormatStored(d, v, b, sizeof(b));
+            uint16_t back = 0xFFFF;
+            TEST_ASSERT_TRUE_MESSAGE(settingsParse(d, b, back), key);
+            TEST_ASSERT_EQUAL_UINT16_MESSAGE(v, back, key);
+        }
+    }
+}
+
+void test_parse_ids_labels_numbers(void) {
+    TEST_ASSERT_TRUE(parses("output.aspect", "force_4_3", 1));
+    TEST_ASSERT_TRUE(parses("output.aspect", "Force 4:3", 1));
+    TEST_ASSERT_TRUE(parses("output.aspect", "force 4:3", 1));
+    TEST_ASSERT_TRUE(parses("output.aspect", "1", 1));
+    TEST_ASSERT_TRUE(rejects("output.aspect", "nope"));
+    TEST_ASSERT_TRUE(parses("output.hdmi_range", "Limited", 3));
+    TEST_ASSERT_TRUE(parses("output.hdmi_range", "limited", 3));
+}
+
+void test_bool_words_normalised(void) {
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "On", 1));
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "OFF", 0));
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "on ", 1));
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "off\r", 0));
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "true", 1));
+    TEST_ASSERT_TRUE(parses("picture.scanlines", "0", 0));
+    TEST_ASSERT_TRUE(rejects("picture.scanlines", "maybe"));
+}
+
+void test_signed_or_marked_numbers_rejected(void) {
+    TEST_ASSERT_TRUE(rejects("system.encoder_steps", "-1"));
+    TEST_ASSERT_TRUE(rejects("system.encoder_steps", "+1"));
+    TEST_ASSERT_TRUE(rejects("system.encoder_steps", "#2"));
+    TEST_ASSERT_TRUE(rejects("picture.scanlines", "-1"));
+}
+
+void test_format_unchanged_for_menu_and_echo(void) {
+    char b[32];
+    settingsFormat(defOf("output.aspect"), 1, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("Force 4:3", b);
+    settingsFormat(defOf("system.encoder_steps"), 2, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("2", b);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_id_from_label);
+    RUN_TEST(test_ids_distinct_per_setting);
+    RUN_TEST(test_flash_ids_with_suffixes);
+    RUN_TEST(test_format_stored_ids_and_words);
+    RUN_TEST(test_format_stored_value_outside_list);
+    RUN_TEST(test_stored_round_trip_every_setting);
+    RUN_TEST(test_parse_ids_labels_numbers);
+    RUN_TEST(test_bool_words_normalised);
+    RUN_TEST(test_signed_or_marked_numbers_rejected);
+    RUN_TEST(test_format_unchanged_for_menu_and_echo);
     RUN_TEST(test_advanced_mark_stripped_and_long_lists_complete);
     RUN_TEST(test_setting_ids_match_table_order);
     RUN_TEST(test_adv_apply_groups_are_granular);
