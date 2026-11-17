@@ -39,7 +39,10 @@ bool geoWidth(GeoRegs& r, float f);
 
 enum GeoAspect : uint8_t { GEO_AUTO, GEO_FORCE43, GEO_FULL };              // output.aspect
 enum GeoStyle50 : uint8_t { GEO_PAL_TV, GEO_FULL_HEIGHT, GEO_AS_60HZ };    // output.style_50hz
-struct GeoState { uint8_t aspect; bool integer; uint8_t style50; };
+// standIn: the table stands in for the other resolution of its pair. Matching the output to the source loads the
+// 1024p table (a 5:4 frame) for a 50 Hz source when 960p (4:3) was chosen, and the 960p table for a 60 Hz source
+// when 1024p was chosen; a screen shows either in the frame of the chosen one, so the width follows that frame.
+struct GeoState { uint8_t aspect; bool integer; uint8_t style50; bool standIn; };
 
 // The vertical part of a picture against its table: the scale (0: the table's own), and for a picture taller than
 // the window the lines its top moves down and the source lines the input skips so that it stays centred
@@ -49,12 +52,13 @@ struct GeoTarget { GeoVert vert; uint16_t widthPm; };   // the width against the
 // The picture of a state on the table tableId (GBS_PRESET_ID). False for a table the steps do not handle.
 bool geoTarget(uint8_t tableId, GeoState s, GeoTarget& out);
 
-// The state the registers end in for these settings: the 50Hz style only counts on a 50 Hz table, and Full height
-// with Integer scale is the PAL TV picture (it cannot fill the height and be a whole multiple).
+// The state the registers end in for these settings: the 50Hz style only counts on a 50 Hz table, Full height with
+// Integer scale is the PAL TV picture (it cannot fill the height and be a whole multiple), and only the two tables
+// that matching swaps in can stand in.
 GeoState geoNormalise(uint8_t tableId, GeoState s);
 
 // GBS_GEOMETRY for a normalised state: bits 0-1 the aspect, bit 2 Integer scale, bits 3-4 the 50Hz style plus one
-// on a 50 Hz table. 0 is a table as loaded.
+// on a 50 Hz table, bit 5 a table standing in for the chosen one. 0 is a table as loaded.
 uint8_t geoMark(uint8_t tableId, GeoState s);
 
 struct GeoResult {

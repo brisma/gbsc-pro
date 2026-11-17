@@ -25,6 +25,8 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   50Hz style = Full height brings the earlier picture back. A profile saved at 1080p from a 50 Hz source with PAL
   full height on still holds that picture: run Screen > Reset screen on it (or delete and save it again) before
   choosing its 50Hz style, otherwise Full height is applied on top of it. The active profile shows as changed once.
+- Aspect, Integer scale and 50Hz style also act on a VGA (RGBHV) source scaled by the GBSC at 50 or 60 Hz; not on
+  70 Hz and faster PC modes, on HD sources passed through, or on the Downscale output. (#69)
 - The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
   grid are welcome.
 

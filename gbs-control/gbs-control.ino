@@ -3045,11 +3045,16 @@ static void applyProfileSyncWatcher()
 // loaded, table or profile. Its registers say which picture they hold (GBS_GEOMETRY); the step applies the
 // difference. It runs while the display clock is still the scaler's own code, so a clock step is one register: the
 // clock generator and the line total are set up after it. Sources that share the tables with other vertical scales
-// (medium resolution, scaled RGBHV) and bypass modes are left alone.
+// (medium resolution, scaled RGBHV at 70 Hz and more) and bypass modes are left alone. Scaled RGBHV loads a table
+// as mode 1..4 and sets its own capture start after it (rgbhvCaptureStart): the step's move is kept for that.
+static int16_t gGeoCaptureMove = 0;   // IF_VB lines the last step moved the capture start by
+static float gRgbhvHz = 0;            // scaled RGBHV: the source's field rate, measured before its table loads
 static void geometryStep()
 {
+    gGeoCaptureMove = 0;
+    bool rgbhv = GBS::GBS_OPTION_SCALING_RGBHV::read() == 1;
     if (rto->outModeHdBypass || rto->videoStandardInput < 1 || rto->videoStandardInput > 4 ||
-        GBS::GBS_OPTION_SCALING_RGBHV::read() == 1) {
+        (rgbhv && (gRgbhvHz < 45.0f || gRgbhvHz >= 69.0f))) {
         logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: not at this resolution"));
         return;
     }
@@ -3075,7 +3080,11 @@ static void geometryStep()
     was.bar = GBS::GBS_GEOMETRY_BAR::read();
 
     GeoRegs now = was;
-    GeoState want = {uopt->outputAspect, uopt->integerScale != 0, uopt->style50Hz};
+    // Matching the output to the source loads the 1024p table when 960p was chosen (50 Hz) and the 960p table when
+    // 1024p was chosen (60 Hz): the picture is shaped for the frame of the chosen one
+    uint8_t chosen = uopt->presetPreference == OutputCustomized ? profileBasePreset() : (uint8_t)uopt->presetPreference;
+    bool standIn = (rto->presetID == 0x12 && chosen == Output960P) || (rto->presetID == 0x01 && chosen == Output1024P);
+    GeoState want = {uopt->outputAspect, uopt->integerScale != 0, uopt->style50Hz, standIn};
     GeoResult g = geometryApply(now, rto->presetID, want);
     if (!g.acted) {
         logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: not at this resolution"));
@@ -3084,8 +3093,13 @@ static void geometryStep()
     // The TV menu is placed on the shown window. A reload under the same preset id may have changed it even when
     // this step has nothing to do (back to the table's own picture)
     if (hwHas(CAP_OSD)) osdWindowSoon();
+    static const char* const kAspect[] = {"Auto", "Force 4:3", "Full"};
+    static const char* const kStyle[] = {"PAL TV", "Full height", "As 60Hz"};
+    GeoState held = geoNormalise(rto->presetID, want);
     if (g.failed) {
-        logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: step refused, picture left as loaded"));
+        logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: step refused, picture left as loaded: aspect %s, integer %s, 50Hz %s, width x%u.%03u"),
+                  kAspect[held.aspect], held.integer ? "on" : "off", (rto->presetID & 0x10) ? kStyle[held.style50] : "-",
+                  (unsigned)(g.widthPm / 1000), (unsigned)(g.widthPm % 1000));
         return;
     }
     if (!g.changed) {
@@ -3107,19 +3121,32 @@ static void geometryStep()
     if (now.disVbSt != was.disVbSt) GBS::VDS_DIS_VB_ST::write(now.disVbSt);
     if (now.disVbSp != was.disVbSp) GBS::VDS_DIS_VB_SP::write(now.disVbSp);
     if (now.ifVbSt != was.ifVbSt) GBS::IF_VB_ST::write(now.ifVbSt);
+    gGeoCaptureMove = (int16_t)((int)now.ifVbSt - (int)was.ifVbSt);
     if (now.ifVbSp != was.ifVbSp) GBS::IF_VB_SP::write(now.ifVbSp);
     if (now.mark != was.mark) GBS::GBS_GEOMETRY::write(now.mark);
     if (now.bar != was.bar) GBS::GBS_GEOMETRY_BAR::write(now.bar);
 
-    static const char* const kAspect[] = {"Auto", "Force 4:3", "Full"};
-    static const char* const kStyle[] = {"PAL TV", "Full height", "As 60Hz"};
-    GeoState held = geoNormalise(rto->presetID, want);
-    logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: aspect %s, integer %s, 50Hz %s: width x%u.%03u, clock 0x%02X -> 0x%02X, vertical %u -> %u"),
+    logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: aspect %s, integer %s, 50Hz %s%s: width x%u.%03u, clock 0x%02X -> 0x%02X, vertical %u -> %u"),
               kAspect[held.aspect], held.integer ? "on" : "off", (rto->presetID & 0x10) ? kStyle[held.style50] : "-",
+              held.standIn ? (rto->presetID == 0x12 ? ", 4:3 frame" : ", 5:4 frame") : "",
               (unsigned)(g.widthPm / 1000), (unsigned)(g.widthPm % 1000), g.clockFrom, g.clockTo, (unsigned)was.vScale,
               (unsigned)g.vScale);
+    // the picture the registers held and what came of it (a line of its own: the one above is near the length limit)
+    logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: mark 0x%02X -> 0x%02X, bar %u -> %u, capture start %u -> %u"),
+              was.mark, now.mark, (unsigned)was.bar, (unsigned)now.bar, (unsigned)was.ifVbSt, (unsigned)now.ifVbSt);
     if (now.clamps)
-        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: %u edge(s) held inside the line"), (unsigned)now.clamps);
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: %u edge(s) held inside the line or the capture start"), (unsigned)now.clamps);
+}
+
+// Scaled RGBHV from a 31 kHz source: upstream's capture start for that path (6 / 8) plus the geometry step's move, on a
+// table. A profile holds the value captured after this, the step's move included: it stays.
+static void rgbhvCaptureStart()
+{
+    if (rto->isCustomPreset) return;
+    int st = 6 + gGeoCaptureMove;
+    if (st < 0) st = 0;
+    GBS::IF_VB_SP::write((uint16_t)(st + 2));
+    GBS::IF_VB_ST::write((uint16_t)st);
 }
 
 void doPostPresetLoadSteps()
@@ -6400,6 +6427,7 @@ void runSyncWatcher()
                     delay(4);
 
                     float sourceRate = getSourceFieldRate(1);
+                    gRgbhvHz = sourceRate;   // the geometry step acts at 50 / 60 Hz only
                     //Serial.println(sourceRate);
 
                     // todo: this hack is hard to understand when looking at applypreset and mode is suddenly 1,2 or 3
@@ -6498,8 +6526,7 @@ void runSyncWatcher()
                         } else {
                             // 50/60Hz, presumably
                             // adjust vposition
-                            GBS::IF_VB_SP::write(8);
-                            GBS::IF_VB_ST::write(6);
+                            rgbhvCaptureStart();   // upstream: IF_VB 6 / 8
                         }
                     }
                 }
@@ -6542,6 +6569,7 @@ void runSyncWatcher()
                         }
 
                         activePresetLineCount = sourceLines;
+                        gRgbhvHz = getSourceFieldRate(1);   // the geometry step acts at 50 / 60 Hz only
                         applyPresets(rto->videoStandardInput);
 
                         GBS::GBS_OPTION_SCALING_RGBHV::write(1);
@@ -6611,8 +6639,7 @@ void runSyncWatcher()
                             } else {
                                 // 50/60Hz, presumably
                                 // adjust vposition
-                                GBS::IF_VB_SP::write(8);
-                                GBS::IF_VB_ST::write(6);
+                                rgbhvCaptureStart();   // upstream: IF_VB 6 / 8
                             }
                         }
                     } else {
