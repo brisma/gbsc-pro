@@ -213,8 +213,30 @@ void test_header_without_valid_source_writes_no_fp(void) {
 }
 
 
+
+// The header's format and scan are read like the settings (case, spaces); a fingerprint needs a known source and format
+void test_header_format_and_scan_normalised(void) {
+    ProfileMeta r; profileMetaInit(r);
+    const char* edited[] = {"profile.fp.source=RGB SCART", "profile.fp.format=NTSC ", "profile.fp.scan=Interlaced"};
+    for (const char* l : edited) profileParseHeaderLine(l, r);
+    TEST_ASSERT_TRUE(r.hasFp);
+    TEST_ASSERT_EQUAL_UINT8(1, r.fpInput);
+    TEST_ASSERT_EQUAL_UINT8(1, r.fpMode);
+    TEST_ASSERT_EQUAL_UINT8(1, r.fpInterlaced);
+    ProfileMeta n; profileMetaInit(n);
+    const char* noFormat[] = {"profile.fp.source=rgb_scart", "profile.fp.lines=262"};
+    for (const char* l : noFormat) profileParseHeaderLine(l, n);
+    TEST_ASSERT_FALSE(n.hasFp);                                       // a fingerprint that could never match
+    ProfileMeta b; profileMetaInit(b);
+    const char* badFormat[] = {"profile.fp.source=rgb_scart", "profile.fp.format=nope"};
+    for (const char* l : badFormat) profileParseHeaderLine(l, b);
+    TEST_ASSERT_FALSE(b.hasFp);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_header_format_and_scan_normalised);
     RUN_TEST(test_header_writes_names);
     RUN_TEST(test_header_every_fp_format_round_trips);
     RUN_TEST(test_header_ignores_old_keys);
