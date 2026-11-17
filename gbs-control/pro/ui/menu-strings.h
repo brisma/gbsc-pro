@@ -19,6 +19,8 @@
     S(S_SYNC, "Sync") \
     S(S_SYNC_STRIPPER, "Sync cleanup") \
     S(S_ADAPTIVE_SYNC, "Adaptive Sync") \
+    S(S_DIGITAL_SYNC, "Digital sync") \
+    S(S_SYNC_DEJITTER, "Sync dejitter") \
     S(S_LOST_WAIT, "Wait before search") \
     S(S_TERMINATION, "75 ohm sync") \
     S(S_ADC, "ADC calibration") \
@@ -313,6 +315,8 @@
     S(H_VIDEO_FORMAT, "Color system of S-Video and Composite. Auto finds it. Grey blacks on NTSC: Auto 7.5 IRE.") \
     S(H_SYNC_STRIPPER, "Cleans the RGB SCART and SoG sync with a separator chip. Off only if the picture rolls or drops.") \
     S(H_ADAPTIVE_SYNC, "Steadier picture on bright screens and video mode changes. Off is the original sync handling.") \
+    S(H_DIGITAL_SYNC, "Reads the sync from the digital input. Try it when a 15kHz RGB source loses sync.") \
+    S(H_SYNC_DEJITTER, "Filters the sync on the HS/VS pins for a sync with jitter. Auto is the original handling.") \
     S(H_TERMINATION, "75 ohm load on the SCART sync for cables that expect it. Saved with the profile.") \
     S(H_ADC, "How the scaler reads the input: gain/SOG level/black calibration.") \
     S(H_GAIN, "Input signal level. Too dark: raise it. Whites blown out or colors too strong: lower it.") \

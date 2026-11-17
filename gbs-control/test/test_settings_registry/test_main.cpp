@@ -119,6 +119,19 @@ void test_format_enum_by_name(void) {
     TEST_ASSERT_EQUAL_STRING("PAL-N 7.5 IRE", buf);
 }
 
+// input.sync_dejitter: Auto (as rama's code) / On / Off, per profile, Auto by default (sync-source.h)
+void test_sync_dejitter_auto_on_off(void) {
+    char buf[32];
+    const SettingDef d = defOf("input.sync_dejitter");
+    TEST_ASSERT_EQUAL_UINT16(0, d.def);
+    settingsFormat(d, 0, buf, sizeof(buf)); TEST_ASSERT_EQUAL_STRING("Auto", buf);
+    settingsFormat(d, 1, buf, sizeof(buf)); TEST_ASSERT_EQUAL_STRING("On", buf);
+    settingsFormat(d, 2, buf, sizeof(buf)); TEST_ASSERT_EQUAL_STRING("Off", buf);
+    uint16_t v;
+    TEST_ASSERT_FALSE(settingsParse(d, "3", v));
+    TEST_ASSERT_EQUAL_UINT8(1, defOf("input.digital_sync").max);   // Digital sync stays Off / On
+}
+
 void test_caps_from_key_prefix(void) {
     TEST_ASSERT_EQUAL_UINT8(CAP_ADV, settingsCaps(defOf("adv.brightness")));
     TEST_ASSERT_EQUAL_UINT8(CAP_ADV, settingsCaps(defOf("input.sync_stripper")));
@@ -295,6 +308,7 @@ int main(int, char**) {
     RUN_TEST(test_parse_bool_number_and_enum);
     RUN_TEST(test_parse_enum_accepts_number);
     RUN_TEST(test_format_enum_by_name);
+    RUN_TEST(test_sync_dejitter_auto_on_off);
     RUN_TEST(test_option_grammar_with_caps);
     RUN_TEST(test_parse_ignores_caps_marker);
     RUN_TEST(test_input_source_is_a_choice_with_auto);

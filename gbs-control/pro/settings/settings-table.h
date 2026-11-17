@@ -26,6 +26,7 @@
     OPT(OPT_ENC_STEP,  "1|2|4")   /* menu steps per detent */ \
     OPT(OPT_OLED_IDLE, "Screensaver|Off") \
     OPT(OPT_OLED_AFTER, "30s|1min|3min|10min") \
+    OPT(OPT_DEJITTER,  "Auto|On|Off")   /* input.sync_dejitter (pro/input/sync-source.h) */ \
     OPT(OPT_FTL,       "Method 1|Method 2")   /* 0 Vtotal+VSST, 1 Vtotal */ \
     OPT(OPT_HDMI,      "Auto=1|Full=0|Limited=3|Limited SD=2#a")   /* values: 0 off, 1 HD modes, 2 SD/PC modes, 3 all */ \
     OPT(OPT_MENU_MODE, "Easy|Advanced") \
@@ -86,6 +87,8 @@
     SETTING(input_auto_gain,   "input.auto_gain",       Bool, enableAutoGain,                0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_sync_strip,  "input.sync_stripper",   Bool, advSyncStripper,               1,      0, 1,      Profile, APPLY_SYNC,        nullptr,     0, CAP_ADV) \
     SETTING(input_adaptive,    "input.adaptive_sync",   Bool, adaptiveSync,                  1,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
+    SETTING(input_digital_sync, "input.digital_sync",   Bool, digitalSync,                   0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
+    SETTING(input_sync_dejitter, "input.sync_dejitter", Enum, syncDejitter,                  0,      0, 2,      Profile, APPLY_NONE,        OPT_DEJITTER, 0, CAP_NONE) \
     SETTING(input_sync_75,     "input.sync_75ohm",      Bool, sync75Ohm,                     0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
     /* ---- Profile: picture ---- */ \
     SETTING(pic_scanlines,     "picture.scanlines",     Bool, wantScanlines,                 0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \

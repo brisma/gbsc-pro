@@ -55,6 +55,7 @@ extern bool gSettingsPresetPending;   // pro/settings/settings-apply.cpp: preset
 #include "pro/net/ap-retry.h"
 #include "pro/clock/frame-lock-fails.h"
 #include "pro/input/sync-pulse.h"
+#include "pro/input/sync-source.h"
 #include "pro/input/rgb-scart-judge.h"
 #include "pro/picture/picture-color.h"
 
@@ -3806,6 +3807,7 @@ void doPostPresetLoadSteps()
         GBS::SP_EXT_SYNC_SEL::write(1); // 5_20 3 disconnect HV input
                                         // stays disconnected until reset condition
     }
+    syncSourceWrite(syncSourceWanted());   // input.digital_sync, after the values the preset and the lines above wrote
 
     rto->coastPositionIsSet = false; // re-arm these
     rto->clampPositionIsSet = false;
@@ -5240,6 +5242,7 @@ void setOutModeHdBypass(bool regsInitialized)
     SerialM.println(F("pass-through on"));
 }
 
+void syncDejitterRearm();   // input.sync_dejitter (with syncDejitterLoop)
 void bypassModeSwitch_RGBHV()
 {
     if (!rto->boardHasPower) {
@@ -5287,6 +5290,7 @@ void bypassModeSwitch_RGBHV()
                                        //GBS::HD_SEL_BLK_IN::write(1); // "DVI", not regular
 
     GBS::PAD_SYNC1_IN_ENZ::write(0); // filter H/V sync input1 (0 = on)
+    syncDejitterRearm();             // input.sync_dejitter decides again (Auto: on, as here)
     GBS::PAD_SYNC2_IN_ENZ::write(0); // filter H/V sync input2 (0 = on)
 
     GBS::SP_SOG_P_ATO::write(1); // 5_20 1 corrects hpw readout and slightly affects sync
@@ -7968,6 +7972,68 @@ void myLog(char const* type, char command) {
 
 
 
+// input.digital_sync: a composite sync read from the HS input pin instead of the ADC's sync slicer (sync-source.h).
+// Presets, input changes and resets write the slicer's values, so the choice is written after every preset load and
+// when the setting changes under a running picture.
+static bool gSyncFromHs = false;   // what the sync processor was last set to
+static int8_t gSyncDejitter = -1;  // input.sync_dejitter: the pad filter as last written, -1 = write at the next pass
+static bool syncSourceWanted()
+{
+    return syncFromHsPin(uopt->digitalSync != 0, hwHas(CAP_ADV), uopt->activeInputType, rto->syncTypeCsync);
+}
+static void syncSourceWrite(bool hs)
+{
+    if (hs) {
+        GBS::SP_EXT_SYNC_SEL::write(0);   // the first HS/VS input pair: the second one, selected for a composite sync, is grounded
+        GBS::SP_SOG_SRC_SEL::write(1);
+    } else {
+        GBS::SP_SOG_SRC_SEL::write(0);    // also what a profile's registers may hold from a save with the setting on
+        if (gSyncFromHs && rto->syncTypeCsync) GBS::SP_EXT_SYNC_SEL::write(1);
+    }
+    if (hs != gSyncFromHs) logPrintf(LC_SYNC, LL_INFO, PSTR("sync source: %s"), hs ? "HS input (digital sync)" : "sync slicer");
+    gSyncFromHs = hs;
+    gSyncDejitter = -1;                // a preset load or a source change: the pad filter is decided again
+}
+
+// input.sync_dejitter: the pad filter of the HS/VS pins (S0_48 bit 6, 0 = on) where the pins carry the sync. Auto
+// keeps rama's choice: off in the scaling presets, on in the RGBHV bypass (bypassModeSwitch_RGBHV) and during the
+// source search (setResetParameters), which this leaves alone. Written after every preset load, bypass switch and
+// setting change; the value always written on a running picture also clears a profile's captured S0_48.
+void syncDejitterRearm() { gSyncDejitter = -1; }
+static void syncDejitterLoop()
+{
+    bool running = rto->boardHasPower && !rto->sourceDisconnected && !rto->isInLowPowerMode &&
+                   rto->videoStandardInput != 0 && !updateInProgress();
+    if (!running) {
+        gSyncDejitter = -1;
+        return;
+    }
+    bool bypass = rto->videoStandardInput == 15;   // RGBHV bypass
+    bool pins = syncPinsRead(rto->syncTypeCsync, gSyncFromHs, bypass);
+    bool on = syncDejitterOn(uopt->syncDejitter, pins, bypass);
+    if (gSyncDejitter == (int8_t)on) return;
+    GBS::PAD_SYNC1_IN_ENZ::write(on ? 0 : 1);
+    static int8_t logged = -1;
+    if (logged != (int8_t)on) {
+        logPrintf(LC_SYNC, LL_INFO, PSTR("sync dejitter: pad filter %s (%s, HS/VS pins %s)"), on ? "on" : "off",
+                  uopt->syncDejitter == kSyncDejitterOn ? "On" : uopt->syncDejitter == kSyncDejitterOff ? "Off" : "Auto",
+                  pins ? "in use" : "unused");
+        logged = on;
+    }
+    gSyncDejitter = on;
+}
+static void syncSourceLoop()
+{
+    bool running = rto->boardHasPower && !rto->sourceDisconnected && !rto->isInLowPowerMode &&
+                   rto->videoStandardInput >= 1 && rto->videoStandardInput <= 4 && !updateInProgress();
+    if (!running) {             // a search or a reset wrote the slicer's values: the next preset load decides again
+        gSyncFromHs = false;
+        return;
+    }
+    bool want = syncSourceWanted();
+    if (want != gSyncFromHs) syncSourceWrite(want);
+}
+
 // The short-pulse limit follows the sync pulse: brighter pictures widen it, a console that changes its horizontal
 // mode changes it (sync-pulse.h)
 static SyncPulseTrack gSyncPulseTrack;
@@ -8029,6 +8095,8 @@ void loop()
     
     loopWatchBegin();  // a slow pass names its slowest stretch (debug log)
     syncPulseTrackLoop();
+    syncSourceLoop();
+    syncDejitterLoop();
     settingsLoop();
     logLoop();         // console log: pending upstream text, sync marks summary
     apiLoop();         // web changes and actions, applied outside the network context

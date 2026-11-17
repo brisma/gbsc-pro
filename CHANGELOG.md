@@ -30,6 +30,13 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
 - The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
   grid are welcome.
 
+### Input
+- **Digital sync** (Advanced, per profile, off by default; boards with the sync separator, RGB inputs): the scaler
+  reads a composite sync from its HS input instead of its analog sync slicer, which the board feeds through a
+  small capacitor. To try when a 15 kHz RGB source loses sync, above all on the VGA connector. (#69)
+- **Sync dejitter** (Advanced, per profile; VGA, or the RGB inputs with Digital sync): the scaler's own filter on its
+  HS/VS input pins, meant for a sync with jitter. Auto keeps the usual behaviour; On or Off force it. (#69)
+
 ### Fixed
 - After an update the active profile no longer shows unsaved changes when nothing was changed: a profile is compared
   with its own file when the settings of the new version differ from the old one's. (#72)

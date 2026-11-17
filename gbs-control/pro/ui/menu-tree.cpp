@@ -149,6 +149,8 @@ static const MenuNode kInput[] SET_PROGMEM = {
     SET(S_2X_SMOOTH, H_2X_SMOOTH, adv_smooth, P_I2P_ON, 0, NF_ADVANCED),
     SET(S_ADAPTIVE_SYNC, H_ADAPTIVE_SYNC, input_adaptive, P_NONE, 0, 0),
     SET(S_SYNC_STRIPPER, H_SYNC_STRIPPER, input_sync_strip, P_RGB_SYNC, 0, NF_REVERT),
+    SET(S_DIGITAL_SYNC, H_DIGITAL_SYNC, input_digital_sync, P_RGB_HS, 0, NF_ADVANCED),
+    SET(S_SYNC_DEJITTER, H_SYNC_DEJITTER, input_sync_dejitter, P_SYNC_PINS, 0, NF_ADVANCED),
     SET(S_RGBHV_SCALING, H_RGBHV_SCALING, pic_rgbhv_scale, P_VGA, 0, 0),
     SET(S_TERMINATION, H_TERMINATION, input_sync_75, P_RGBS, 0, NF_ADVANCED),
     SUBF(S_ADC, H_ADC, P_NONE, kAdc, NF_ADVANCED),

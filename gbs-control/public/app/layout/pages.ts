@@ -32,6 +32,8 @@ const INPUT: Section = { id: "input", title: "Input", icon: "cable", hint: "The 
     { kind: "toggle", ref: m("input/2x-smooth"), icon: "blur_on" },
     { kind: "toggle", ref: m("input/adaptive-sync"), icon: "sync" },
     { kind: "toggle", ref: m("input/sync-cleanup"), icon: "cleaning_services" },
+    { kind: "toggle", ref: m("input/digital-sync"), icon: "timeline" },
+    { kind: "inline", ref: m("input/sync-dejitter"), icon: "filter_alt" },
     { kind: "toggle", ref: m("input/vga-upscaling"), icon: "aspect_ratio" },
     { kind: "toggle", ref: m("input/75-ohm-sync"), icon: "electrical_services" },
     DECODER_NOTE,

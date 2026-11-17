@@ -42,6 +42,8 @@ function predVisible(pred: string, s: PredState): boolean {
     case "av_ntsc": return i === IN.AV && s.signal.advNtsc;
     case "av_pal": return i === IN.AV && !s.signal.advNtsc;
     case "rgb_sync": return (s.caps & CAP.ADV) !== 0 && (i === IN.RGBS || i === IN.RGSB);
+    case "rgb_hs": return (s.caps & CAP.ADV) !== 0 && (i === IN.RGBS || i === IN.RGSB || i === IN.VGA);
+    case "sync_pins": return i === IN.VGA || (predVisible("rgb_hs", s) && num(s, "input.digital_sync") !== 0);
     case "rgbs": return (s.caps & CAP.ADV) !== 0;
     case "profile_active": return s.profileActive;
     case "update_available": return s.signal.updateAvailable;

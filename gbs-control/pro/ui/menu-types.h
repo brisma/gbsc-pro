@@ -25,6 +25,8 @@ enum MenuPred : uint8_t {
     P_WIFI_AP,                // hotspot mode only
     P_SOG,                    // sync on green or luma: RGB SoG and Component
     P_TV_OSD,                 // standard board with a source the scaler draws (tvOsdAllowed)
+    P_RGB_HS,                 // boards with the sync separator, RGB inputs: the sync reaches the HS input
+    P_SYNC_PINS,              // the HS/VS pins carry the sync: VGA, or Digital sync on P_RGB_HS
     P_COUNT };
 
 enum MenuFn : uint8_t {

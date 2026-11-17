@@ -2,6 +2,7 @@
 #include <unity.h>
 #include <string>
 #include "input-auto.h"
+#include "sync-source.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -906,6 +907,39 @@ void test_a_csync_cable_on_vga_gets_one_look_per_return(void) {
     TEST_ASSERT_FALSE(n.pending());
 }
 
+// input.digital_sync: the HS pin as the source of a composite sync, only where the sync reaches it as a logic signal
+void test_digital_sync_only_where_the_sync_is_a_logic_signal(void) {
+    TEST_ASSERT_TRUE(syncFromHsPin(true, true, InputTypeRGBs, true));     // RGB SCART: the sync separator's output
+    TEST_ASSERT_TRUE(syncFromHsPin(true, true, InputTypeRGsB, true));
+    TEST_ASSERT_TRUE(syncFromHsPin(true, true, InputTypeVGA, true));      // a composite sync on the VGA connector
+    TEST_ASSERT_FALSE(syncFromHsPin(true, true, InputTypeVGA, false));    // separate H and V sync: nothing to choose
+    TEST_ASSERT_FALSE(syncFromHsPin(true, true, InputTypeYUV, true));     // the sync is in the video: the slicer only
+    TEST_ASSERT_FALSE(syncFromHsPin(true, true, InputTypeSV, true));
+    TEST_ASSERT_FALSE(syncFromHsPin(true, true, InputTypeAV, true));
+    TEST_ASSERT_FALSE(syncFromHsPin(true, false, InputTypeRGBs, true));   // a board without the separator
+    TEST_ASSERT_FALSE(syncFromHsPin(false, true, InputTypeRGBs, true));   // off
+    TEST_ASSERT_FALSE(syncFromHsPin(true, true, 0, true));
+}
+
+// The HS/VS pins carry the sync for separate H and V, for RGBHV bypass, and for a composite sync read by Digital sync
+void test_sync_pins_read_where_the_sync_comes_from_them(void) {
+    TEST_ASSERT_TRUE(syncPinsRead(false, false, false));    // RGBHV scaled: H and V on the pins
+    TEST_ASSERT_TRUE(syncPinsRead(false, false, true));     // RGBHV bypass
+    TEST_ASSERT_TRUE(syncPinsRead(true, false, true));      // bypass with a composite sync on the HS pin
+    TEST_ASSERT_TRUE(syncPinsRead(true, true, false));      // Digital sync
+    TEST_ASSERT_FALSE(syncPinsRead(true, false, false));    // composite sync through the slicer: the pins are unused
+}
+
+// input.sync_dejitter: the pad filter of the HS/VS pins where they carry the sync; Auto keeps rama's choice
+void test_sync_dejitter_on_the_pins_that_carry_the_sync(void) {
+    TEST_ASSERT_FALSE(syncDejitterOn(kSyncDejitterAuto, true, false));   // rama's scaling presets: off
+    TEST_ASSERT_TRUE(syncDejitterOn(kSyncDejitterAuto, true, true));     // rama's RGBHV bypass: on
+    TEST_ASSERT_TRUE(syncDejitterOn(kSyncDejitterOn, true, false));
+    TEST_ASSERT_FALSE(syncDejitterOn(kSyncDejitterOff, true, true));
+    TEST_ASSERT_FALSE(syncDejitterOn(kSyncDejitterOn, false, false));    // pins unused: rama's value whatever the setting
+    TEST_ASSERT_TRUE(syncDejitterOn(kSyncDejitterOff, false, true));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_paths_pro_order);
@@ -967,5 +1001,8 @@ int main(int, char**) {
     RUN_TEST(test_no_vga_look_where_it_cannot_help);
     RUN_TEST(test_the_look_is_repeated_only_when_scart_is_silent);
     RUN_TEST(test_a_csync_cable_on_vga_gets_one_look_per_return);
+    RUN_TEST(test_digital_sync_only_where_the_sync_is_a_logic_signal);
+    RUN_TEST(test_sync_pins_read_where_the_sync_comes_from_them);
+    RUN_TEST(test_sync_dejitter_on_the_pins_that_carry_the_sync);
     return UNITY_END();
 }

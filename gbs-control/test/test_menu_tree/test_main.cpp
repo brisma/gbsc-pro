@@ -294,6 +294,50 @@ void test_video_standard_label(void) {
     (void)be;
 }
 
+// Digital sync: an Advanced row of Input on the boards with the sync separator, for the RGB inputs
+void test_digital_sync_row(void) {
+    const uint8_t rgb[] = {1, 2, 3};                   // RGB SCART, RGB SoG, VGA
+    for (uint8_t in : rgb) {
+        FakeBackend& be = easy(in, false, false);
+        TEST_ASSERT_TRUE(rows(be, "Input").find("Digital sync") == std::string::npos);   // not in Easy
+        be.apply(SID_sys_menu_mode, 1); be.settle();
+        TEST_ASSERT_TRUE_MESSAGE(rows(be, "Input").find("Digital sync") != std::string::npos, rows(be, "Input").c_str());
+    }
+    FakeBackend& yuv = easy(4, false, false);          // Component: the sync is in the picture
+    yuv.apply(SID_sys_menu_mode, 1); yuv.settle();
+    TEST_ASSERT_TRUE(rows(yuv, "Input").find("Digital sync") == std::string::npos);
+    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);
+    FakeBackend& standard = easy(1, false, false);
+    standard.apply(SID_sys_menu_mode, 1); standard.settle();
+    bool there = rows(standard, "Input").find("Digital sync") != std::string::npos;
+    platformSetCaps(CAPS_DEFAULT);
+    TEST_ASSERT_FALSE(there);
+}
+
+// Sync dejitter: an Advanced row of Input wherever the HS/VS pins carry the sync: VGA on both boards, the other RGB
+// inputs of the Pro while Digital sync reads the HS pin
+void test_sync_dejitter_row(void) {
+    auto shown = [](FakeBackend& be) { return rows(be, "Input").find("Sync dejitter") != std::string::npos; };
+    FakeBackend& vga = easy(3, false, false);
+    TEST_ASSERT_FALSE(shown(vga));                                       // not in Easy
+    vga.apply(SID_sys_menu_mode, 1); vga.settle();
+    TEST_ASSERT_TRUE_MESSAGE(shown(vga), rows(vga, "Input").c_str());
+    FakeBackend& scart = easy(1, false, false);
+    scart.apply(SID_sys_menu_mode, 1); scart.settle();
+    TEST_ASSERT_FALSE(shown(scart));                                     // the slicer reads the sync
+    scart.apply(SID_input_digital_sync, 1); scart.settle();
+    TEST_ASSERT_TRUE(shown(scart));
+    FakeBackend& yuv = easy(4, false, false);
+    yuv.apply(SID_sys_menu_mode, 1); yuv.apply(SID_input_digital_sync, 1); yuv.settle();
+    TEST_ASSERT_FALSE(shown(yuv));                                       // Component: the sync is in the picture
+    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);
+    FakeBackend& standard = easy(3, false, false);
+    standard.apply(SID_sys_menu_mode, 1); standard.settle();
+    bool there = shown(standard);
+    platformSetCaps(CAPS_DEFAULT);
+    TEST_ASSERT_TRUE(there);                                             // the standard board's VGA input too
+}
+
 // Knob direction is an Easy row (TV menu too) of System > Device; the knob's steps stay Advanced, right under it.
 // Restart and Factory reset close the System page in both modes
 void test_knob_direction_in_easy(void) {
@@ -415,6 +459,8 @@ int main() {
     RUN_TEST(test_tree_no_duplicate_visible_labels);
     RUN_TEST(test_tree_every_sub_has_a_visible_child_somewhere);
     RUN_TEST(test_screen_page_has_no_50hz_row);
+    RUN_TEST(test_digital_sync_row);
+    RUN_TEST(test_sync_dejitter_row);
     RUN_TEST(test_easy_pages_rgb_scart_240p);
     RUN_TEST(test_easy_pages_component_480i);
     RUN_TEST(test_easy_pages_svideo_ntsc);
