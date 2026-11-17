@@ -23,7 +23,7 @@ void settingsSerializeEx(const userOptions& u, SettingScope scope, bool withSche
         settingsDefAt(i, d);
         if (d.scope != scope) continue;
         settingsKeyCopy(d, key, sizeof(key));
-        settingsFormat(d, settingsGet(u, d), val, sizeof(val));
+        settingsFormatStored(d, settingsGet(u, d), val, sizeof(val));   // ids for choices, numbers for quantities
         sink(key, ctx); sink("=", ctx); sink(val, ctx); sink("\n", ctx);
     }
     StrSettingDef sd;

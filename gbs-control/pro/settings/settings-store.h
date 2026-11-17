@@ -4,7 +4,7 @@
 
 struct userOptions;
 
-static const uint16_t SETTINGS_SCHEMA_VERSION = 1;
+static const uint16_t SETTINGS_SCHEMA_VERSION = 2;   // 2: choices written as option ids
 
 typedef void (*SettingsSink)(const char* text, void* ctx);
 

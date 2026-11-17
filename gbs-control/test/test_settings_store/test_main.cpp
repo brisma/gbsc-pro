@@ -24,8 +24,8 @@ void test_serialize_device_scope_only(void) {
     std::string out;
     u.osdTheme = 2;
     settingsSerialize(u, SettingScope::Device, appendSink, &out);
-    TEST_ASSERT_EQUAL_INT(0, (int)out.find("schema=1\n"));
-    TEST_ASSERT_TRUE(out.find("osd.theme=Light\n") != std::string::npos);
+    TEST_ASSERT_EQUAL_INT(0, (int)out.find("schema=2\n"));
+    TEST_ASSERT_TRUE(out.find("osd.theme=light\n") != std::string::npos);
     TEST_ASSERT_TRUE(out.find("adv.brightness=") == std::string::npos);
 }
 
@@ -225,8 +225,43 @@ void test_stored_scope_from_another_version_against_the_working_state(void) {
     TEST_ASSERT_TRUE(settingsScopeCrc(u, SettingScope::Profile) != settingsScopeCrc(copy, SettingScope::Profile));
 }
 
+
+// Files hold option ids and on/off; quantities stay numbers
+void test_serialize_writes_ids(void) {
+    std::string out;
+    u.outputAspect = 1; u.wantScanlines = 0; u.volume = 80;
+    settingsSerialize(u, SettingScope::Device, appendSink, &out);
+    settingsSerialize(u, SettingScope::Profile, appendSink, &out);
+    TEST_ASSERT_TRUE(out.find("output.aspect=force_4_3\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("picture.scanlines=off\n") != std::string::npos);
+    TEST_ASSERT_TRUE(out.find("audio.volume=80\n") != std::string::npos);
+}
+
+// The profile hash is the CRC of the serialised scope: the same state gives the same CRC, also after a write and load
+void test_scope_crc_stable_across_serialisations(void) {
+    u.outputAspect = 2; u.hdmiLimitedRange = 3; u.deintMode = 1; u.wantScanlines = 1;
+    uint32_t a = settingsScopeCrc(u, SettingScope::Profile), b = settingsScopeCrc(u, SettingScope::Profile);
+    TEST_ASSERT_EQUAL_HEX32(a, b);
+    std::string text;
+    settingsSerialize(u, SettingScope::Profile, appendSink, &text);
+    userOptions back; memset(&back, 0, sizeof(back)); settingsApplyDefaults(back);
+    SettingsLoadReport rep;
+    settingsLoadBegin(back, SettingScope::Profile, rep);
+    size_t pos = 0;
+    while (pos < text.size()) {
+        size_t e = text.find('\n', pos); if (e == std::string::npos) e = text.size();
+        std::string line = text.substr(pos, e - pos); pos = e + 1;
+        if (!line.empty()) settingsLoadLine(back, SettingScope::Profile, line.c_str(), rep);
+    }
+    TEST_ASSERT_EQUAL_UINT(0, rep.invalid);
+    TEST_ASSERT_EQUAL_HEX32(a, settingsScopeCrc(back, SettingScope::Profile));
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_serialize_writes_ids);
+    RUN_TEST(test_scope_crc_stable_across_serialisations);
     RUN_TEST(test_serialize_device_scope_only);
     RUN_TEST(test_round_trip_profile);
     RUN_TEST(test_unknown_missing_invalid_rules);

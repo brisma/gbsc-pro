@@ -1,0 +1,73 @@
+input.source auto=0 rgb_scart=1 rgb_sog=2 vga=3 component=4 s_video=5 composite=6
+input.last rgb_scart=1 rgb_sog=2 vga=3 component=4 s_video=5 composite=6
+input.scan_vga on=1 off=0
+input.scan_rgbs on=1 off=0
+input.scan_rgsb on=1 off=0
+input.scan_yuv on=1 off=0
+input.scan_sv on=1 off=0
+input.scan_av on=1 off=0
+input.lost_wait 1s=1 2s=2 5s=5 10s=10
+osd.theme gbsc_pro=0 classic=1 light=2 retro=3
+osd.position top_left=0 top=1 top_right=2 center_left=3 center=4 center_right=5 bottom_left=6 bottom=7 bottom_right=8
+osd.popup_position top_left=0 top=1 top_right=2 center_left=3 center=4 center_right=5 bottom_left=6 bottom=7 bottom_right=8
+osd.timeout 5s=0 10s=1 15s=2 30s=3 60s=4 10min=5
+osd.status_popup off=0 input_only=1 always=2
+osd.tv_changes on=1 off=0
+audio.mute on=1 off=0
+output.component on=1 off=0
+output.aspect auto=0 force_4_3=1 full=2
+output.integer_scale on=1 off=0
+system.adc_calibration on=1 off=0
+system.ext_clock on=1 off=0
+system.board auto=0 standard=2 pro=1
+system.encoder_direction normal=0 reversed=1
+system.encoder_steps 1=1 2=2 4=4
+system.oled_idle screensaver=0 off=1
+system.oled_idle_after 30s=0 1min=1 3min=2 10min=3
+system.auto_update_check off=0 daily=1
+system.update_channel stable=0 beta=1
+system.wifi_optimize on=1 off=0
+profiles.autoload on=1 off=0
+profiles.switch_input on=1 off=0
+profiles.startup last_used=0 defaults=1
+system.devmode on=1 off=0
+system.menu_mode easy=0 advanced=1
+output.preset 960p=0 480p=1 custom=2 720p=3 1024p=4 1080p=5 1200p=7 downscale=6 bypass=10
+output.frame_lock on=1 off=0
+output.frame_lock_method method_1=0 method_2=1
+output.force_60hz on=1 off=0
+output.style_50hz pal_tv=0 full_height=1 as_60hz=2
+output.match_preset on=1 off=0
+output.hdmi_range auto=1 full=0 limited=3
+input.auto_gain on=1 off=0
+input.sync_stripper on=1 off=0
+input.adaptive_sync on=1 off=0
+input.digital_sync on=1 off=0
+input.sync_dejitter auto=0 on=1 off=2
+input.sync_75ohm on=1 off=0
+picture.scanlines on=1 off=0
+picture.deinterlace adaptive=0 bob=1
+picture.line_filter on=1 off=0
+picture.rgbhv_scaling on=1 off=0
+picture.step_response on=1 off=0
+adv.format_sv auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
+adv.format_av auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
+adv.i2p on=1 off=0
+adv.smooth on=1 off=0
+adv.ace on=1 off=0
+adv.filter_y autowide=0 autonarrow=1 svhs_1=2 svhs_2=3 svhs_3=4 svhs_4=5 svhs_5=6 svhs_6=7 svhs_7=8 svhs_8=9 svhs_9=10 svhs_10=11 svhs_11=12 svhs_12=13 svhs_13=14 svhs_14=15 svhs_15=16 svhs_16=17 svhs_17=18 svhs_18=19 pal_nn1=20 pal_nn2=21 pal_nn3=22 pal_wn1=23 pal_wn2=24 ntsc_nn1=25 ntsc_nn2=26 ntsc_nn3=27 ntsc_wn1=28 ntsc_wn2=29 ntsc_wn3=30
+adv.filter_c auto_1_5mhz=0 auto_2_2mhz=1 shape_1=2 shape_2=3 shape_3=4 shape_4=5 shape_5=6 wideband=7
+adv.filter_wy svhs_1=2 svhs_2=3 svhs_3=4 svhs_4=5 svhs_5=6 svhs_6=7 svhs_7=8 svhs_8=9 svhs_9=10 svhs_10=11 svhs_11=12 svhs_12=13 svhs_13=14 svhs_14=15 svhs_15=16 svhs_16=17 svhs_17=18 svhs_18=19
+adv.filter_wy_override on=1 off=0
+adv.comb_ntsc narrow=0 medium=1 wide=3
+adv.comb_pal narrow=0 medium=1 wide=2 widest=3
+adv.comb_luma_ntsc adaptive=0 notch=4 2_line_upper=5 3_line=6 2_line_lower=7
+adv.comb_chroma_ntsc adaptive=0 off=4 2_line_upper=5 3_line=6 2_line_lower=7
+adv.comb_taps_ntsc 3_2_lines=1 5_3_lines=2 5_4_lines=3
+adv.comb_luma_pal adaptive=0 notch=4 2_line_upper=5 3_line=6 2_line_lower=7
+adv.comb_chroma_pal adaptive=0 off=4 2_line_upper=5 3_line=6 2_line_lower=7
+adv.comb_taps_pal 5_2_lines=1 5_3_lines=2 5_4_lines=3
+adv.dnr on=1 off=0
+adv.cti on=1 off=0
+dev.syncwatcher inherit=0 on=1 off=2
+dev.wifi_watch on=1 off=0
