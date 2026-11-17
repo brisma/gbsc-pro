@@ -41,6 +41,13 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
 - **Sync dejitter** (Advanced, per profile; VGA, or the RGB inputs with Digital sync): the scaler's own filter on its
   HS/VS input pins, meant for a sync with jitter. Auto keeps the usual behaviour; On or Off force it. (#69)
 
+### Settings files
+- Settings, profiles and backups store each choice by a fixed name (`output.aspect=force_4_3`, `picture.scanlines=off`)
+  instead of its menu label or a number, so later versions keep reading them whatever the menus call an option.
+- Coming from an earlier beta: profiles lose their auto-load fingerprint and base resolution. For each one, start
+  its console, open Profiles > Manage > Replace with current, and choose its resolution again. Going back to an
+  earlier beta resets most choices.
+
 ### Fixed
 - After an update the active profile no longer shows unsaved changes when nothing was changed: a profile is compared
   with its own file when the settings of the new version differ from the old one's. (#72)
