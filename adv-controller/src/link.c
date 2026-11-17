@@ -114,7 +114,7 @@ static void defer(uint8_t cmd, const uint8_t* buf, uint8_t len) {
 /* 1 when the reply went out */
 static int reply(uint8_t seq, uint8_t cmd, const uint8_t* payload, uint8_t len) {
     if (sCurPollUs - sPrevPollUs > kFreshUs) { sDropped++; return 0; }   /* the frame may be too old to answer */
-    uint8_t f[ADV_INFO_BYTES + ADV_FRAME_OVERHEAD];
+    uint8_t f[ADV_MAX_PAYLOAD + ADV_FRAME_OVERHEAD];   /* any reply up to the protocol maximum (was INFO-sized) */
     size_t n = advFrameEncode(seq, cmd, payload, len, f, sizeof(f));
     uint32_t back = halReply(f, (uint8_t)n, sCurPollUs + kTurnaroundUs, sCurPollUs + kDeadlineUs);
     if (!back) { sDropped++; return 0; }

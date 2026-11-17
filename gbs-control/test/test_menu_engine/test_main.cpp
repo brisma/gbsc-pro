@@ -253,7 +253,7 @@ void test_confirm_default_no(void) {
 
 void test_queue_full_shows_busy_toast(void) {
     MenuRig r;
-    r.key(K_MENU); r.enter("Output"); r.select("Force 60Hz");
+    r.key(K_MENU); r.enter("Output"); TEST_ASSERT_TRUE(r.select("Always 60Hz"));
     r.be.queueFull = true;
     r.key(K_OK);
     TEST_ASSERT_EQUAL_UINT8(OV_TOAST, r.v().overlay);
@@ -350,7 +350,7 @@ void test_second_revert_waits_for_settle(void) {
     MenuRig r;
     openRevert(r);
     r.key(K_BACK);                     // undo queued, not settled yet
-    r.select("Frame lock");
+    TEST_ASSERT_TRUE(r.select("Smooth scrolling"));
     r.key(K_OK);
     TEST_ASSERT_EQUAL_INT(0, countLog(r, "apply output.frame_lock=1"));
     TEST_ASSERT_EQUAL_STRING("Please wait", line0(r).c_str());
