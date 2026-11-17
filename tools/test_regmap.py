@@ -37,7 +37,7 @@ class RegmapTest(unittest.TestCase):
         with open(os.path.join(REPO, "gbs-control", "tv5725.h")) as f:
             count = len(re.findall(r"typedef\s+UReg<", f.read()))
         self.assertEqual(len(self.db["tv5725"]), count)
-        self.assertEqual(count, 677)
+        self.assertEqual(count, 679)
         self.assertEqual(self.tv["STATUS_IF_HT_OK"][1:5], [0, 0, 1, 1])   # seg, reg, bit, width
 
     def test_segment0_low_registers_read_only(self):
