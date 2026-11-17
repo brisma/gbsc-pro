@@ -10,6 +10,9 @@
 #define ENC_ISR
 #endif
 
+// system.encoder_steps (menu steps per detent: 1, 2 or 4) -> quarter steps of the knob per menu step; else 4
+inline uint8_t encoderQuartersPerStep(uint8_t steps) { return steps == 2 ? 2 : steps == 4 ? 1 : 4; }
+
 // Quadrature decoding by quarter steps: bounces cancel out, a step is emitted when the encoder is back
 // at its rest position (the pin state seen at attach), so a lost edge realigns at the next detent. No time filter.
 // quartersPerStep: 4 = one step per full cycle (default), 2 = two steps per cycle, 1 = every edge.

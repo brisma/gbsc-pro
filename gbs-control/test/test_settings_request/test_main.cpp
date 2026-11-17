@@ -109,12 +109,37 @@ void test_string_and_numeric_in_one_request(void) {
     TEST_ASSERT_EQUAL_UINT16(70, out[0].value);
 }
 
+
+// system.encoder_steps: the value is the number of steps (1, 2, 4), the same as its label, so a posted number, a
+// label in a file and the WebSocket echo all mean one thing (labels 1|2|4 for the values 0|1|2 made the web app set
+// 1 step for 2 and show 4)
+void test_knob_steps_value_is_its_label(void) {
+    const char* k[] = {"system.encoder_steps"};
+    std::string err; SettingsPair out[2];
+    const char* two[] = {"2"};
+    SettingsValidateResult r = settingsValidateRequest(k, two, 1, false, sink, &err, out, 2, nullptr);
+    TEST_ASSERT_EQUAL_UINT8(1, r.okCount);
+    TEST_ASSERT_EQUAL_UINT16(2, out[0].value);
+    const char* three[] = {"3"};
+    r = settingsValidateRequest(k, three, 1, false, sink, &err, out, 2, nullptr);
+    TEST_ASSERT_EQUAL_UINT8(0, r.okCount);               // not an option
+    SettingDef d; settingsDefAt((uint8_t)settingsFind("system.encoder_steps"), d);
+    char buf[8];
+    settingsFormat(d, 4, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("4", buf);                  // the file and the echo
+    uint16_t v = 9;
+    TEST_ASSERT_TRUE(settingsParse(d, "1", v));          // a beta file's label "1" = 1 step
+    TEST_ASSERT_EQUAL_UINT16(1, v);
+    TEST_ASSERT_EQUAL_UINT16(1, d.def);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_validate_returns_pairs_without_writing);
     RUN_TEST(test_validate_reports_each_error_kind);
     RUN_TEST(test_validate_keeps_valid_pairs_next_to_errors);
     RUN_TEST(test_devmode_unlocks_dev_keys);
+    RUN_TEST(test_knob_steps_value_is_its_label);
     RUN_TEST(test_secret_string_write_is_validated_and_returned);
     RUN_TEST(test_device_only_is_readonly_over_http);
     RUN_TEST(test_extra_hosts_writable_and_validated);

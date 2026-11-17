@@ -175,6 +175,15 @@ void test_two_presses_between_polls(void) {
     TEST_ASSERT_EQUAL_INT(K_CLICK, b.poll(1340, false));
 }
 
+// Knob steps (system.encoder_steps = menu steps per detent) -> quarter steps of the knob per menu step
+void test_quarters_per_menu_step(void) {
+    TEST_ASSERT_EQUAL_UINT8(4, encoderQuartersPerStep(1));
+    TEST_ASSERT_EQUAL_UINT8(2, encoderQuartersPerStep(2));
+    TEST_ASSERT_EQUAL_UINT8(1, encoderQuartersPerStep(4));
+    TEST_ASSERT_EQUAL_UINT8(4, encoderQuartersPerStep(0));   // anything else: one step per detent
+    TEST_ASSERT_EQUAL_UINT8(4, encoderQuartersPerStep(3));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_rotation_one_step_per_detent);
@@ -196,5 +205,6 @@ int main(int, char**) {
     RUN_TEST(test_long_press_fires_once_while_held);
     RUN_TEST(test_late_loop_still_tells_long_from_click);
     RUN_TEST(test_two_presses_between_polls);
+    RUN_TEST(test_quarters_per_menu_step);
     return UNITY_END();
 }

@@ -1,6 +1,8 @@
 [
   {"name": "enum by label", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["S-Video"]},
   {"name": "enum by number", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["5"]},
+  {"name": "knob steps: the value is the count", "board": "pro", "devmode": false, "keys": ["system.encoder_steps"], "values": ["2"]},
+  {"name": "knob steps: not an option", "board": "pro", "devmode": false, "keys": ["system.encoder_steps"], "values": ["3"]},
   {"name": "enum number not an option", "board": "pro", "devmode": false, "keys": ["input.source"], "values": ["8"]},
   {"name": "leading space number", "board": "pro", "devmode": false, "keys": ["adv.brightness"], "values": [" 70"]},
   {"name": "bool word on", "board": "pro", "devmode": false, "keys": ["profiles.autoload"], "values": ["on"]},

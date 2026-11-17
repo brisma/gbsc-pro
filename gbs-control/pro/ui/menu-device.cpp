@@ -131,8 +131,7 @@ static void encoderInput(uint32_t now) {
     if (!hwHas(CAP_ENCODER)) return;
     // Normal = the board's own direction: the standard gbs-control turns the other way; the base follows
     // the hardware, so Board = Standard on a Pro does not flip it
-    static const uint8_t kQuarters[3] = {4, 2, 1};
-    gRot.configure((uopt->encoderReverse != 0) != !platformLinkHardware(), kQuarters[uopt->encoderSteps < 3 ? uopt->encoderSteps : 0]);
+    gRot.configure((uopt->encoderReverse != 0) != !platformLinkHardware(), encoderQuartersPerStep(uopt->encoderSteps));
     noInterrupts();
     int8_t steps = gRotSteps;
     gRotSteps = 0;

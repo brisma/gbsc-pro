@@ -64,7 +64,7 @@
     uint8_t hdmiWhiteLevel;         /* output.hdmi_white: white level of the HDMI compression */ \
     uint8_t  boardOverride;         /* system.board: BOARD_AUTO / BOARD_PRO / BOARD_ORIGINAL (Standard) */ \
     uint8_t  encoderReverse;        /* system.encoder_direction: 0 the board's own direction, 1 reversed */ \
-    uint8_t  encoderSteps;          /* system.encoder_steps: 1, 2 or 4 menu steps per detent */ \
+    uint8_t  encoderSteps;          /* system.encoder_steps: 1, 2 or 4 menu steps per detent (the value is the count) */ \
     uint8_t  oledIdle;              /* system.oled_idle: the OLED without input, 0 screensaver, 1 panel off */ \
     uint8_t  oledIdleAfter;         /* system.oled_idle_after: 30 s, 1 min, 3 min, 10 min (oledIdleAfterMs) */ \
     uint8_t  devMode;               /* system.devmode: developer entries in menus and API */ \

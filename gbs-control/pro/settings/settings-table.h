@@ -23,7 +23,7 @@
     OPT(OPT_AUTOUPD,   "Off|Daily") \
     OPT(OPT_UPD_CHANNEL, "Stable|Beta") \
     OPT(OPT_ENC_DIR,   "Normal|Reversed") \
-    OPT(OPT_ENC_STEP,  "1|2|4")   /* menu steps per detent */ \
+    OPT(OPT_ENC_STEP,  "1=1|2=2|4=4")   /* menu steps per detent: the value is the label (a label of digits for another value is misread by the API, the echo and the simulator) */ \
     OPT(OPT_OLED_IDLE, "Screensaver|Off") \
     OPT(OPT_OLED_AFTER, "30s|1min|3min|10min") \
     OPT(OPT_DEJITTER,  "Auto|On|Off")   /* input.sync_dejitter (pro/input/sync-source.h) */ \
@@ -64,7 +64,7 @@
     SETTING(sys_ext_clock,     "system.ext_clock",      Bool, disableExternalClockGenerator, 1,      0, 1,      Device,  APPLY_NONE,        nullptr,     SETTING_FLAG_INVERT, CAP_NONE) \
     SETTING(sys_board,         "system.board",          Enum, boardOverride,                 0,      0, 2,      Device,  APPLY_NONE,        OPT_BOARD,   0, CAP_NONE) \
     SETTING(sys_encoder_dir,   "system.encoder_direction", Enum, encoderReverse,             0,      0, 1,      Device,  APPLY_NONE,        OPT_ENC_DIR, 0, CAP_ENCODER) \
-    SETTING(sys_encoder_steps, "system.encoder_steps",  Enum, encoderSteps,                  0,      0, 2,      Device,  APPLY_NONE,        OPT_ENC_STEP, 0, CAP_ENCODER) \
+    SETTING(sys_encoder_steps, "system.encoder_steps",  Enum, encoderSteps,                  1,      1, 4,      Device,  APPLY_NONE,        OPT_ENC_STEP, 0, CAP_ENCODER) \
     SETTING(sys_oled_idle,     "system.oled_idle",      Enum, oledIdle,                      0,      0, 1,      Device,  APPLY_NONE,        OPT_OLED_IDLE, 0, CAP_OLED) \
     SETTING(sys_oled_after,    "system.oled_idle_after", Enum, oledIdleAfter,                1,      0, 3,      Device,  APPLY_NONE,        OPT_OLED_AFTER, 0, CAP_OLED) \
     SETTING(sys_auto_update,   "system.auto_update_check", Enum, autoUpdateCheck,            1,      0, 1,      Device,  APPLY_NONE,        OPT_AUTOUPD, 0, CAP_NONE) \

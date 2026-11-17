@@ -52,6 +52,8 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   moves it left and right; it sat at the left. (#72)
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
   and the greyed Scanlines row no longer points to Bob for it. (#72)
+- Web app: System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the
+  OLED were right.
 - HDMI range Auto also compresses 480p and 576p, which the HDMI converter sends as limited range like 720p and
   1080p: their darkest greys were crushed into black. 960p, 1024p and 1200p stay full range, as the HDMI standard
   (CEA-861) says; Limited SD is gone. A black that looks grey with Auto or Limited: lower HDMI black. (#72)
