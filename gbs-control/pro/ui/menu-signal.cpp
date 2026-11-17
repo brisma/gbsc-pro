@@ -1,12 +1,17 @@
 #include <string.h>
 #include "menu-signal.h"
 #include "../settings/settings-registry.h"
+#include "../profiles/profile-modes.h"
 
 uint16_t menuSourceLines(uint8_t videoStandardInput, uint16_t vperiodIf) {
     if (videoStandardInput != 1 && videoStandardInput != 2) return vperiodIf;
     // 15 kHz: 230 to 340 lines a field, counted as that or as twice that; anything else is a sync that is going
     uint16_t lines = vperiodIf > 400 ? (uint16_t)(vperiodIf / 2) : vperiodIf;
     return lines >= 230 && lines <= 340 ? lines : 0;
+}
+
+bool menuSourceInterlaced(uint8_t videoStandardInput, uint16_t vperiodIf) {
+    return videoStandardInput == 6 || profileIsInterlaced(videoStandardInput, vperiodIf);
 }
 
 bool MenuRatesRetry::due(bool noSignal, uint16_t srcHzX10, uint32_t now) {

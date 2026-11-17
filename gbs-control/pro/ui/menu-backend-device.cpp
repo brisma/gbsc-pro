@@ -71,7 +71,7 @@ void DeviceMenuBackend::refreshSignal() {
     vperiod_ = vperiod;
     static MenuLineFilter lineFilter;                    // an unstable count reads "--", not "1220L"
     sig_.srcLines = lineFilter.feed(sig_.noSignal ? 0 : menuSourceLines(rto->videoStandardInput, vperiod), millis());
-    sig_.interlaced = profileIsInterlaced(rto->videoStandardInput, vperiod);
+    sig_.interlaced = menuSourceInterlaced(rto->videoStandardInput, vperiod);
     sig_.syncType = menuSyncType(GBS::SP_SOG_MODE::read() == 1, rto->syncTypeCsync);
     sig_.frameLocked = uopt->enableFrameTimeLock && menuFrameLockReady();
     sig_.palGroup = rto->videoStandardInput == 2 || rto->videoStandardInput == 4;

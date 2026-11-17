@@ -13,6 +13,7 @@ export const IN = { RGBS: 1, RGSB: 2, VGA: 3, YUV: 4, SV: 5, AV: 6 } as const;
 export interface PredSignal {
   noSignal: boolean; interlaced: boolean; scanlinesOk: boolean; advNtsc: boolean; updateAvailable: boolean;
   advControllerUpdate: boolean; presetId: number; srcHz10: number;
+  lines: number;          // the source's line count as shown (0 = not stable)
 }
 export interface PredState {
   caps: number;
@@ -96,9 +97,9 @@ export function disabledReason(n: MenuNode, s: PredState): string | null {
     case "sv_wy": return num(s, "adv.filter_wy_override") !== 1 ? r.wy_manual : null;
     case "rgbs": return s.input !== IN.RGBS ? r.rgbs : null;
     case "ace_on": return num(s, "adv.ace") !== 1 ? r.ace : null;
-    case "scanlines_ok":
+    case "scanlines_ok":   // interlaced 15 kHz sources need Bob; 1080i has no scanlines at all
       if (s.signal.scanlinesOk) return null;
-      return s.signal.interlaced && num(s, "picture.deinterlace") === 0 ? r.needs_bob : r.scanlines;
+      return s.signal.interlaced && s.signal.lines < 400 && num(s, "picture.deinterlace") === 0 ? r.needs_bob : r.scanlines;
     case "i2p_on": return num(s, "adv.i2p") !== 1 ? r["2x_first"] : null;
     case "deint_ok": return decoder(s.input) && num(s, "adv.i2p") === 1 ? r["2x_on"] : null;
     case "ftl_ok":
@@ -138,6 +139,7 @@ export function stateFromStore(v: StoreView): PredState {
       advControllerUpdate: !!i.adv_controller?.update_available,
       presetId: Number(g.preset ?? 0),
       srcHz10: Number(g.src_hz10 ?? 0),
+      lines: Number(g.lines ?? 0),
     },
   };
 }

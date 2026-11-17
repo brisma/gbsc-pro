@@ -101,6 +101,17 @@ void test_source_lines_of_a_15khz_mode_are_a_possible_count(void) {
     TEST_ASSERT_EQUAL_UINT16(396, menuSourceLines(14, 396));
 }
 
+// The scan type the screens, the log and /api/info show. 1080i reads 1124 lines like 1080p (the scaler counts both
+// fields): its mode says interlaced. The 15 kHz modes are judged by the line count, the other modes are progressive
+void test_source_interlaced_follows_the_mode_for_1080i(void) {
+    TEST_ASSERT_TRUE(menuSourceInterlaced(6, 1124));            // 1080i (Xbox over Component)
+    TEST_ASSERT_FALSE(menuSourceInterlaced(7, 1124));           // 1080p
+    TEST_ASSERT_FALSE(menuSourceInterlaced(5, 749));            // 720p
+    TEST_ASSERT_TRUE(menuSourceInterlaced(1, 524));             // 480i
+    TEST_ASSERT_FALSE(menuSourceInterlaced(1, 523));            // 240p
+    TEST_ASSERT_FALSE(menuSourceInterlaced(3, 524));            // 480p
+}
+
 void test_signal_change_detector(void) {
     MenuSignalKey a = {1, 1, false, 0, 525, 0};
     MenuSignalKey b = a;
@@ -143,6 +154,7 @@ int main() {
     RUN_TEST(test_sync_type_sog_first);
     RUN_TEST(test_source_lines_not_halved_below_400);
     RUN_TEST(test_source_lines_of_a_15khz_mode_are_a_possible_count);
+    RUN_TEST(test_source_interlaced_follows_the_mode_for_1080i);
     RUN_TEST(test_signal_change_detector);
     RUN_TEST(test_ir_key_map);
     RUN_TEST(test_ir_repeat_acceleration);

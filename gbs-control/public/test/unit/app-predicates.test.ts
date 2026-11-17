@@ -22,7 +22,7 @@ function stateOf(sc: any): PredState {
     profileActive: sc.state.profile_active >= 0, wifiAp: sc.state.wifi_ap, values,
     signal: { noSignal: g.no_signal, interlaced: g.interlaced, scanlinesOk: g.scanlines_ok, advNtsc: g.adv_ntsc,
               updateAvailable: g.update_available, advControllerUpdate: g.adv_controller_update,
-              presetId: g.preset_id, srcHz10: g.src_hz10 },
+              presetId: g.preset_id, srcHz10: g.src_hz10, lines: g.lines },
   };
 }
 
@@ -55,7 +55,7 @@ test("state from the store keeps the last found input while Auto searches", () =
 test("state from the store reads info, wifi and the browser mode", () => {
   const s = stateFromStore({
     values: { "input.source": 0, "system.devmode": 1 },
-    info: { caps: 63, input: { active: 5 }, signal: { none: 0, interlaced: 1, scanlines_ok: 0, adv_ntsc: 1, preset: 0x11, src_hz10: 599 },
+    info: { caps: 63, input: { active: 5 }, signal: { none: 0, interlaced: 1, scanlines_ok: 0, adv_ntsc: 1, preset: 0x11, src_hz10: 599, lines: 262 },
             update: { offer: { version: "3.0.1" } }, adv_controller: { update_available: true } },
     wifiMode: "AP", mode: "advanced", profileActive: true,
   });
@@ -64,7 +64,7 @@ test("state from the store reads info, wifi and the browser mode", () => {
   assert.equal(s.devmode, true);
   assert.equal(s.wifiAp, true);
   assert.deepEqual(s.signal, { noSignal: false, interlaced: true, scanlinesOk: false, advNtsc: true, updateAvailable: true,
-                               advControllerUpdate: true, presetId: 0x11, srcHz10: 599 });
+                               advControllerUpdate: true, presetId: 0x11, srcHz10: 599, lines: 262 });
   const e = stateFromStore({ values: {}, info: null, wifiMode: "", mode: "easy", profileActive: false });
   assert.equal(e.menuMode, 0);
   assert.equal(e.signal.noSignal, true);   // nothing known yet: as without a signal

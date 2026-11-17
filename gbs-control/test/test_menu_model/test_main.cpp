@@ -329,8 +329,11 @@ void test_na_reasons(void) {
     be.sig.srcHzX10 = 599;                                             // a 60 Hz source still locks
     TEST_ASSERT_EQUAL_UINT16(S_NONE, reasonOf(ftl, be));
     MenuNode scan = menuFind("Picture/Scanlines");
-    be.sig.scanlinesAllowed = false; be.sig.interlaced = true;
+    be.sig.scanlinesAllowed = false; be.sig.interlaced = true; be.sig.srcLines = 262;
     TEST_ASSERT_EQUAL_UINT16(S_R_NEEDS_BOB, reasonOf(scan, be));
+    be.sig.srcLines = 1124;                                           // 1080i: no scanlines in HD, Bob or not
+    TEST_ASSERT_EQUAL_UINT16(S_R_SCANLINES, reasonOf(scan, be));
+    be.sig.srcLines = 262;
     be.apply(SID_pic_deint, 1); be.settle();
     TEST_ASSERT_EQUAL_UINT16(S_R_SCANLINES, reasonOf(scan, be));
     be.sig.interlaced = false; be.apply(SID_pic_deint, 0); be.settle();

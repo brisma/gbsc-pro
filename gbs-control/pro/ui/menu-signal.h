@@ -5,6 +5,9 @@
 
 // VPERIOD_IF counts about two fields' lines in the SD modes 1/2 (240p reads ~525): halve them for display
 uint16_t menuSourceLines(uint8_t videoStandardInput, uint16_t vperiodIf);
+// The scan type shown (screens, log, /api/info): 1080i (mode 6) counts its two fields like 1080p, so its mode says
+// interlaced; the 15 kHz modes by their line count (profileIsInterlaced); every other mode is progressive
+bool menuSourceInterlaced(uint8_t videoStandardInput, uint16_t vperiodIf);
 // The line count the menus show: a value that stayed within 2 lines for kStableMs and that video uses (kMinLines ..
 // kMaxLines: 240p has 262, 1200p ~1235); 0 (shown "--") otherwise, e.g. an unstable sync after a console power-up or
 // the "218 lines" of a console switching off

@@ -46,6 +46,8 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   get one look. (#69)
 - TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
   moves it left and right; it sat at the left. (#72)
+- A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
+  and the greyed Scanlines row no longer points to Bob for it. (#72)
 
 ## 3.0.0-beta2 - 2026-11-14
 

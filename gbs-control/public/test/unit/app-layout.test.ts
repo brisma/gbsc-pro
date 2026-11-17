@@ -19,7 +19,7 @@ function state(over: Partial<PredState> & { values?: Record<string, number> } = 
   return {
     caps: BOARD_CAPS.pro, input: 1, menuMode: 1, devmode: false, profileActive: false, wifiAp: false,
     signal: { noSignal: false, interlaced: false, scanlinesOk: true, advNtsc: false, updateAvailable: false,
-              advControllerUpdate: false, presetId: 1, srcHz10: 600 },
+              advControllerUpdate: false, presetId: 1, srcHz10: 600, lines: 240 },
     ...over, values: { ...values, ...(over.values ?? {}) },
   };
 }

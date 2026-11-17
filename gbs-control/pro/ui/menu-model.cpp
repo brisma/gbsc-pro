@@ -83,9 +83,10 @@ bool menuEnabled(const MenuNode& n, MenuBackend& be, uint16_t* reason) {
         case P_SV_WY: if (be.value(SID_adv_filter_wy_ovr) != 1) r = S_R_WY_MANUAL; break;
         case P_RGBS: if (in != InputTypeRGBs) r = S_R_RGBS; break;
         case P_ACE_ON: if (be.value(SID_adv_ace) != 1) r = S_R_ACE; break;
-        case P_SCANLINES_OK:   // interlaced sources need Bob (motion adaptive blocks the scanlines)
+        case P_SCANLINES_OK:   // interlaced 15 kHz sources need Bob (motion adaptive blocks the scanlines); 1080i has none
             if (!be.signal().scanlinesAllowed)
-                r = be.signal().interlaced && be.value(SID_pic_deint) == 0 ? S_R_NEEDS_BOB : S_R_SCANLINES;
+                r = be.signal().interlaced && be.signal().srcLines < 400 && be.value(SID_pic_deint) == 0
+                        ? S_R_NEEDS_BOB : S_R_SCANLINES;
             break;
         case P_I2P_ON: if (be.value(SID_adv_i2p) != 1) r = S_R_2X_FIRST; break;
         case P_DEINT_OK: if (inputIsDecoder(in) && be.value(SID_adv_i2p) == 1) r = S_R_2X_ON; break;

@@ -408,13 +408,14 @@ static uint32_t countNodes(const MenuNode& n) {
 struct Scenario {
     const char* name; const char* board; uint8_t input; uint8_t menuMode; bool dev; int profile; bool wifiAp;
     bool noSignal, interlaced, scanlinesOk, advNtsc, updateAvailable, advUpdate; uint8_t preset; uint16_t srcHz10;
+    uint16_t srcLines;
     std::vector<std::pair<uint8_t, uint16_t>> values;
 };
 
 static std::vector<Scenario> scenarios() {
     std::vector<Scenario> v;
     auto base = [](const char* name, const char* board, uint8_t input, uint8_t mode) {
-        Scenario s{name, board, input, mode, false, -1, false, false, false, true, false, false, false, 1, 600, {}};
+        Scenario s{name, board, input, mode, false, -1, false, false, false, true, false, false, false, 1, 600, 262, {}};
         return s;
     };
     static char names[12][24];
@@ -429,6 +430,7 @@ static std::vector<Scenario> scenarios() {
     { Scenario s = base("developer", "pro", 1, 1); s.dev = true; v.push_back(s); }
     { Scenario s = base("no-signal", "pro", 1, 1); s.noSignal = true; s.scanlinesOk = false; s.srcHz10 = 0; v.push_back(s); }
     { Scenario s = base("interlaced-motion-adaptive", "pro", 1, 1); s.interlaced = true; s.scanlinesOk = false; s.values = {{SID_pic_deint, 0}}; v.push_back(s); }
+    { Scenario s = base("interlaced-1080i", "pro", 4, 1); s.interlaced = true; s.scanlinesOk = false; s.srcLines = 1124; s.preset = 0; s.values = {{SID_pic_deint, 0}}; v.push_back(s); }
     { Scenario s = base("svideo-2x-off", "pro", 5, 1); s.values = {{SID_adv_i2p, 0}}; v.push_back(s); }
     { Scenario s = base("svideo-ace-off", "pro", 5, 1); s.values = {{SID_adv_ace, 0}}; v.push_back(s); }
     { Scenario s = base("svideo-wy-override-off", "pro", 5, 1); s.values = {{SID_adv_filter_wy_ovr, 0}}; v.push_back(s); }
@@ -462,6 +464,7 @@ static std::string exportPredicates() {
         be.sig.noSignal = sc.noSignal; be.sig.interlaced = sc.interlaced; be.sig.scanlinesAllowed = sc.scanlinesOk;
         be.sig.advNtsc = sc.advNtsc; be.sig.updateAvailable = sc.updateAvailable;
         be.sig.advControllerUpdateAvailable = sc.advUpdate; be.sig.presetId = sc.preset; be.sig.srcHzX10 = sc.srcHz10;
+        be.sig.srcLines = sc.srcLines;
         std::string vals;
         for (auto& p : sc.values) {
             SettingDef d; settingsDefAt(p.first, d); settingsPut(be.u, d, p.second);
@@ -475,7 +478,7 @@ static std::string exportPredicates() {
              (sc.scanlinesOk ? "true" : "false") + ",\"adv_ntsc\":" + (sc.advNtsc ? "true" : "false") + ",\"update_available\":" +
              (sc.updateAvailable ? "true" : "false") +
              ",\"adv_controller_update\":" + (sc.advUpdate ? "true" : "false") + ",\"preset_id\":" + num(sc.preset) +
-             ",\"src_hz10\":" + num(sc.srcHz10) + "},\"values\":{" + vals + "}},\"visible\":[";
+             ",\"src_hz10\":" + num(sc.srcHz10) + ",\"lines\":" + num(sc.srcLines) + "},\"values\":{" + vals + "}},\"visible\":[";
         std::string disabled;
         bool first = true;
         for (const NodeRef& r : gAllNodes) {
