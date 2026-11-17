@@ -14,6 +14,7 @@ static ColorIn neutral(bool yuv, bool component) {
     in.hdmiRange = 0;
     in.hdmiBlack = 16;
     in.hdmiWhite = 235;
+    in.builtInHdmi = true;
     in.presetId = 0x01;
     return in;
 }
@@ -159,10 +160,28 @@ void test_adc_gain_step_stops_at_the_ends(void) {
     TEST_ASSERT_EQUAL_UINT8(255, adcGainStep(255, 1));
 }
 
+
+// The standard board has no HDMI converter of its own: its VGA output goes to monitors and adapters that expect full
+// range, so Auto does not compress there; Limited still does
+void test_auto_compresses_only_with_the_built_in_hdmi(void) {
+    ColorIn in = neutral(false, false);
+    in.presetId = 0x05;                     // 1080p
+    in.hdmiRange = 1;
+    in.builtInHdmi = false;
+    TEST_ASSERT_EQUAL_HEX8(0x80, pictureColor(in).yGain);
+    TEST_ASSERT_EQUAL_INT8(0, pictureColor(in).yOff);
+    in.hdmiRange = 3;
+    TEST_ASSERT_EQUAL_HEX8(0x80 * 219 / 255, pictureColor(in).yGain);
+    in.hdmiRange = 1; in.builtInHdmi = true;
+    TEST_ASSERT_EQUAL_HEX8(0x80 * 219 / 255, pictureColor(in).yGain);
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_defaults_match_today);
     RUN_TEST(test_hdmi_last);
+    RUN_TEST(test_auto_compresses_only_with_the_built_in_hdmi);
     RUN_TEST(test_hdmi_black_and_white_levels);
     RUN_TEST(test_custom_preset_not_double_compressed);
     RUN_TEST(test_brightness_contrast_saturation);

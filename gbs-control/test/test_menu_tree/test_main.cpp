@@ -352,6 +352,15 @@ void test_hdmi_level_rows(void) {
     be.apply(SID_output_hdmi, 0); be.settle();                           // Full: nothing to tune
     TEST_ASSERT_FALSE(shown(be, "HDMI black"));
     TEST_ASSERT_FALSE(shown(be, "HDMI white"));
+    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);    // standard board: Auto does not compress
+    FakeBackend& std = easy(1, false, false);
+    std.apply(SID_sys_menu_mode, 1); std.apply(SID_output_hdmi, 1); std.settle();
+    bool autoShown = shown(std, "HDMI black");
+    std.apply(SID_output_hdmi, 3); std.settle();
+    bool limitedShown = shown(std, "HDMI black");
+    platformSetCaps(CAPS_DEFAULT);
+    TEST_ASSERT_FALSE(autoShown);
+    TEST_ASSERT_TRUE(limitedShown);
 }
 
 // Reset screen closes the Screen page in both modes: Mask position (Advanced) sits above it, with the other masks

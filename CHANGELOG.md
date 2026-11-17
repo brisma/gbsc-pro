@@ -65,7 +65,9 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   OLED were right.
 - HDMI range Auto also compresses 480p and 576p, which the HDMI converter sends as limited range like 720p and
   1080p: their darkest greys were crushed into black. 960p, 1024p and 1200p stay full range, as the HDMI standard
-  (CEA-861) says; Limited SD is gone. A black that looks grey with Auto or Limited: lower HDMI black. (#72)
+  (CEA-861) says; Limited SD is gone. A black that looks grey with Auto or Limited: lower HDMI black. On the standard
+  board, which has no HDMI converter of its own and drives VGA monitors and adapters in full range, Auto no longer
+  compresses: Limited does when an adapter needs it. (#72)
 
 ## 3.0.0-beta2 - 2026-11-14
 

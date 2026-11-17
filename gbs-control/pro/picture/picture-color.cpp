@@ -48,12 +48,13 @@ ColorRegs pictureColor(const ColorIn& in) {
 
     // HDMI range last, on the computed values: compress full range into black..white for the MS9288. Following
     // CEA-861, it sends the TV formats (480p, 576p, 720p, 1080p) as limited range and the PC formats (960p, 1024p,
-    // 1200p) as full range, so Auto compresses the TV formats only. The levels default to the standard 16..235 and
+    // 1200p) as full range, so Auto compresses the TV formats only. The standard board has no converter of its own: its
+    // VGA output goes to monitors and adapters that expect full range, so Auto leaves it alone (Limited still compresses). The levels default to the standard 16..235 and
     // are settings: through the MS9288 the right black differs from one TV to another (12 on one TV measured).
     static const uint8_t kTv[] = {0x03, 0x13, 0x04, 0x14, 0x05, 0x15};
     static const uint8_t kPc[] = {0x01, 0x11, 0x02, 0x12, 0x07, 0x17};
     bool tv = presetIn(in.presetId, kTv, sizeof(kTv)), pc = presetIn(in.presetId, kPc, sizeof(kPc));
-    bool compress = !in.hdBypass && ((in.hdmiRange == 1 && tv) || (in.hdmiRange == 3 && (tv || pc)));
+    bool compress = !in.hdBypass && ((in.hdmiRange == 1 && tv && in.builtInHdmi) || (in.hdmiRange == 3 && (tv || pc)));
     if (compress && in.hdmiWhite > in.hdmiBlack) {
         int span = in.hdmiWhite - in.hdmiBlack;
         yGain = clampInt(yGain * span / 255, 0, 255);
