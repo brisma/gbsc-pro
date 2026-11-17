@@ -45,8 +45,9 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
 - Settings, profiles and backups store each choice by a fixed name (`output.aspect=force_4_3`, `picture.scanlines=off`)
   instead of its menu label or a number, so later versions keep reading them whatever the menus call an option.
 - Coming from an earlier beta: profiles lose their auto-load fingerprint and base resolution. For each one, start
-  its console, open Profiles > Manage > Replace with current, and choose its resolution again. Going back to an
-  earlier beta resets most choices.
+  its console, load the profile, choose its resolution in Output > Resolution, then Profiles > Manage > Replace with
+  current (the Screen adjustments of that resolution return to the defaults). Going back to an earlier beta resets
+  most choices.
 
 ### Fixed
 - After an update the active profile no longer shows unsaved changes when nothing was changed: a profile is compared

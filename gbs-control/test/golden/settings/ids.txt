@@ -13,6 +13,7 @@ osd.popup_position top_left=0 top=1 top_right=2 center_left=3 center=4 center_ri
 osd.timeout 5s=0 10s=1 15s=2 30s=3 60s=4 10min=5
 osd.status_popup off=0 input_only=1 always=2
 osd.tv_changes on=1 off=0
+audio.volume
 audio.mute on=1 off=0
 output.component on=1 off=0
 output.aspect auto=0 force_4_3=1 full=2
@@ -39,6 +40,8 @@ output.force_60hz on=1 off=0
 output.style_50hz pal_tv=0 full_height=1 as_60hz=2
 output.match_preset on=1 off=0
 output.hdmi_range auto=1 full=0 limited=3
+output.hdmi_black
+output.hdmi_white
 input.auto_gain on=1 off=0
 input.sync_stripper on=1 off=0
 input.adaptive_sync on=1 off=0
@@ -46,15 +49,32 @@ input.digital_sync on=1 off=0
 input.sync_dejitter auto=0 on=1 off=2
 input.sync_75ohm on=1 off=0
 picture.scanlines on=1 off=0
+picture.scanline_strength
 picture.deinterlace adaptive=0 bob=1
 picture.line_filter on=1 off=0
+picture.sharpness
 picture.rgbhv_scaling on=1 off=0
 picture.step_response on=1 off=0
+picture.red
+picture.green
+picture.blue
+picture.brightness
+picture.contrast
+picture.saturation
 adv.format_sv auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
 adv.format_av auto=0 auto_7_5_ire=12 pal=1 ntsc_7_5_ire=2 pal_60=3 ntsc_4_43=4 ntsc_j=5 pal_n_7_5_ire=6 pal_m_0_ire=7 pal_m_7_5_ire=8 pal_nc=9 pal_nc_7_5ire=10 secam=11
 adv.i2p on=1 off=0
 adv.smooth on=1 off=0
 adv.ace on=1 off=0
+adv.brightness
+adv.contrast
+adv.saturation
+adv.hue
+adv.ace_luma_gain
+adv.ace_chroma_gain
+adv.ace_chroma_max
+adv.ace_gamma_gain
+adv.ace_response_speed
 adv.filter_y autowide=0 autonarrow=1 svhs_1=2 svhs_2=3 svhs_3=4 svhs_4=5 svhs_5=6 svhs_6=7 svhs_7=8 svhs_8=9 svhs_9=10 svhs_10=11 svhs_11=12 svhs_12=13 svhs_13=14 svhs_14=15 svhs_15=16 svhs_16=17 svhs_17=18 svhs_18=19 pal_nn1=20 pal_nn2=21 pal_nn3=22 pal_wn1=23 pal_wn2=24 ntsc_nn1=25 ntsc_nn2=26 ntsc_nn3=27 ntsc_wn1=28 ntsc_wn2=29 ntsc_wn3=30
 adv.filter_c auto_1_5mhz=0 auto_2_2mhz=1 shape_1=2 shape_2=3 shape_3=4 shape_4=5 shape_5=6 wideband=7
 adv.filter_wy svhs_1=2 svhs_2=3 svhs_3=4 svhs_4=5 svhs_5=6 svhs_6=7 svhs_7=8 svhs_8=9 svhs_9=10 svhs_10=11 svhs_11=12 svhs_12=13 svhs_13=14 svhs_14=15 svhs_15=16 svhs_16=17 svhs_17=18 svhs_18=19
@@ -71,6 +91,11 @@ adv.dnr on=1 off=0
 adv.cti on=1 off=0
 dev.syncwatcher inherit=0 on=1 off=2
 dev.wifi_watch on=1 off=0
+system.extra_hosts
+system.ota_password
+profile.active
+profile.hash
+system.adv_controller_skip
 profile.base = output.preset
 profile.fp.source = input.last
 profile.fp.format ntsc=1 pal=2 ntsc_480p=3 pal_576p=4 720p=5 1080i=6 1080p=7 medium_res=8 unrecognised=9 hd_odd=13 vga_upscale=14 rgbhv_bypass=15

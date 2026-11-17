@@ -450,18 +450,23 @@ void test_new_enum_rejects_unlisted_number(void) {
 
 
 
-// The ids files hold, frozen: from 3.0.0 on an id may be added, never changed or removed
+// The keys and ids files hold, frozen: from 3.0.0 a key or an id may be added, never changed or removed
 static std::string idListing() {
     std::string out;
     for (uint8_t i = 0; i < settingsCount(); i++) {
         SettingDef d; settingsDefAt(i, d);
-        if (d.type != SettingType::Enum && d.type != SettingType::Bool) continue;
         char key[48]; settingsKeyCopy(d, key, sizeof(key));
         out += key;
+        if (d.type != SettingType::Enum && d.type != SettingType::Bool) { out += "\n"; continue; }   // a quantity: the key
         if (d.type == SettingType::Bool) out += " on=1 off=0";
         else { char n[48], id[48]; uint16_t v;
                for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) { settingsIdFromLabel(n, id, sizeof(id)); out += std::string(" ") + id + "=" + std::to_string(v); } }
         out += "\n";
+    }
+    for (uint8_t i = 0; i < settingsStrCount(); i++) {   // string settings: the key
+        StrSettingDef sd; settingsStrDefAt(i, sd);
+        char key[48]; settingsKeyCopyStr(sd, key, sizeof(key));
+        out += std::string(key) + "\n";
     }
     // the profile header's names (profile-file.cpp): base preset and source are the registry ids above
     out += "profile.base = output.preset\nprofile.fp.source = input.last\nprofile.fp.format";
@@ -472,7 +477,7 @@ static std::string idListing() {
 
 void test_frozen_ids(void) {
     TEST_ASSERT_TRUE_MESSAGE(goldenCheckFile("settings", "ids", "txt", idListing()),
-        "an id was changed or removed: from 3.0.0 on ids may only be added; keep a renamed label's old id");
+        "a key or an id was changed or removed: from 3.0.0 on they may only be added; keep a renamed label's old id");
 }
 
 
