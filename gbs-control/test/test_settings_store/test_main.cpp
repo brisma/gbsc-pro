@@ -120,8 +120,9 @@ void test_schema_entries_compose_to_schema(void) {
 void test_schema_stream_entry_larger_than_buffer(void) {
     std::string whole;
     settingsSchemaJson(true, appendSink, &whole);
+    for (size_t cap : {64u, 1u, 0u})                    // a buffer under 2 bytes is raised to 2 (the ',' and one byte)
     for (size_t chunk : {1u, 7u, 64u, 1460u}) {
-        SchemaStreamer st(true, 64);
+        SchemaStreamer st(true, cap);
         std::string out;
         char buf[1460];
         for (int guard = 0; guard < 200000; guard++) {

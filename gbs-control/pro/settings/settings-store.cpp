@@ -205,7 +205,6 @@ bool SchemaStreamer::next() {
         if (lead) buf_[0] = ',';
         first_ = false;
         len_ = w.len + lead;
-        entryMore_ = w.more;
         if (w.more) entrySkip_ = (uint16_t)(entrySkip_ + w.len);
         else { entrySkip_ = 0; n_++; }
         return true;
