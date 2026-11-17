@@ -28,7 +28,7 @@
     OPT(OPT_OLED_AFTER, "30s|1min|3min|10min") \
     OPT(OPT_DEJITTER,  "Auto|On|Off")   /* input.sync_dejitter (pro/input/sync-source.h) */ \
     OPT(OPT_FTL,       "Method 1|Method 2")   /* 0 Vtotal+VSST, 1 Vtotal */ \
-    OPT(OPT_HDMI,      "Auto=1|Full=0|Limited=3|Limited SD=2#a")   /* values: 0 off, 1 HD modes, 2 SD/PC modes, 3 all */ \
+    OPT(OPT_HDMI,      "Auto=1|Full=0|Limited=3")   /* values: 0 off, 1 the TV formats, 3 every scaled mode */ \
     OPT(OPT_MENU_MODE, "Easy|Advanced") \
     OPT(OPT_STARTUP,   "Last used|Defaults") \
     OPT(OPT_POPUP,     "Off|Input only|Always") \
@@ -83,6 +83,8 @@
     SETTING(output_style50,    "output.style_50hz",     Enum, style50Hz,                     0,      0, 2,      Profile, APPLY_PRESET,      OPT_STYLE50, 0, CAP_NONE) \
     SETTING(output_match,      "output.match_preset",   Bool, matchPresetSource,             1,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(output_hdmi,       "output.hdmi_range",     Enum, hdmiLimitedRange,              1,      0, 3,      Profile, APPLY_COLOR,       OPT_HDMI,    0, CAP_NONE) \
+    SETTING(output_hdmi_black, "output.hdmi_black",     U8,   hdmiBlackLevel,                16,     0, 20,     Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
+    SETTING(output_hdmi_white, "output.hdmi_white",     U8,   hdmiWhiteLevel,                235,    215, 255,  Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
     /* ---- Profile: input ---- */ \
     SETTING(input_auto_gain,   "input.auto_gain",       Bool, enableAutoGain,                0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_sync_strip,  "input.sync_stripper",   Bool, advSyncStripper,               1,      0, 1,      Profile, APPLY_SYNC,        nullptr,     0, CAP_ADV) \

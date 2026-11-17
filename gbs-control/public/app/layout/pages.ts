@@ -121,6 +121,8 @@ const OUTPUT: Section = { id: "output", title: "Output", icon: "tv", hint: "What
   ] },
   { title: "Connection to the TV", rows: [
     { kind: "cards", ref: m("output/hdmi-range"), icon: "settings_input_hdmi", look: "hdmi" },
+    { kind: "stepper", ref: m("output/hdmi-black"), icon: "brightness_4" },
+    { kind: "stepper", ref: m("output/hdmi-white"), icon: "brightness_7" },
     { kind: "inline", ref: m("output/analog-out"), icon: "settings_input_component" },
   ] },
 ] };

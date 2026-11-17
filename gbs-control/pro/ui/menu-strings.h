@@ -66,6 +66,8 @@
     S(S_EXT_CLOCK, "External clock") \
     S(S_COMPONENT, "Analog out") \
     S(S_HDMI_RANGE, "HDMI range") \
+    S(S_HDMI_BLACK, "HDMI black") \
+    S(S_HDMI_WHITE, "HDMI white") \
     S(S_COLOR, "Color") \
     S(S_RED, "Red") \
     S(S_GREEN, "Green") \
@@ -333,7 +335,9 @@
     S(H_STYLE50, "PAL TV: as a PAL TV showed it. Full height: taller. As 60Hz: shaped as the 60Hz game.") \
     S(H_FORCE60, "Sends 50Hz PAL sources at 60Hz for TVs that dislike 50Hz. Smooth scrolling then stays off.") \
     S(H_EXT_CLOCK, "Uses the board's external clock chip when one is fitted. Applies after a restart.") \
-    S(H_HDMI_RANGE, "Grey blacks: try Full. Crushed dark areas: try Limited. Auto: Limited at 720p and 1080p.") \
+    S(H_HDMI_BLACK, "Lower it if black looks grey. Raise it if the darkest greys vanish into black.") \
+    S(H_HDMI_WHITE, "Lower it if the brightest greys merge into white. Raise it for a brighter white.") \
+    S(H_HDMI_RANGE, "Grey blacks: try Full. Crushed dark areas: try Limited. Auto: Limited at 480p/576p/720p/1080p.") \
     S(H_SHARPNESS, "Edge sharpening of the scaler. 0 turns it off. The Filter row sets it too.") \
     S(H_DEINTERLACE, "How 480i/576i are shown. Adaptive: sharper still images. Bob: no combing and allows scanlines.") \
     S(H_RESET_GEOMETRY, "Undoes Position/Size/Edge mask for this signal mode. The profile in use forgets them too.") \

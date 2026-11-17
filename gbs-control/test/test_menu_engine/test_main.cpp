@@ -2141,7 +2141,7 @@ void test_header_hidden_when_group_empty(void) {
     TEST_ASSERT_FALSE(hasRow(r, "External clock"));
     uint8_t easyCount = r.v().posCount;
     r.be.apply(SID_sys_menu_mode, 1); r.be.settle(); r.wait(10);
-    TEST_ASSERT_EQUAL_UINT8(easyCount + 3, r.v().posCount);   // Lock method, Analog out, External clock
+    TEST_ASSERT_EQUAL_UINT8(easyCount + 5, r.v().posCount);   // Lock method, HDMI black, HDMI white, Analog out, External clock
 }
 
 void test_mode_switch_closes_vanished_page(void) {

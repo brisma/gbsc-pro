@@ -32,6 +32,7 @@ static bool predVisible(uint8_t pred, MenuBackend& be) {
         case P_RGB_SYNC: return (be.caps() & CAP_ADV) != 0 && (in == InputTypeRGBs || in == InputTypeRGsB);   // the stripper acts on RGBs/RGsB only
         case P_RGBS: return (be.caps() & CAP_ADV) != 0;
         case P_RGB_HS: return (be.caps() & CAP_ADV) != 0 && (in == InputTypeRGBs || in == InputTypeRGsB || in == InputTypeVGA);
+        case P_HDMI_LIMITED: return be.value(SID_output_hdmi) != 0;
         case P_SYNC_PINS: return in == InputTypeVGA || (predVisible(P_RGB_HS, be) && be.value(SID_input_digital_sync) != 0);
         case P_PROFILE_ACTIVE: return be.profileActive() >= 0;
         case P_UPDATE_AVAILABLE: return be.signal().updateAvailable;

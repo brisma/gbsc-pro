@@ -64,7 +64,7 @@ void test_defaults_match_legacy_defaults(void) {
     TEST_ASSERT_EQUAL_UINT8(1, u.advSyncStripper);
     TEST_ASSERT_EQUAL_UINT8(50, u.advBrightness);    // menu v3: decoder levels 0..100
     TEST_ASSERT_EQUAL_UINT8(19, u.advFilterWYShaping);
-    TEST_ASSERT_EQUAL_UINT8(1, u.hdmiLimitedRange);
+    TEST_ASSERT_EQUAL_UINT8(1, u.hdmiLimitedRange);   // Auto: compress where the HDMI converter flags limited range
 }
 
 void test_comb_defaults_are_set(void) {   // legacy loadDefaultUserOptions() forgot these
@@ -109,8 +109,8 @@ void test_parse_enum_accepts_number(void) {
 
 void test_format_enum_by_name(void) {
     char buf[32];
-    settingsFormat(defOf("output.hdmi_range"), 2, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("Limited SD", buf);
+    settingsFormat(defOf("output.hdmi_range"), 3, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("Limited", buf);
     settingsFormat(defOf("output.hdmi_range"), 1, buf, sizeof(buf));
     TEST_ASSERT_EQUAL_STRING("Auto", buf);
     settingsFormat(defOf("output.hdmi_range"), 0, buf, sizeof(buf));
@@ -130,6 +130,22 @@ void test_sync_dejitter_auto_on_off(void) {
     uint16_t v;
     TEST_ASSERT_FALSE(settingsParse(d, "3", v));
     TEST_ASSERT_EQUAL_UINT8(1, defOf("input.digital_sync").max);   // Digital sync stays Off / On
+}
+
+void test_hdmi_levels_per_profile(void) {
+    const SettingDef b = defOf("output.hdmi_black"), w = defOf("output.hdmi_white");
+    TEST_ASSERT_EQUAL_UINT16(16, b.def);   // the CEA-861 limited range: black 16, white 235
+    TEST_ASSERT_EQUAL_UINT16(0, b.min);
+    TEST_ASSERT_EQUAL_UINT16(20, b.max);
+    TEST_ASSERT_EQUAL_UINT16(235, w.def);
+    TEST_ASSERT_EQUAL_UINT16(215, w.min);
+    TEST_ASSERT_EQUAL_UINT16(255, w.max);
+    TEST_ASSERT_TRUE(b.scope == SettingScope::Profile);   // with HDMI range: a console's profile carries both
+    TEST_ASSERT_TRUE(w.scope == SettingScope::Profile);
+    TEST_ASSERT_EQUAL_UINT16(APPLY_COLOR, b.apply);
+    TEST_ASSERT_EQUAL_UINT16(APPLY_COLOR, w.apply);
+    TEST_ASSERT_EQUAL_UINT8(16, u.hdmiBlackLevel);
+    TEST_ASSERT_EQUAL_UINT8(235, u.hdmiWhiteLevel);
 }
 
 void test_caps_from_key_prefix(void) {
@@ -309,6 +325,7 @@ int main(int, char**) {
     RUN_TEST(test_parse_enum_accepts_number);
     RUN_TEST(test_format_enum_by_name);
     RUN_TEST(test_sync_dejitter_auto_on_off);
+    RUN_TEST(test_hdmi_levels_per_profile);
     RUN_TEST(test_option_grammar_with_caps);
     RUN_TEST(test_parse_ignores_caps_marker);
     RUN_TEST(test_input_source_is_a_choice_with_auto);

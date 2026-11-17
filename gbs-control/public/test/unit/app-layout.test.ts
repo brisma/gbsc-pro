@@ -133,7 +133,9 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:output/resolution"), "output");
   assert.equal(where.get("menu:output/hdmi-range"), "output");
   assert.equal(where.get("menu:input/sync-dejitter"), "input");
-  assert.equal(where.size, 68);   // the rows of the former Input, Output, Picture and Screen sections, none lost
+  assert.equal(where.get("menu:output/hdmi-black"), "output");
+  assert.equal(where.get("menu:output/hdmi-white"), "output");
+  assert.equal(where.size, 70);   // the rows of the former Input, Output, Picture and Screen sections, none lost
 });
 
 test("old section bookmarks land on the new pages", async () => {

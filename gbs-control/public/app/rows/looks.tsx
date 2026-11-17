@@ -9,7 +9,7 @@ const WORDS: Record<Look, Record<string, string>> = {
   scanlines: { Off: "no lines", Light: "keeps it bright", Medium: "balanced", Strong: "closest to a CRT", Custom: "Advanced level",
                "10": "Light", "20": "between", "30": "Medium", "40": "between", "50": "Strong", "60": "darkest" },
   deint: { Adaptive: "sharp, may comb on motion", Bob: "soft, no combing" },
-  hdmi: { Auto: "picks for you", Full: "PC levels, deep black", Limited: "TV levels", "Limited SD": "TV levels, SD modes" },
+  hdmi: { Auto: "picks for you", Full: "PC levels, deep black", Limited: "TV levels" },
 };
 export const lookWords = (look: Look, label: string) => WORDS[look][label] ?? "";
 

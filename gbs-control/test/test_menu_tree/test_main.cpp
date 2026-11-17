@@ -338,6 +338,22 @@ void test_sync_dejitter_row(void) {
     TEST_ASSERT_TRUE(there);                                             // the standard board's VGA input too
 }
 
+// The HDMI levels tune the compression: shown only while HDMI range compresses (not Full), Advanced only
+void test_hdmi_level_rows(void) {
+    auto shown = [](FakeBackend& be, const char* label) { return rows(be, "Output").find(label) != std::string::npos; };
+    FakeBackend& be = easy(1, false, false);
+    be.apply(SID_output_hdmi, 3); be.settle();
+    TEST_ASSERT_FALSE(shown(be, "HDMI black"));                    // not in Easy
+    be.apply(SID_sys_menu_mode, 1); be.settle();
+    TEST_ASSERT_TRUE_MESSAGE(shown(be, "HDMI black"), rows(be, "Output").c_str());
+    TEST_ASSERT_TRUE(shown(be, "HDMI white"));
+    be.apply(SID_output_hdmi, 1); be.settle();                           // Auto compresses too
+    TEST_ASSERT_TRUE(shown(be, "HDMI black"));
+    be.apply(SID_output_hdmi, 0); be.settle();                           // Full: nothing to tune
+    TEST_ASSERT_FALSE(shown(be, "HDMI black"));
+    TEST_ASSERT_FALSE(shown(be, "HDMI white"));
+}
+
 // Knob direction is an Easy row (TV menu too) of System > Device; the knob's steps stay Advanced, right under it.
 // Restart and Factory reset close the System page in both modes
 void test_knob_direction_in_easy(void) {
@@ -461,6 +477,7 @@ int main() {
     RUN_TEST(test_screen_page_has_no_50hz_row);
     RUN_TEST(test_digital_sync_row);
     RUN_TEST(test_sync_dejitter_row);
+    RUN_TEST(test_hdmi_level_rows);
     RUN_TEST(test_easy_pages_rgb_scart_240p);
     RUN_TEST(test_easy_pages_component_480i);
     RUN_TEST(test_easy_pages_svideo_ntsc);

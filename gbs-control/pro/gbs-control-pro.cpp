@@ -128,6 +128,8 @@ void applyPictureColor(void)
     in.contrast = uopt->picContrast;
     in.saturation = uopt->picSaturation;
     in.hdmiRange = uopt->hdmiLimitedRange;
+    in.hdmiBlack = uopt->hdmiBlackLevel;
+    in.hdmiWhite = uopt->hdmiWhiteLevel;
     in.presetId = rto->presetID;
     in.hdBypass = rto->outModeHdBypass;
     ColorRegs r = pictureColor(in);

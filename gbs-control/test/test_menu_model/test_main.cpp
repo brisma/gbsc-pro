@@ -146,7 +146,7 @@ void test_decoder_option_lists_follow_the_guide(void) {
     TEST_ASSERT_EQUAL_STRING("Narrow=0|Medium=1|Wide=2|Widest=3", enumList(SID_adv_comb_pal).c_str());
     TEST_ASSERT_EQUAL_STRING("3-2 lines=1|5-3 lines=2|5-4 lines=3", enumList(SID_adv_ct_ntsc).c_str());
     TEST_ASSERT_EQUAL_STRING("5-2 lines=1|5-3 lines=2|5-4 lines=3", enumList(SID_adv_ct_pal).c_str());
-    TEST_ASSERT_EQUAL_STRING("Auto=1|Full=0|Limited=3|Limited SD=2", enumList(SID_output_hdmi).c_str());
+    TEST_ASSERT_EQUAL_STRING("Auto=1|Full=0|Limited=3", enumList(SID_output_hdmi).c_str());
     TEST_ASSERT_EQUAL_STRING("Auto=0|RGB SCART=1|RGB SoG=2|VGA=3|Component=4|S-Video=5|Composite=6", enumList(SID_input_source).c_str());
     SettingDef d; settingsDefAt(SID_adv_comb_ntsc, d);
     TEST_ASSERT_FALSE(settingsValid(d, 2));                         // a web or old-profile value outside the list
@@ -200,6 +200,8 @@ void test_value_formats(void) {
     TEST_ASSERT_EQUAL_STRING("Adaptive", fmt(menuFind("Picture/Deinterlace"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("50", fmt(menuFind("Picture/Saturation"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("Auto", fmt(menuFind("Output/HDMI range"), be).c_str());
+    TEST_ASSERT_EQUAL_STRING("16", fmt(menuFind("Output/HDMI black"), be).c_str());
+    TEST_ASSERT_EQUAL_STRING("235", fmt(menuFind("Output/HDMI white"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("Method 1", fmt(menuFind("Output/Lock method"), be).c_str());
     TEST_ASSERT_EQUAL_STRING("Auto: RGB SCART", fmt(menuFind("Input/Source"), be).c_str());   // Auto + the found input
     TEST_ASSERT_EQUAL_STRING("Center", fmt(menuFind("System/TV and OLED menu/Menu position"), be).c_str());

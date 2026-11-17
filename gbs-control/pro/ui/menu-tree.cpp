@@ -167,6 +167,8 @@ static const MenuNode kOutput[] SET_PROGMEM = {
     SET(S_FRAME_LOCK, H_FTL, output_ftl, P_FTL_OK, 0, NF_REVERT),
     SET(S_LOCK_METHOD, H_LOCK_METHOD, output_ftl_method, P_FTL_ON, 0, NF_ADVANCED),
     SET(S_HDMI_RANGE, H_HDMI_RANGE, output_hdmi, P_NONE, 0, 0),
+    SET(S_HDMI_BLACK, H_HDMI_BLACK, output_hdmi_black, P_HDMI_LIMITED, 0, NF_ADVANCED),
+    SET(S_HDMI_WHITE, H_HDMI_WHITE, output_hdmi_white, P_HDMI_LIMITED, 0, NF_ADVANCED),
     SET(S_COMPONENT, H_ANALOG_OUT, output_component, P_NONE, 0, NF_REVERT | NF_ADVANCED),
     SET(S_EXT_CLOCK, H_EXT_CLOCK, sys_ext_clock, P_NONE, 0, NF_RESTART_NOTE | NF_ADVANCED),
 };

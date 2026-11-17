@@ -29,6 +29,10 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   70 Hz and faster PC modes, on HD sources passed through, or on the Downscale output. (#69)
 - The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
   grid are welcome.
+- **HDMI black** and **HDMI white** (Output, Advanced, per profile like HDMI range; shown when it is not
+  Full): where the compression puts black (0..20, default 16) and white (215..255, default 235). The
+  defaults are the standard's; lower HDMI black for a TV that shows black grey, raise it for one that crushes the
+  darkest greys.
 
 ### Input
 - **Digital sync** (Advanced, per profile, off by default; boards with the sync separator, RGB inputs): the scaler
@@ -48,6 +52,9 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   moves it left and right; it sat at the left. (#72)
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
   and the greyed Scanlines row no longer points to Bob for it. (#72)
+- HDMI range Auto also compresses 480p and 576p, which the HDMI converter sends as limited range like 720p and
+  1080p: their darkest greys were crushed into black. 960p, 1024p and 1200p stay full range, as the HDMI standard
+  (CEA-861) says; Limited SD is gone. A black that looks grey with Auto or Limited: lower HDMI black. (#72)
 
 ## 3.0.0-beta2 - 2026-11-14
 

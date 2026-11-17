@@ -60,6 +60,8 @@
     uint8_t advDnr;                 /* adv.dnr: digital noise reduction */ \
     uint8_t advCti;                 /* adv.cti: chroma transient improvement */ \
     uint8_t hdmiLimitedRange;       /* output.hdmi_range */ \
+    uint8_t hdmiBlackLevel;         /* output.hdmi_black: black level of the HDMI compression */ \
+    uint8_t hdmiWhiteLevel;         /* output.hdmi_white: white level of the HDMI compression */ \
     uint8_t  boardOverride;         /* system.board: BOARD_AUTO / BOARD_PRO / BOARD_ORIGINAL (Standard) */ \
     uint8_t  encoderReverse;        /* system.encoder_direction: 0 the board's own direction, 1 reversed */ \
     uint8_t  encoderSteps;          /* system.encoder_steps: 1, 2 or 4 menu steps per detent */ \
