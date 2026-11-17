@@ -7,7 +7,7 @@ static const uint8_t PROFILE_NAME_MAX = 24;
 static const uint8_t PROFILE_NAME_BUF = PROFILE_NAME_MAX + 1;   // char buffer for a name
 static const uint8_t PROFILE_LABEL_MAX = 25;                     // "<name> <REGION>": the longest console name of the
 static const uint8_t PROFILE_LABEL_BUF = PROFILE_LABEL_MAX + 1;  // catalog (18) with the longest region (6), whole
-static const uint8_t PROFILE_BASE_NONE = 0xFF;                   // profile.base_preset not set
+static const uint8_t PROFILE_BASE_NONE = 0xFF;                   // profile.base not set
 // Regions (profile.region, stored by name): the order is the menu's cycle order
 static const uint8_t PROFILE_REGION_NTSC_U = 0;
 static const uint8_t PROFILE_REGION_NTSC_J = 1;

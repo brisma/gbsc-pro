@@ -85,7 +85,7 @@ void settingsGet(AsyncWebServerRequest* req, uint8_t) {
 }
 
 void schemaGet(AsyncWebServerRequest* req, uint8_t) {
-    // Chunked, one entry at a time: the whole schema (~15 KB) does not fit the free heap
+    // Chunked, a piece at a time: the whole schema (about 17 KB on the Pro) does not fit the free heap
     std::shared_ptr<SchemaStreamer> st = std::make_shared<SchemaStreamer>(uopt->devMode);
     AsyncWebServerResponse* resp = req->beginChunkedResponse("application/json", [st](uint8_t* buf, size_t max, size_t) -> size_t {
         return st->fill((char*)buf, max);
