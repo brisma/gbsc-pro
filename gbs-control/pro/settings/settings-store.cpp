@@ -179,10 +179,15 @@ void probeSink(const char* t, void* c) {
 }
 
 namespace {
-struct BufSink { char* buf; size_t cap; size_t len; };
-void bufSink(const char* t, void* c) {
-    BufSink* b = (BufSink*)c;
-    while (*t && b->len + 1 < b->cap) b->buf[b->len++] = *t++;
+// A window on one rendered entry: skips its first `skip` bytes, keeps up to `cap`, notes whether more followed
+struct WindowSink { char* buf; size_t cap; size_t len; size_t skip; size_t seen; bool more; };
+void windowSink(const char* t, void* c) {
+    WindowSink* w = (WindowSink*)c;
+    for (; *t; t++) {
+        if (w->seen < w->skip) { w->seen++; continue; }
+        if (w->len < w->cap) { w->buf[w->len++] = *t; w->seen++; }
+        else w->more = true;
+    }
 }
 }
 
@@ -190,11 +195,17 @@ bool SchemaStreamer::next() {
     len_ = off_ = 0;
     if (stage_ == 0) { buf_[0] = '['; len_ = 1; stage_ = 1; return true; }
     while (stage_ == 1) {
-        BufSink b = {buf_ + 1, sizeof(buf_) - 1, 0};
-        if (!settingsSchemaEntry(n_++, dev_, bufSink, &b)) { stage_ = 2; break; }
-        if (!b.len) continue;
-        if (first_) { memmove(buf_, buf_ + 1, b.len); len_ = b.len; first_ = false; }
-        else { buf_[0] = ','; len_ = b.len + 1; }
+        bool starting = entrySkip_ == 0;
+        size_t lead = (starting && !first_) ? 1 : 0;           // the ',' before every entry but the first
+        WindowSink w = {buf_ + lead, cap_ - lead, 0, entrySkip_, 0, false};
+        if (!settingsSchemaEntry(n_, dev_, windowSink, &w)) { stage_ = 2; break; }
+        if (starting && !w.len) { n_++; continue; }            // an unavailable setting: nothing emitted
+        if (lead) buf_[0] = ',';
+        first_ = false;
+        len_ = w.len + lead;
+        entryMore_ = w.more;
+        if (w.more) entrySkip_ = (uint16_t)(entrySkip_ + w.len);
+        else { entrySkip_ = 0; n_++; }
         return true;
     }
     if (stage_ == 2) { buf_[0] = ']'; len_ = 1; stage_ = 3; return true; }

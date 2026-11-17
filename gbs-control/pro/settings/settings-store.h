@@ -28,10 +28,11 @@ void settingsValuesJson(const userOptions& u, bool devmode, SettingsSink sink, v
 void settingsSchemaJson(bool devmode, SettingsSink sink, void* ctx);
 bool settingsSchemaEntry(uint16_t n, bool devmode, SettingsSink sink, void* ctx);   // false past the last entry
 
-// The schema as a chunked stream: fill() copies up to max bytes, 0 at the end. RAM use is one entry (512 B).
+// The schema as a chunked stream: fill() copies up to max bytes, 0 at the end. RAM use is one 512 B buffer; an entry
+// longer than it is rendered again for each piece, skipping the bytes already sent. bufCap < 512: tests only.
 class SchemaStreamer {
 public:
-    explicit SchemaStreamer(bool devmode) : dev_(devmode) {}
+    explicit SchemaStreamer(bool devmode, size_t bufCap = 512) : dev_(devmode), cap_(bufCap < 512 ? bufCap : 512) {}
     size_t fill(char* out, size_t max);
 private:
     bool next();                          // renders the next piece into buf_; false at the end
@@ -40,5 +41,8 @@ private:
     uint8_t stage_ = 0;                   // 0 "[", 1 entries, 2 "]", 3 done
     bool first_ = true;
     char buf_[512];
+    size_t cap_;
     size_t len_ = 0, off_ = 0;
+    uint16_t entrySkip_ = 0;              // bytes of the current entry already sent
+    bool entryMore_ = false;              // the current entry did not fit: the next piece continues it
 };

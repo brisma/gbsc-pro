@@ -96,14 +96,13 @@ void test_schema_json_has_enum_options(void) {
     TEST_ASSERT_TRUE(out.find("\"key\":\"adv.hue\",\"type\":\"u8\",\"scope\":\"profile\",\"min\":0,\"max\":100,\"def\":50,\"caps\":1") != std::string::npos);
 }
 
-// The web serves the schema one entry at a time (a chunked response): entries compose to the same JSON and
-// each one fits the 512-byte chunk buffer (the whole schema does not fit the ESP heap)
+// The web serves the schema one entry at a time (a chunked response): entries compose to the same JSON (the whole
+// schema does not fit the ESP heap; an entry longer than the stream buffer is sent in pieces)
 void test_schema_entries_compose_to_schema(void) {
     for (int dev = 0; dev < 2; dev++) {
         std::string whole, parts = "[";
         settingsSchemaJson(dev != 0, appendSink, &whole);
         bool first = true;
-        size_t longest = 0;
         for (uint16_t n = 0; ; n++) {
             std::string e;
             if (!settingsSchemaEntry(n, dev != 0, appendSink, &e)) break;
@@ -111,11 +110,26 @@ void test_schema_entries_compose_to_schema(void) {
             if (!first) parts += ",";
             first = false;
             parts += e;
-            if (e.size() > longest) longest = e.size();
         }
         parts += "]";
         TEST_ASSERT_EQUAL_STRING(whole.c_str(), parts.c_str());
-        TEST_ASSERT_TRUE(longest < 512);
+    }
+}
+
+// Entries longer than the streamer's buffer arrive whole: a 64-byte buffer is smaller than most entries
+void test_schema_stream_entry_larger_than_buffer(void) {
+    std::string whole;
+    settingsSchemaJson(true, appendSink, &whole);
+    for (size_t chunk : {1u, 7u, 64u, 1460u}) {
+        SchemaStreamer st(true, 64);
+        std::string out;
+        char buf[1460];
+        for (int guard = 0; guard < 200000; guard++) {
+            size_t n = st.fill(buf, chunk);
+            if (!n) break;
+            out.append(buf, n);
+        }
+        TEST_ASSERT_EQUAL_STRING(whole.c_str(), out.c_str());
     }
 }
 
@@ -225,5 +239,6 @@ int main(int, char**) {
     RUN_TEST(test_stored_scope_from_another_version_against_the_working_state);
     RUN_TEST(test_schema_entries_compose_to_schema);
     RUN_TEST(test_schema_streamer_chunks);
+    RUN_TEST(test_schema_stream_entry_larger_than_buffer);
     return UNITY_END();
 }
