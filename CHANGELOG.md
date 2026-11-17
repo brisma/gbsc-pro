@@ -43,6 +43,11 @@ again (see Settings files).
 - **Sync dejitter** (Advanced, per profile; VGA, or the RGB inputs with Digital sync): the scaler's own filter on its
   HS/VS input pins, meant for a sync with jitter. Auto keeps the usual behaviour; On or Off force it. (#69)
 
+### Profiles
+- The console list for a new profile's name has 15 more machines: Arcade, Amiga 500, 1200 and CD32, Amstrad CPC 464
+  and 6128, Apple II, Atari 5200, 800XL and 130XE, BBC Micro, Commodore VIC-20 and 128, Neo Geo CD, PC. C64 is now
+  Commodore 64; a family's models are listed in order of release. Any other name can still be typed.
+
 ### Settings files
 - Settings, profiles and backups store each choice by a fixed name (`output.aspect=force_4_3`, `picture.scanlines=off`)
   instead of its menu label or a number, so later versions keep reading them whatever the menus call an option.

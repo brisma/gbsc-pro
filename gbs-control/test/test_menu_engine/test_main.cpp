@@ -1,3 +1,4 @@
+#include <string>
 #include <unity.h>
 #include <string.h>
 #include "menu-rig.h"
@@ -1489,10 +1490,57 @@ static std::string profLog(uint8_t kind, int index, const char* name, uint8_t re
 }
 
 void test_catalog_sorted_and_fits(void) {
-    TEST_ASSERT_EQUAL_UINT8(28, menuCatalogCount());
-    char prev[32] = "", cur[32];
+    // Alphabetical by name, and inside a family (same first word: Amiga, Amstrad, Atari, Commodore, Neo Geo,
+    // PlayStation) in order of release; the generic family name first
+    static const char* const kWant[] = {"3DO",
+        "Amiga",
+        "Amiga 500",
+        "Amiga 1200",
+        "Amiga CD32",
+        "Amstrad CPC 464",
+        "Amstrad CPC 6128",
+        "Apple II",
+        "Arcade",
+        "Atari 2600",
+        "Atari 5200",
+        "Atari 800XL",
+        "Atari 130XE",
+        "Atari ST",
+        "Atari 7800",
+        "Atari Jaguar",
+        "BBC Micro",
+        "CD-i",
+        "ColecoVision",
+        "Commodore VIC-20",
+        "Commodore 64",
+        "Commodore 128",
+        "Dreamcast",
+        "GameCube",
+        "Genesis/Mega Drive",
+        "Intellivision",
+        "Master System",
+        "Mega CD",
+        "MSX",
+        "N64",
+        "Neo Geo",
+        "Neo Geo CD",
+        "NES/Famicom",
+        "PC",
+        "PC Engine/TG-16",
+        "PlayStation",
+        "PlayStation 2",
+        "Saturn",
+        "Sega 32X",
+        "SNES/Super Famicom",
+        "Wii",
+        "Xbox",
+        "ZX Spectrum"};
+    TEST_ASSERT_EQUAL_UINT8(sizeof(kWant) / sizeof(kWant[0]), menuCatalogCount());
+    TEST_ASSERT_TRUE(menuCatalogCount() <= MENU_CATALOG_MAX);   // the menu keeps a region per row in that many bytes
     for (uint8_t i = 0; i < menuCatalogCount(); i++) {
+        char cur[32];
         menuCatalogName(i, cur, sizeof(cur));
+        TEST_ASSERT_EQUAL_STRING(kWant[i], cur);
         for (uint8_t reg = 0; reg < PROFILE_REGION_NONE; reg++) {     // with any region the label is not shortened
             char whole[40], label[PROFILE_LABEL_BUF];
             snprintf(whole, sizeof(whole), "%s %s", cur, profileRegionName(reg));
@@ -1500,8 +1548,6 @@ void test_catalog_sorted_and_fits(void) {
             TEST_ASSERT_EQUAL_STRING(whole, label);
         }
         for (const char* c = cur; *c; c++) TEST_ASSERT_TRUE_MESSAGE(menuCharOk(*c), cur);
-        if (i) TEST_ASSERT_TRUE_MESSAGE(strcasecmp(prev, cur) < 0, cur);
-        strcpy(prev, cur);
     }
 }
 
@@ -3112,6 +3158,7 @@ void test_signal_info_profile_defaults_when_none(void) {
     for (uint8_t i = 0; i < r.v().lineCount; i++) found = found || !strcmp(r.v().lines[i], "PROF Defaults");
     TEST_ASSERT_TRUE(found);
 }
+
 
 int main() {
     UNITY_BEGIN();

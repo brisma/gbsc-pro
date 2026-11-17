@@ -31,7 +31,7 @@ struct MenuRig {
     std::string selectedValue() const { return v().rows[v().cursorRow].value; }
     // Move the cursor down until the selected row has this label (at most 40 steps)
     bool select(const std::string& l) {
-        for (int i = 0; i < 40; i++) { if (selected() == l) return true; key(K_DOWN); }
+        for (int i = 0; i < 80; i++) { if (selected() == l) return true; key(K_DOWN); }   // the console list has 46 rows
         return false;
     }
     bool enter(const std::string& l) { if (!select(l)) return false; key(K_OK); return title() == l; }

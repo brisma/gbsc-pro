@@ -6,6 +6,7 @@
 #include "menu-backend.h"
 #include "menu-view.h"
 #include "menu-keyboard.h"
+#include "menu-catalog.h"
 #include "../profiles/profile-list.h"
 
 class MenuEngine {
@@ -61,7 +62,7 @@ private:
     struct Entry { const MenuNode* node; uint8_t kind; int8_t profile; uint8_t cursor; uint8_t top; };
     struct Row { MenuNode node; uint8_t dyn; int8_t profile; };
     static const uint8_t kMaxDepth = 6;
-    static const uint8_t kMaxRows = 40;
+    static const uint8_t kMaxRows = 3 + MENU_CATALOG_MAX + 1;   // the longest page: New profile's names (3 rows, the catalog, Back)
 
     uint8_t rowCount(const Entry& e);
     bool hasBack(const Entry& e) const { return back_ && &e != &stack_[0]; }
@@ -196,7 +197,7 @@ private:
     bool adjustUndoable_ = false;           // Position/Size: Back reloads the preset (Borders: no undo)
     MenuNode sliderNode_ = {};
     static const uint32_t kSliderTimeoutMs = 5000;
-    uint8_t regions_[32];                   // STK_NAMES: region per catalog row
+    uint8_t regions_[MENU_CATALOG_MAX];     // STK_NAMES: region per catalog row
     MenuKeyboard kb_;
     int8_t kbProfile_ = -1;                 // KB_RENAME: profile index
     char kbOrig_[PROFILE_NAME_BUF] = {0};                 // KB_RENAME: name when the keyboard opened
