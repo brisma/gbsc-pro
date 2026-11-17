@@ -36,12 +36,20 @@
     OPT(OPT_COMB_BW_P, "Narrow=0|Medium=1|Wide=2|Widest=3")   /* Table 68 */ \
     OPT(OPT_TAPS_N,    "3-2 lines=1|5-3 lines=2|5-4 lines=3")   /* 00: do not use */ \
     OPT(OPT_TAPS_P,    "5-2 lines=1|5-3 lines=2|5-4 lines=3") \
+    OPT(OPT_DEINT,      "Adaptive=0|Bob=1") \
+    OPT(OPT_FILTER_Y,   "AutoWide=0|AutoNarrow=1|SVHS-1=2|SVHS-2=3|SVHS-3=4|SVHS-4=5|SVHS-5=6|SVHS-6=7|SVHS-7=8|SVHS-8=9|SVHS-9=10|SVHS-10=11|SVHS-11=12|SVHS-12=13|SVHS-13=14|SVHS-14=15|SVHS-15=16|SVHS-16=17|SVHS-17=18|SVHS-18=19|PAL-NN1=20|PAL-NN2=21|PAL-NN3=22|PAL-WN1=23|PAL-WN2=24|NTSC-NN1=25|NTSC-NN2=26|NTSC-NN3=27|NTSC-WN1=28|NTSC-WN2=29|NTSC-WN3=30") \
+    OPT(OPT_FILTER_WY,  "SVHS-1=2|SVHS-2=3|SVHS-3=4|SVHS-4=5|SVHS-5=6|SVHS-6=7|SVHS-7=8|SVHS-8=9|SVHS-9=10|SVHS-10=11|SVHS-11=12|SVHS-12=13|SVHS-13=14|SVHS-14=15|SVHS-15=16|SVHS-16=17|SVHS-17=18|SVHS-18=19") \
+    OPT(OPT_FILTER_C,   "Auto 1.5MHz=0|Auto 2.2MHz=1|Shape 1=2|Shape 2=3|Shape 3=4|Shape 4=5|Shape 5=6|Wideband=7") \
+    OPT(OPT_COMB_LUMA,  "Adaptive=0|Notch=4|2-line upper=5|3-line=6|2-line lower=7") \
+    OPT(OPT_COMB_CHROMA, "Adaptive=0|Off=4|2-line upper=5|3-line=6|2-line lower=7") \
+    OPT(OPT_SYNCWATCHER, "Inherit=0|On=1|Off=2") \
+    OPT(OPT_INPUT_LAST, "RGB SCART=1|RGB SoG=2|VGA=3|Component=4|S-Video=5|Composite=6")   /* input.last and the profile fingerprint: no @adv (a hint, every board) */ \
     OPT(OPT_FORMATS,   "Auto=0|Auto 7.5 IRE=12|PAL=1|NTSC 7.5 IRE=2|PAL-60=3|NTSC 4.43=4#a|NTSC-J=5|PAL-N 7.5 IRE=6#a|PAL-M 0 IRE=7#a|PAL-M 7.5 IRE=8#a|PAL-Nc=9#a|PAL-Nc 7.5IRE=10#a|SECAM=11#a")   /* index: advFormatRegister() */
 
 #define SETTINGS_TABLE(SETTING) \
     /* ---- Device ---- */ \
     SETTING(input_source,      "input.source",          Enum, inputChoice,                   0,      0, 10,     Device,  APPLY_INPUT,       OPT_INPUTS,  0, CAP_NONE) \
-    SETTING(input_last,        "input.last",            U8,   inputLast,                     1,      1, 6,      Device,  APPLY_NONE,        nullptr,     SETTING_FLAG_DEVICE_ONLY, CAP_NONE) \
+    SETTING(input_last,        "input.last",            Enum, inputLast,                     1,      1, 6,      Device,  APPLY_NONE,        OPT_INPUT_LAST,  SETTING_FLAG_DEVICE_ONLY, CAP_NONE) \
     SETTING(input_scan_vga,    "input.scan_vga",        Bool, scanVga,                       1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_ADV) \
     SETTING(input_scan_rgbs,   "input.scan_rgbs",       Bool, scanRgbs,                      1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_scan_rgsb,   "input.scan_rgsb",       Bool, scanRgsb,                      1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_ADV) \
@@ -95,7 +103,7 @@
     /* ---- Profile: picture ---- */ \
     SETTING(pic_scanlines,     "picture.scanlines",     Bool, wantScanlines,                 0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_scan_strength, "picture.scanline_strength", U8, scanlineStrength,            0x30,   0, 0x60,   Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \
-    SETTING(pic_deint,         "picture.deinterlace",   U8,   deintMode,                     0,      0, 2,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
+    SETTING(pic_deint,         "picture.deinterlace",   Enum, deintMode,                     0,      0, 1,      Profile, APPLY_PRESET,      OPT_DEINT,   0, CAP_NONE) \
     SETTING(pic_line_filter,   "picture.line_filter",   Bool, wantVdsLineFilter,             1,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_sharpness,     "picture.sharpness",     U8,   picSharpness,                  22,     0, 31,     Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \
     SETTING(pic_rgbhv_scale,   "picture.rgbhv_scaling", Bool, preferScalingRgbhv,            1,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
@@ -121,21 +129,21 @@
     SETTING(adv_ace_cmax,      "adv.ace_chroma_max",    U8,   advACEChromaMax,               8,      0, 15,     Profile, APPLY_ADV_ACE,     nullptr,     0, CAP_ADV) \
     SETTING(adv_ace_gamma,     "adv.ace_gamma_gain",    U8,   advACEGammaGain,               8,      0, 15,     Profile, APPLY_ADV_ACE,     nullptr,     0, CAP_ADV) \
     SETTING(adv_ace_speed,     "adv.ace_response_speed",U8,   advACEResponseSpeed,           15,     0, 15,     Profile, APPLY_ADV_ACE,     nullptr,     0, CAP_ADV) \
-    SETTING(adv_filter_y,      "adv.filter_y",          U8,   advFilterYShaping,             1,      0, 30,     Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
-    SETTING(adv_filter_c,      "adv.filter_c",          U8,   advFilterCShaping,             0,      0, 7,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
-    SETTING(adv_filter_wy,     "adv.filter_wy",         U8,   advFilterWYShaping,            19,     2, 19,     Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
+    SETTING(adv_filter_y,      "adv.filter_y",          Enum, advFilterYShaping,             1,      0, 30,     Profile, APPLY_ADV_FILTERS, OPT_FILTER_Y,  0, CAP_ADV) \
+    SETTING(adv_filter_c,      "adv.filter_c",          Enum, advFilterCShaping,             0,      0, 7,      Profile, APPLY_ADV_FILTERS, OPT_FILTER_C,  0, CAP_ADV) \
+    SETTING(adv_filter_wy,     "adv.filter_wy",         Enum, advFilterWYShaping,            19,     2, 19,     Profile, APPLY_ADV_FILTERS, OPT_FILTER_WY,  0, CAP_ADV) \
     SETTING(adv_filter_wy_ovr, "adv.filter_wy_override",Bool, advFilterWYOverride,           1,      0, 1,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
     SETTING(adv_comb_ntsc,     "adv.comb_ntsc",         Enum, advFilterCombNTSC,             0,      0, 3,      Profile, APPLY_ADV_FILTERS, OPT_COMB_BW_N, 0, CAP_ADV) \
     SETTING(adv_comb_pal,      "adv.comb_pal",          Enum, advFilterCombPAL,              1,      0, 3,      Profile, APPLY_ADV_FILTERS, OPT_COMB_BW_P, 0, CAP_ADV) \
-    SETTING(adv_cl_ntsc,       "adv.comb_luma_ntsc",    U8,   advCombLumaModeNTSC,           0,      0, 7,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
-    SETTING(adv_cc_ntsc,       "adv.comb_chroma_ntsc",  U8,   advCombChromaModeNTSC,         0,      0, 7,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
+    SETTING(adv_cl_ntsc,       "adv.comb_luma_ntsc",    Enum, advCombLumaModeNTSC,           0,      0, 7,      Profile, APPLY_ADV_FILTERS, OPT_COMB_LUMA,  0, CAP_ADV) \
+    SETTING(adv_cc_ntsc,       "adv.comb_chroma_ntsc",  Enum, advCombChromaModeNTSC,         0,      0, 7,      Profile, APPLY_ADV_FILTERS, OPT_COMB_CHROMA,  0, CAP_ADV) \
     SETTING(adv_ct_ntsc,       "adv.comb_taps_ntsc",    Enum, advCombChromaTapsNTSC,         2,      1, 3,      Profile, APPLY_ADV_FILTERS, OPT_TAPS_N,  0, CAP_ADV) \
-    SETTING(adv_cl_pal,        "adv.comb_luma_pal",     U8,   advCombLumaModePAL,            0,      0, 7,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
-    SETTING(adv_cc_pal,        "adv.comb_chroma_pal",   U8,   advCombChromaModePAL,          0,      0, 7,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
+    SETTING(adv_cl_pal,        "adv.comb_luma_pal",     Enum, advCombLumaModePAL,            0,      0, 7,      Profile, APPLY_ADV_FILTERS, OPT_COMB_LUMA,  0, CAP_ADV) \
+    SETTING(adv_cc_pal,        "adv.comb_chroma_pal",   Enum, advCombChromaModePAL,          0,      0, 7,      Profile, APPLY_ADV_FILTERS, OPT_COMB_CHROMA,  0, CAP_ADV) \
     SETTING(adv_ct_pal,        "adv.comb_taps_pal",     Enum, advCombChromaTapsPAL,          3,      1, 3,      Profile, APPLY_ADV_FILTERS, OPT_TAPS_P,  0, CAP_ADV) \
     SETTING(adv_dnr,           "adv.dnr",               Bool, advDnr,                        0,      0, 1,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
     SETTING(adv_cti,           "adv.cti",               Bool, advCti,                        0,      0, 1,      Profile, APPLY_ADV_FILTERS, nullptr,     0, CAP_ADV) \
-    SETTING(dev_syncwatcher,   "dev.syncwatcher",       U8,   syncwatcherMode,           0,      0, 2,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
+    SETTING(dev_syncwatcher,   "dev.syncwatcher",       Enum, syncwatcherMode,           0,      0, 2,      Profile, APPLY_NONE,        OPT_SYNCWATCHER,  0, CAP_NONE) \
     SETTING(dev_wifi_watch,    "dev.wifi_watch",        Bool, wifiWatch,                     0,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE)
 
 // String settings: SETTING_STR(id, key, uopt char[] field, scope, flags); max length = sizeof(field) - 1

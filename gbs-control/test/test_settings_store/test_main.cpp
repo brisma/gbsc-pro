@@ -174,7 +174,10 @@ void test_schema_and_values_filter_by_caps_and_devmode(void) {
     settingsValuesJson(u, false, appendSink, &values);
     TEST_ASSERT_TRUE(schema.find("\"adv.brightness\"") == std::string::npos);
     TEST_ASSERT_TRUE(schema.find("\"dev.syncwatcher\"") == std::string::npos);
-    TEST_ASSERT_TRUE(schema.find("{\"n\":\"Composite\"") == std::string::npos);
+    size_t src = schema.find("\"key\":\"input.source\"");                     // the source choice drops the decoder inputs
+    TEST_ASSERT_TRUE(src != std::string::npos);
+    std::string srcEntry = schema.substr(src, schema.find('}', schema.find("]", src)) - src);
+    TEST_ASSERT_TRUE(srcEntry.find("{\"n\":\"Composite\"") == std::string::npos);
     TEST_ASSERT_TRUE(schema.find("{\"n\":\"Bypass\",\"v\":10}") != std::string::npos);
     TEST_ASSERT_TRUE(values.find("\"adv.brightness\"") == std::string::npos);
     TEST_ASSERT_TRUE(values.find("\"picture.scanlines\"") != std::string::npos);

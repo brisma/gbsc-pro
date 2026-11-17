@@ -24,8 +24,7 @@ void menuAdjustRead(uint8_t index, MenuAdjust& out);
 
 const char* menuOptList(uint8_t index);                         // PROGMEM "Label=value|..." (0 and unknown: nullptr)
 
-enum : uint8_t { OL_NONE, OL_DEINT, OL_FILTER_Y, OL_FILTER_WY, OL_WY_MODE, OL_FILTER_C, OL_COMB_LUMA, OL_COMB_CHROMA,
-                 OL_SYNCWATCHER, OL_COUNT };   // comb bandwidth and chroma taps: registry options (settings-table.h)
+enum : uint8_t { OL_NONE, OL_WY_MODE, OL_COUNT };   // comb bandwidth and chroma taps: registry options (settings-table.h)
 enum : uint8_t { OPTS_STEP16 = 116 };                           // numeric setting stepped by 16
 enum : uint8_t { CH_FILTER, CH_SCANLINES, CH_RESOLUTION };
 enum : uint8_t { AJ_MOVE, AJ_SIZE, AJ_BORDERS, AJ_BORDER_MOVE };

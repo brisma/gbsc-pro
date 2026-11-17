@@ -185,10 +185,11 @@ void test_caps_and_devmode_hide_nodes(void) {
 
 void test_streaming_option_parser_beyond_160_chars(void) {
     char name[24]; uint16_t v = 0;
-    TEST_ASSERT_TRUE(menuOptAt(menuOptList(OL_FILTER_Y), 30, name, sizeof(name), v));
+    SettingDef d; settingsDefAt(SID_adv_filter_y, d);   // the Y filter's 31 options, a list longer than 160 chars
+    TEST_ASSERT_TRUE(settingsEnumAt(d, 30, name, sizeof(name), v));
     TEST_ASSERT_EQUAL_STRING("NTSC-WN3", name);
     TEST_ASSERT_EQUAL_UINT16(30, v);
-    TEST_ASSERT_FALSE(menuOptAt(menuOptList(OL_FILTER_Y), 31, name, sizeof(name), v));
+    TEST_ASSERT_FALSE(settingsEnumAt(d, 31, name, sizeof(name), v));
 }
 
 void test_value_formats(void) {

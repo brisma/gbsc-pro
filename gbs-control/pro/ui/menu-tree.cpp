@@ -6,20 +6,11 @@
 #include "menu-strings.h"
 #include "menu-tree.h"
 
-// ---- Option lists (labels for settings that have none in the registry) ----
-static const char kOlDeint[] SET_PROGMEM = "Adaptive=0|Bob=1";
-static const char kOlFilterY[] SET_PROGMEM =
-    "AutoWide=0|AutoNarrow=1|SVHS-1=2|SVHS-2=3|SVHS-3=4|SVHS-4=5|SVHS-5=6|SVHS-6=7|SVHS-7=8|SVHS-8=9|SVHS-9=10|SVHS-10=11|SVHS-11=12|SVHS-12=13|SVHS-13=14|SVHS-14=15|SVHS-15=16|SVHS-16=17|SVHS-17=18|SVHS-18=19|PAL-NN1=20|PAL-NN2=21|PAL-NN3=22|PAL-WN1=23|PAL-WN2=24|"
-    "NTSC-NN1=25|NTSC-NN2=26|NTSC-NN3=27|NTSC-WN1=28|NTSC-WN2=29|NTSC-WN3=30";
-static const char kOlFilterWy[] SET_PROGMEM = "SVHS-1=2|SVHS-2=3|SVHS-3=4|SVHS-4=5|SVHS-5=6|SVHS-6=7|SVHS-7=8|SVHS-8=9|SVHS-9=10|SVHS-10=11|SVHS-11=12|SVHS-12=13|SVHS-13=14|SVHS-14=15|SVHS-15=16|SVHS-16=17|SVHS-17=18|SVHS-18=19";
+// ---- Option lists (menu labels for a setting whose registry values have other names) ----
 static const char kOlWyMode[] SET_PROGMEM = "Auto=0|Manual=1";
-static const char kOlFilterC[] SET_PROGMEM = "Auto 1.5MHz=0|Auto 2.2MHz=1|Shape 1=2|Shape 2=3|Shape 3=4|Shape 4=5|Shape 5=6|Wideband=7";
-static const char kOlCombLuma[] SET_PROGMEM = "Adaptive=0|Notch=4|2-line upper=5|3-line=6|2-line lower=7";
-static const char kOlCombChroma[] SET_PROGMEM = "Adaptive=0|Off=4|2-line upper=5|3-line=6|2-line lower=7";
-static const char kOlSyncwatcher[] SET_PROGMEM = "Inherit=0|On=1|Off=2";
 
 static const char* const kOptLists[OL_COUNT] SET_PROGMEM = {
-    nullptr, kOlDeint, kOlFilterY, kOlFilterWy, kOlWyMode, kOlFilterC, kOlCombLuma, kOlCombChroma, kOlSyncwatcher};
+    nullptr, kOlWyMode};
 
 const char* menuOptList(uint8_t index) {
     if (index == OL_NONE || index >= OL_COUNT) return nullptr;
@@ -111,19 +102,19 @@ static const MenuNode kDecoder[] SET_PROGMEM = {
     SET(S_SATURATION, H_SATURATION, adv_saturation, P_NONE, 0, 0),
     SET(S_HUE, H_HUE, adv_hue, P_NONE, 0, 0),
     HEAD(S_COMB),                                   // UG-637: the comb settings act on CVBS (Composite) only
-    SET(S_LUMA_MODE, H_LUMA_MODE, adv_cl_ntsc, P_AV_NTSC, OL_COMB_LUMA, 0),
-    SET(S_LUMA_MODE, H_LUMA_MODE, adv_cl_pal, P_AV_PAL, OL_COMB_LUMA, 0),
-    SET(S_CHROMA_MODE, H_CHROMA_MODE, adv_cc_ntsc, P_AV_NTSC, OL_COMB_CHROMA, 0),
-    SET(S_CHROMA_MODE, H_CHROMA_MODE, adv_cc_pal, P_AV_PAL, OL_COMB_CHROMA, 0),
+    SET(S_LUMA_MODE, H_LUMA_MODE, adv_cl_ntsc, P_AV_NTSC, 0, 0),
+    SET(S_LUMA_MODE, H_LUMA_MODE, adv_cl_pal, P_AV_PAL, 0, 0),
+    SET(S_CHROMA_MODE, H_CHROMA_MODE, adv_cc_ntsc, P_AV_NTSC, 0, 0),
+    SET(S_CHROMA_MODE, H_CHROMA_MODE, adv_cc_pal, P_AV_PAL, 0, 0),
     SET(S_BANDWIDTH, H_BANDWIDTH, adv_comb_ntsc, P_AV_NTSC, 0, 0),
     SET(S_BANDWIDTH, H_BANDWIDTH, adv_comb_pal, P_AV_PAL, 0, 0),
     SET(S_CHROMA_TAPS, H_CHROMA_TAPS, adv_ct_ntsc, P_AV_NTSC, 0, 0),
     SET(S_CHROMA_TAPS, H_CHROMA_TAPS, adv_ct_pal, P_AV_PAL, 0, 0),
     HEAD(S_FILTERS),
-    SET(S_Y_FILTER, H_Y_FILTER, adv_filter_y, P_AV, OL_FILTER_Y, 0),
+    SET(S_Y_FILTER, H_Y_FILTER, adv_filter_y, P_AV, 0, 0),
     SET(S_Y_FILTER_MODE, H_Y_FILTER_MODE, adv_filter_wy_ovr, P_SV, OL_WY_MODE, 0),
-    SET(S_Y_FILTER, H_Y_FILTER, adv_filter_wy, P_SV_WY, OL_FILTER_WY, 0),
-    SET(S_C_FILTER, H_C_FILTER, adv_filter_c, P_AV, OL_FILTER_C, 0),
+    SET(S_Y_FILTER, H_Y_FILTER, adv_filter_wy, P_SV_WY, 0, 0),
+    SET(S_C_FILTER, H_C_FILTER, adv_filter_c, P_AV, 0, 0),
     HEAD(S_ENHANCE),
     SET(S_DNR, H_DNR, adv_dnr, P_NONE, 0, 0),
     SET(S_CTI, H_CTI, adv_cti, P_NONE, 0, 0),
@@ -180,7 +171,7 @@ static const MenuNode kPicture[] SET_PROGMEM = {
     SET(S_BRIGHTNESS, H_PIC_BRIGHTNESS, pic_brightness, P_NONE, 0, 0),
     SET(S_CONTRAST, H_PIC_CONTRAST, pic_contrast, P_NONE, 0, 0),
     SET(S_SATURATION, H_PIC_SATURATION, pic_saturation, P_NONE, 0, 0),
-    SET(S_DEINTERLACE, H_DEINTERLACE, pic_deint, P_DEINT_OK, OL_DEINT, 0),
+    SET(S_DEINTERLACE, H_DEINTERLACE, pic_deint, P_DEINT_OK, 0, 0),
     FNA(S_RESET_PICTURE, H_RESET_PICTURE, FN_PICTURE_RESET, P_NONE, NF_CONFIRM),
     HEAD(S_DETAIL),
     SET(S_SHARPNESS, H_SHARPNESS, pic_sharpness, P_NONE, 0, NF_ADVANCED),
@@ -268,7 +259,7 @@ static const MenuNode kSystem[] SET_PROGMEM = {   // the pages first, then the r
 
 // ---- Developer ----   (Advanced + System > Developer menu)
 static const MenuNode kDevSync[] SET_PROGMEM = {
-    SET(S_WATCHER_MODE, H_WATCHER_MODE, dev_syncwatcher, P_NONE, OL_SYNCWATCHER, 0),
+    SET(S_WATCHER_MODE, H_WATCHER_MODE, dev_syncwatcher, P_NONE, 0, 0),
     ACT(S_SYNC_WATCHER, H_SYNC_WATCHER, dev_syncwatcher, LV_SYNCWATCHER, P_NONE, 0),
     ACT(S_INVERT_SYNC, H_INVERT_SYNC, dev_invert_sync, LV_SYNC_POLARITY, P_NONE, 0),
     STEP(S_HSYNC_POS, H_HSYNC_POS, dev_hs_left, dev_hs_right, LV_NONE, P_NONE),

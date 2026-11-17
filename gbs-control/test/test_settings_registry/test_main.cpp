@@ -413,6 +413,40 @@ void test_format_unchanged_for_menu_and_echo(void) {
 }
 
 
+
+// Choices that were numbers with labels only in the menu: registry Enums, same values, same labels in the same order
+static std::string labelsOf(const char* key) {
+    SettingDef d = defOf(key); std::string out; char n[48]; uint16_t v;
+    for (uint8_t k = 0; settingsEnumAt(d, k, n, sizeof(n), v); k++) { if (k) out += "|"; out += n; out += "="; out += std::to_string(v); }
+    return out;
+}
+
+void test_converted_choices_are_enums(void) {
+    const char* keys[] = {"picture.deinterlace", "adv.filter_y", "adv.filter_wy", "adv.filter_c", "adv.comb_luma_ntsc",
+                          "adv.comb_luma_pal", "adv.comb_chroma_ntsc", "adv.comb_chroma_pal", "dev.syncwatcher", "input.last"};
+    for (const char* k : keys) TEST_ASSERT_TRUE_MESSAGE(defOf(k).type == SettingType::Enum, k);
+    TEST_ASSERT_EQUAL_STRING("bob", stored("picture.deinterlace", 1).c_str());
+    TEST_ASSERT_EQUAL_STRING("notch", stored("adv.comb_luma_ntsc", 4).c_str());
+    TEST_ASSERT_EQUAL_STRING("off", stored("dev.syncwatcher", 2).c_str());
+    TEST_ASSERT_EQUAL_STRING("vga", stored("input.last", 3).c_str());
+    TEST_ASSERT_EQUAL_STRING("wideband", stored("adv.filter_c", 7).c_str());
+    TEST_ASSERT_EQUAL_STRING("Adaptive=0|Bob=1", labelsOf("picture.deinterlace").c_str());
+    TEST_ASSERT_EQUAL_STRING("Adaptive=0|Notch=4|2-line upper=5|3-line=6|2-line lower=7", labelsOf("adv.comb_luma_pal").c_str());
+    TEST_ASSERT_EQUAL_STRING("Adaptive=0|Off=4|2-line upper=5|3-line=6|2-line lower=7", labelsOf("adv.comb_chroma_ntsc").c_str());
+    TEST_ASSERT_EQUAL_STRING("Inherit=0|On=1|Off=2", labelsOf("dev.syncwatcher").c_str());
+    TEST_ASSERT_EQUAL_STRING("Auto 1.5MHz=0|Auto 2.2MHz=1|Shape 1=2|Shape 2=3|Shape 3=4|Shape 4=5|Shape 5=6|Wideband=7",
+                             labelsOf("adv.filter_c").c_str());
+    TEST_ASSERT_EQUAL_STRING("RGB SCART=1|RGB SoG=2|VGA=3|Component=4|S-Video=5|Composite=6", labelsOf("input.last").c_str());
+    TEST_ASSERT_EQUAL_UINT8(31, settingsEnumCount(defOf("adv.filter_y")));
+    TEST_ASSERT_EQUAL_UINT8(18, settingsEnumCount(defOf("adv.filter_wy")));
+}
+
+void test_new_enum_rejects_unlisted_number(void) {
+    TEST_ASSERT_TRUE(rejects("adv.comb_luma_ntsc", "2"));
+    TEST_ASSERT_TRUE(rejects("picture.deinterlace", "2"));
+}
+
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_id_from_label);
@@ -425,6 +459,8 @@ int main(int, char**) {
     RUN_TEST(test_bool_words_normalised);
     RUN_TEST(test_signed_or_marked_numbers_rejected);
     RUN_TEST(test_format_unchanged_for_menu_and_echo);
+    RUN_TEST(test_converted_choices_are_enums);
+    RUN_TEST(test_new_enum_rejects_unlisted_number);
     RUN_TEST(test_advanced_mark_stripped_and_long_lists_complete);
     RUN_TEST(test_setting_ids_match_table_order);
     RUN_TEST(test_adv_apply_groups_are_granular);

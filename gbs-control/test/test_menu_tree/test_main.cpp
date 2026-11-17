@@ -365,6 +365,15 @@ void test_reset_screen_is_the_last_screen_row(void) {
     }
 }
 
+// Settings with registry options take them from the registry: no menu-only list for them
+void test_converted_rows_use_registry_options(void) {
+    const uint8_t sids[] = {SID_pic_deint, SID_adv_filter_y, SID_adv_filter_wy, SID_adv_filter_c, SID_adv_cl_ntsc,
+                            SID_adv_cl_pal, SID_adv_cc_ntsc, SID_adv_cc_pal, SID_dev_syncwatcher};
+    for (auto& v : allNodes())
+        if (v.n.type == N_SETTING)
+            for (uint8_t sid : sids) if (v.n.ref == sid) TEST_ASSERT_EQUAL_UINT8_MESSAGE(0, v.n.opts, str(v.n.label).c_str());
+}
+
 // Knob direction is an Easy row (TV menu too) of System > Device; the knob's steps stay Advanced, right under it.
 // Restart and Factory reset close the System page in both modes
 void test_knob_direction_in_easy(void) {
@@ -490,6 +499,7 @@ int main() {
     RUN_TEST(test_sync_dejitter_row);
     RUN_TEST(test_hdmi_level_rows);
     RUN_TEST(test_reset_screen_is_the_last_screen_row);
+    RUN_TEST(test_converted_rows_use_registry_options);
     RUN_TEST(test_easy_pages_rgb_scart_240p);
     RUN_TEST(test_easy_pages_component_480i);
     RUN_TEST(test_easy_pages_svideo_ntsc);
