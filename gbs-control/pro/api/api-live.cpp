@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 #include "api-live.h"
 #include "../ui/menu-types.h"
@@ -17,17 +18,17 @@ size_t liveJson(const int32_t* v, uint32_t validMask, uint32_t ms, char* out, si
     if (!cap) return 0;
     size_t n = 0;
     auto put = [&](int w) { if (w < 0 || n + (size_t)w >= cap) { n = cap; return; } n += (size_t)w; };
-    put(snprintf(out, cap, "{\"at\":%lu,\"values\":{", (unsigned long)ms));
+    put(snprintf_P(out, cap, PSTR("{\"at\":%lu,\"values\":{"), (unsigned long)ms));
     bool first = true;
     for (uint8_t i = LV_NONE + 1; i < LV_COUNT && n < cap; i++) {
         if (!(validMask & (1u << i))) continue;
         const char* sep = first ? "" : ",";
         first = false;
-        if (isPair(i)) put(snprintf(out + n, cap - n, "%s\"%s\":[%ld,%ld]", sep, kLiveNames[i], (long)((uint32_t)v[i] >> 16),
+        if (isPair(i)) put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":[%ld,%ld]"), sep, kLiveNames[i], (long)((uint32_t)v[i] >> 16),
                                     (long)(v[i] & 0xffff)));
-        else put(snprintf(out + n, cap - n, "%s\"%s\":%ld", sep, kLiveNames[i], (long)v[i]));
+        else put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":%ld"), sep, kLiveNames[i], (long)v[i]));
     }
-    if (n < cap) put(snprintf(out + n, cap - n, "}}"));
+    if (n < cap) put(snprintf_P(out + n, cap - n, PSTR("}}")));
     if (n >= cap) { out[0] = '\0'; return 0; }
     return n;
 }

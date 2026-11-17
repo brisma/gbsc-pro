@@ -76,18 +76,6 @@
     "reason": "read-only: the ADV Controller image the user declined; no control"
   },
   {
-    "ref": "action:dev.clockgen",
-    "reason": "Developer experiment: Si5351 output on/off to look for the no-signal WiFi noise; tools only"
-  },
-  {
-    "ref": "action:dev.loop_pause",
-    "reason": "Developer experiment: a pause at every loop pass to test the no-signal WiFi slowness; tools only"
-  },
-  {
-    "ref": "action:dev.si5351",
-    "reason": "Developer measurements of the Si5351 (gbs-control-nx evaluation): status, divider rule, crystal load, lock timing, output frame rate; tools only"
-  },
-  {
     "ref": "action:dev.listen",
     "reason": "Developer experiment for the input search: the ADV7280 listening on pin 20 by hand; tools only"
   },

@@ -1,6 +1,7 @@
 // Device glue of the menu (whole file device-only)
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <IRrecv.h>
 #include <SSD1306Wire.h>
 #include "../../options.h"
@@ -151,7 +152,7 @@ static void irInput(uint32_t now) {
     irrecv.resume();
     if (gIrLog) {
         char line[32];
-        snprintf(line, sizeof(line), "IR: %08lX%s", (unsigned long)code, isRepeat ? " repeat" : "");
+        snprintf_P(line, sizeof(line), PSTR("IR: %08lX%s"), (unsigned long)code, isRepeat ? " repeat" : "");
         logText(LC_MENU, isRepeat ? LL_DEBUG : LL_INFO, line);   // a held key repeats every ~110 ms
     }
     bool repeat = false;
@@ -206,7 +207,7 @@ static void advControllerUpdate(uint32_t now) {
     static bool prompted = false;
     if (!prompted && gBe.signal().advControllerUpdateAvailable) {
         char id[9];
-        snprintf(id, sizeof(id), "%08lX", (unsigned long)advControllerImageCrc());
+        snprintf_P(id, sizeof(id), PSTR("%08lX"), (unsigned long)advControllerImageCrc());
         if (strcmp(uopt->advControllerSkip, id) == 0) prompted = true;
         else if (gEngine.promptAdvController(now)) prompted = true;    // retried while a menu or an overlay is shown
     }

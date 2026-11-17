@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "../util/pgm.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -65,26 +66,26 @@ bool BackupStreamer::nextSection() {
         if (section_ < marker) {
             const SettingsSection& s = kSettings[section_];
             if (!fs_->exists(s.path)) continue;
-            snprintf(path_, sizeof(path_), "%s", s.path);
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[file %s]\n", s.name);
+            snprintf_P(path_, sizeof(path_), PSTR("%s"), s.path);
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[file %s]\n"), s.name);
             filtered_ = true;
         } else if (section_ == marker) {
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[profiles]\n");
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[profiles]\n"));
             pendingPos_ = 0;
             return true;   // no file
         } else if (section_ == raw) {
             if (!fs_->exists(kProfilesPath)) continue;
-            snprintf(path_, sizeof(path_), "%s", kProfilesPath);
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[raw cfg/profiles.cfg]\n");
+            snprintf_P(path_, sizeof(path_), PSTR("%s"), kProfilesPath);
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[raw cfg/profiles.cfg]\n"));
             filtered_ = false;
         } else if (section_ - firstProfile < idCount_) {
             const char* id = ids_[section_ - firstProfile];
-            snprintf(path_, sizeof(path_), "/profiles/%s.cfg", id);
+            snprintf_P(path_, sizeof(path_), PSTR("/profiles/%s.cfg"), id);
             if (!fs_->exists(path_)) continue;   // deleted since the snapshot
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[profile %s]\n", id);
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[profile %s]\n"), id);
             filtered_ = false;
         } else if (adv_ && section_ - firstProfile - idCount_ == 0) {
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[adv]\n");
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[adv]\n"));
             pendingPos_ = 0;
             return true;   // no file
         } else if (adv_ && section_ - firstProfile - idCount_ - 1 < presetCount_ + macroCount_) {
@@ -95,7 +96,7 @@ bool BackupStreamer::nextSection() {
             if (i < 0) continue;
             advPath(preset ? ADV_PRESET : ADV_MACRO, (uint8_t)i, path_, sizeof(path_));
             if (!fs_->exists(path_)) continue;   // deleted since the snapshot
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "[adv %s %s]\n", preset ? "preset" : "macro", id);
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("[adv %s %s]\n"), preset ? "preset" : "macro", id);
             filtered_ = false;
         } else {
             return false;
@@ -125,7 +126,7 @@ size_t BackupStreamer::fillSome(char* buf, size_t len) {
             continue;
         }
         if (section_ == -1) {   // header line first
-            pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "%s\n", kHeader);
+            pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("%s\n"), kHeader);
             pendingPos_ = 0;
             section_ = kHeaderSent;
             continue;
@@ -142,7 +143,7 @@ size_t BackupStreamer::fillSome(char* buf, size_t len) {
                 pendingLen_ = pendingPos_ = 0;   // an excluded last line must not resend the previous one
                 if (filtered_ && lineLen_ && !lineOverflow_) {
                     line_[lineLen_] = '\0';
-                    if (!excludedLine(line_)) pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "%s\n", line_);
+                    if (!excludedLine(line_)) pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("%s\n"), line_);
                 }
                 if (!filtered_ && lastByte_ != '\n') { pending_[0] = '\n'; pendingLen_ = 1; }   // the next header on its own line
                 lineLen_ = 0;
@@ -163,7 +164,7 @@ size_t BackupStreamer::fillSome(char* buf, size_t len) {
             if (c == '\n') {
                 line_[lineLen_] = '\0';
                 bool emit = !lineOverflow_ && !excludedLine(line_);
-                if (emit) { pendingLen_ = (size_t)snprintf(pending_, sizeof(pending_), "%s\n", line_); pendingPos_ = 0; }
+                if (emit) { pendingLen_ = (size_t)snprintf_P(pending_, sizeof(pending_), PSTR("%s\n"), line_); pendingPos_ = 0; }
                 lineLen_ = 0; lineOverflow_ = false;
                 if (emit) break;
             } else if (lineLen_ < sizeof(line_) - 2) {
@@ -342,7 +343,7 @@ static void applyLine(const char* line, void* c) {
         else if (s.kind == SK_MARKER) { if (a->deleteProfiles) a->deleteProfiles(a->ctx); }
         else if (s.kind == SK_RAW) a->w = a->fs->openWriter(kProfilesPath);
         else if (s.kind == SK_PROFILE) {
-            char path[24]; snprintf(path, sizeof(path), "/profiles/p%02d.cfg", s.index);
+            char path[24]; snprintf_P(path, sizeof(path), PSTR("/profiles/p%02d.cfg"), s.index);
             a->w = a->fs->openWriter(path);
         }
         else if (s.kind == SK_ADV_MARKER) { if (a->deleteAdv) a->deleteAdv(a->advCtx); }

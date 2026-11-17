@@ -1,4 +1,5 @@
 #include "../profiles/profile-modes.h"
+#include "../util/pgm.h"
 #include "../profiles/profile-store.h"
 #include <Arduino.h>
 #include <LittleFS.h>
@@ -18,8 +19,8 @@ namespace {
 class LittleFsWriter : public SettingsFileWriter {
 public:
     explicit LittleFsWriter(const char* path) {
-        snprintf(path_, sizeof(path_), "%s", path);
-        snprintf(tmp_, sizeof(tmp_), "%s.tmp", path);
+        snprintf_P(path_, sizeof(path_), PSTR("%s"), path);
+        snprintf_P(tmp_, sizeof(tmp_), PSTR("%s.tmp"), path);
         f_ = LittleFS.open(tmp_, "w");
         ok_ = (bool)f_;
     }

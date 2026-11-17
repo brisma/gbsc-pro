@@ -1,5 +1,6 @@
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <SoftwareSerial.h>
 #include "../platform/platform-caps.h"
 #include "../platform/platform-device.h"
@@ -107,11 +108,11 @@ static void logSignal() {
         {ADV_SIG_FREERUN, "free-run"}, {ADV_SIG_FSC, "burst"}, {ADV_SIG_COLORKILL, "colour kill"},
         {ADV_SIG_INTERLACED, "interlaced"}, {ADV_SIG_NONSTD, "non-standard"}};
     char t[LOG_TEXT_MAX + 1];
-    size_t k = (size_t)snprintf(t, sizeof(t), "signal:");
+    size_t k = (size_t)snprintf_P(t, sizeof(t), PSTR("signal:"));
     for (const auto& f : kFlags) {
         bool on = g->flags & f.bit;
         if (have ? on == (bool)(last.flags & f.bit) : !on) continue;   // the first report: what is on
-        if (k < sizeof(t)) k += (size_t)snprintf(t + k, sizeof(t) - k, " %s %s,", f.name, on ? "on" : "off");
+        if (k < sizeof(t)) k += (size_t)snprintf_P(t + k, sizeof(t) - k, PSTR(" %s %s,"), f.name, on ? "on" : "off");
     }
     if (k < sizeof(t))
         snprintf_P(t + k, sizeof(t) - k, PSTR(" %u Hz, std %u, encoder %s, input %s"), (unsigned)g->hz, (unsigned)g->standard,
@@ -265,8 +266,8 @@ static void updaterPass(uint32_t now) {
             logPrintf(LC_UPDATE, LL_INFO, PSTR("ADV Controller update: failed at %s after %lu s, restarts %u"), gUpd.error(),
                       secs, (unsigned)gUpd.restarts());
         gUpdResult = gUpd.state() == AU_DONE ? 1 : 2;
-        if (gUpd.state() == AU_DONE) snprintf(gUpdStatus, sizeof(gUpdStatus), "done");
-        else snprintf(gUpdStatus, sizeof(gUpdStatus), "failed:%s", gUpd.error());
+        if (gUpd.state() == AU_DONE) snprintf_P(gUpdStatus, sizeof(gUpdStatus), PSTR("done"));
+        else snprintf_P(gUpdStatus, sizeof(gUpdStatus), PSTR("failed:%s"), gUpd.error());
         gUpd.finish();
         gClient.restart();                               // PING -> INFO with the new firmware
         gSched.kick();                                   // and the whole state again
@@ -418,7 +419,7 @@ bool advLinkUpdateCanStart() {
 bool advLinkUpdateStart() {
     if (!advLinkUpdateCanStart()) {                  // refused (e.g. after the menu's Yes): reported like a failure
         gUpdResult = 2;
-        snprintf(gUpdStatus, sizeof(gUpdStatus), "failed:busy");
+        snprintf_P(gUpdStatus, sizeof(gUpdStatus), PSTR("failed:busy"));
         return false;
     }
     const AdvControllerInfo& h = gClient.advController();

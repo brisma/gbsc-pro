@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <ESPAsyncWebServer.h>
 #include <memory>
 #include "../../options.h"
@@ -24,13 +25,13 @@ void settingsBroadcastChange(uint8_t index) {
     char key[48], val[40], msg[96];
     settingsKeyCopy(d, key, sizeof(key));
     settingsFormat(d, settingsGet(*uopt, d), val, sizeof(val));
-    snprintf(msg, sizeof(msg), "s:%s=%s", key, val);
+    snprintf_P(msg, sizeof(msg), PSTR("s:%s=%s"), key, val);
     webSocket.broadcastTXT(msg);
 }
 
 void settingsBroadcastStatusText(const char* key, const char* value) {
     char msg[96];   // s:status.profile_autoload=<label>|<label>: 26 + 2 x 25 + 1
-    snprintf(msg, sizeof(msg), "s:%s=%s", key, value);
+    snprintf_P(msg, sizeof(msg), PSTR("s:%s=%s"), key, value);
     webSocket.broadcastTXT(msg);
 }
 
@@ -130,7 +131,7 @@ void settingsPost(AsyncWebServerRequest* req, uint8_t) {
     }
     TextBuf out; textBufInit(out, 1280);
     textBufAppend(out, "{\"ok\":");
-    char num[6]; snprintf(num, sizeof(num), "%u", r.okCount); textBufAppend(out, num);
+    char num[6]; snprintf_P(num, sizeof(num), PSTR("%u"), r.okCount); textBufAppend(out, num);
     textBufAppend(out, ",\"errors\":{"); if (err.data) textBufAppend(out, err.data); textBufAppend(out, "}}");
     sendJson(req, out.failed ? 500 : (r.errCount ? 400 : 200), out.data ? out.data : "{}");
     textBufFree(out); textBufFree(err);

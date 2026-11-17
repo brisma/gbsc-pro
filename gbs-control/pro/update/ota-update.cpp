@@ -1,4 +1,5 @@
 #include "../log/log.h"
+#include "../util/pgm.h"
 #include "../log/event-ring.h"
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -78,9 +79,9 @@ void finishCheck() {
     bool had = gOfferFor == gChosen;
     gOffer = otaAfterCheck(had ? gOffer : OtaOffer(), best, gReadOk);   // an outage keeps the offer being confirmed
     gOfferFor = gChosen;
-    if (!gReadOk) snprintf(v, sizeof(v), "error:%s", gLastErr);
-    else if (gOffer.any) snprintf(v, sizeof(v), "%s", gOffer.m.version);
-    else snprintf(v, sizeof(v), "none");
+    if (!gReadOk) snprintf_P(v, sizeof(v), PSTR("error:%s"), gLastErr);
+    else if (gOffer.any) snprintf_P(v, sizeof(v), PSTR("%s"), gOffer.m.version);
+    else snprintf_P(v, sizeof(v), PSTR("none"));
     setLast(v);
     settingsBroadcastStatusText("status.update_available", v);
     if (gOffer.any) {
@@ -134,7 +135,7 @@ void startCheck(bool fromUser) {
 
 bool refuse(bool fromUser, const char* code) {
     char v[24];
-    snprintf(v, sizeof(v), "error:%s", code);
+    snprintf_P(v, sizeof(v), PSTR("error:%s"), code);
     settingsBroadcastStatusText("status.update_available", v);
     logPrintf(LC_UPDATE, LL_INFO, PSTR("check refused: %s"), code);
     if (fromUser) {
@@ -148,7 +149,7 @@ bool refuse(bool fromUser, const char* code) {
 // A refused install: status, log and a toast on the TV/OLED (the reason is shown and logged)
 bool installRefused(const char* code) {
     char v[24], t[29];
-    snprintf(v, sizeof(v), "error:%s", code);
+    snprintf_P(v, sizeof(v), PSTR("error:%s"), code);
     settingsBroadcastStatusText("status.update", v);
     logPrintf(LC_UPDATE, LL_INFO, PSTR("install refused: %s"), code);
     otaInstallFailText(code, t, sizeof(t));

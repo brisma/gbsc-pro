@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include "../../options.h"
 #include "../../tv5725.h"
 #include "../gbs-control-pro.h"
@@ -161,7 +162,7 @@ static void logScanStart(bool link) {
     size_t k = 0;
     list[0] = '\0';
     for (uint8_t i = 0; i < n && k < sizeof(list); i++)
-        k += (size_t)snprintf(list + k, sizeof(list) - k, "%s%s", i ? " > " : "", inputLongName(order[i]));
+        k += (size_t)snprintf_P(list + k, sizeof(list) - k, PSTR("%s%s"), i ? " > " : "", inputLongName(order[i]));
     logPrintf(LC_SCAN, LL_INFO, PSTR("start (%s): %s"), whyName(gAuto.scanReason()), list);
 }
 

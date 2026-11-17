@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 #include "profile-names.h"
 #include "../input/input-types.h"
@@ -38,15 +39,15 @@ bool profileNameSame(const char* a, const char* b) {
 }
 
 void profileNameUnique(const char* base, ProfileNameTaken taken, void* ctx, char* out, size_t n) {
-    snprintf(out, n, "%s", base);
+    snprintf_P(out, n, PSTR("%s"), base);
     if (!taken(out, ctx)) return;
     for (int k = 2; k < 100; k++) {
         char suffix[5];
-        int sl = snprintf(suffix, sizeof(suffix), " %d", k);
+        int sl = snprintf_P(suffix, sizeof(suffix), PSTR(" %d"), k);
         size_t keep = strlen(base);
         if (keep + (size_t)sl > PROFILE_NAME_MAX) keep = PROFILE_NAME_MAX - (size_t)sl;
         while (keep && base[keep - 1] == ' ') keep--;
-        snprintf(out, n, "%.*s%s", (int)keep, base, suffix);
+        snprintf_P(out, n, PSTR("%.*s%s"), (int)keep, base, suffix);
         if (!taken(out, ctx)) return;
     }
 }
@@ -58,11 +59,11 @@ void profileExportFileName(const char* name, char* out, size_t n) {
         out[o++] = (c == '/' || c == ':' || c == '\'' || c == ' ') ? '_' : c;
     }
     out[o] = '\0';
-    snprintf(out + o, n - o, ".gbscprofile.txt");
+    snprintf_P(out + o, n - o, PSTR(".gbscprofile.txt"));
 }
 
 void profileGeneratedName(uint8_t input, uint8_t sourceMode, bool interlaced, bool hasSignal, char* out, size_t n) {
-    if (!hasSignal || !inputTypeValid(input)) { snprintf(out, n, "Profile"); return; }
+    if (!hasSignal || !inputTypeValid(input)) { snprintf_P(out, n, PSTR("Profile")); return; }
     const char* res = nullptr;
     switch (sourceMode) {
         case 1: res = interlaced ? "480i" : "240p"; break;
@@ -72,8 +73,8 @@ void profileGeneratedName(uint8_t input, uint8_t sourceMode, bool interlaced, bo
         case 8: res = "medium"; break;
         default: break;
     }
-    if (res) snprintf(out, n, "%s %s", inputLongName(input), res);
-    else snprintf(out, n, "%s", inputLongName(input));
+    if (res) snprintf_P(out, n, PSTR("%s %s"), inputLongName(input), res);
+    else snprintf_P(out, n, PSTR("%s"), inputLongName(input));
 }
 
 static const char* const kRegions[PROFILE_REGION_COUNT] = {"NTSC-U", "NTSC-J", "PAL", "PAL60", "None"};
@@ -109,7 +110,7 @@ uint8_t profileReplaceRegion(bool named, uint8_t region) {
 
 void profileNameWithoutRegion(const char* name, uint8_t region, char* out, size_t n) {
     if (!n) return;
-    snprintf(out, n, "%s", name ? name : "");
+    snprintf_P(out, n, PSTR("%s"), name ? name : "");
     if (region >= PROFILE_REGION_NONE) return;
     if (stripWord(out, kRegions[region])) return;
     if (region == PROFILE_REGION_NTSC_U) stripWord(out, "NTSC");      // old names (NTSC, JP)
@@ -124,15 +125,15 @@ void profileLabel(const char* name, uint8_t region, char* out, size_t n) {
 
 void profileNameWithRegion(const char* base, uint8_t region, char* out, size_t n) {
     if (!n) return;
-    if (region >= PROFILE_REGION_NONE) { snprintf(out, n, "%s", base); return; }
+    if (region >= PROFILE_REGION_NONE) { snprintf_P(out, n, PSTR("%s"), base); return; }
     const char* suffix = kRegions[region];
     size_t cap = n - 1 < PROFILE_LABEL_MAX ? n - 1 : PROFILE_LABEL_MAX, sl = strlen(suffix);
-    if (cap < sl + 2) { snprintf(out, n, "%s", base); return; }   // no room for "x REGION": what fits of the name
+    if (cap < sl + 2) { snprintf_P(out, n, PSTR("%s"), base); return; }   // no room for "x REGION": what fits of the name
     size_t room = cap - 1 - sl;                                   // base characters that fit before " REGION"
     char b[PROFILE_NAME_MAX + 1];
-    snprintf(b, sizeof(b), "%s", base);
+    snprintf_P(b, sizeof(b), PSTR("%s"), base);
     if (strlen(b) > room) b[room] = '\0';
     size_t len = strlen(b);
     while (len && b[len - 1] == ' ') b[--len] = '\0';
-    snprintf(out, n, "%s %s", b, suffix);
+    snprintf_P(out, n, PSTR("%s %s"), b, suffix);
 }

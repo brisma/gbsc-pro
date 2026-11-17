@@ -1,4 +1,5 @@
 #include "log-lines.h"
+#include "../util/pgm.h"
 #include <stdio.h>
 
 void LogLineSplitter::emit(LogLineOut out, void* ctx, bool lineEnds) {
@@ -56,7 +57,7 @@ size_t LogMarks::take(char* out, size_t n) {
     if (n) out[0] = '\0';
     for (uint8_t i = 0; i < LM_COUNT; i++) {
         if (!counts_[i]) continue;
-        int w = snprintf(out + k, n > k ? n - k : 0, "%s%s x%u", k ? ", " : "", kNames[i], (unsigned)counts_[i]);
+        int w = snprintf_P(out + k, n > k ? n - k : 0, PSTR("%s%s x%u"), k ? ", " : "", kNames[i], (unsigned)counts_[i]);
         if (w > 0) k = k + (size_t)w < n ? k + (size_t)w : (n ? n - 1 : 0);
         counts_[i] = 0;
     }

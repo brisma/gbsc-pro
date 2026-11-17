@@ -130,16 +130,16 @@ static void formatLive(uint8_t lv, int32_t v, char* out, size_t n) {
     static const char* const kSdram[8] = {"108MHz", "81MHz", "FB", "162MHz", "144MHz", "185MHz", "216MHz", "129MHz"};
     switch (lv) {
         case LV_ADC_GAIN: case LV_HTOTAL: case LV_PLL_DIV:
-            snprintf(out, n, "%ld", (long)v); break;
+            snprintf_P(out, n, PSTR("%ld"), (long)v); break;
         case LV_DEBUG_VIEW: case LV_FREEZE: case LV_IF_OFFSET: case LV_SYNCWATCHER:
         case LV_OSD_ALWAYS_ON: case LV_OSD_TEST: case LV_PRINT_INFO: case LV_IR_LOG: case LV_OTA:
             copyStr(out, n, onOff(v != 0)); break;
         case LV_POSITION: case LV_SIZE: case LV_BORDERS: case LV_BORDER_POS:
-            snprintf(out, n, "%ld/%ld", (long)((v >> 16) & 0xFFFF), (long)(v & 0xFFFF)); break;
+            snprintf_P(out, n, PSTR("%ld/%ld"), (long)((v >> 16) & 0xFFFF), (long)(v & 0xFFFF)); break;
         case LV_SDRAM: copyStr(out, n, (v >= 0 && v < 8) ? kSdram[v] : "-"); break;
-        case LV_OSR: snprintf(out, n, "%ldx", (long)v); break;
+        case LV_OSR: snprintf_P(out, n, PSTR("%ldx"), (long)v); break;
         case LV_ADC_FILTER: copyStr(out, n, onOff(v > 0)); break;
-        case LV_SOG: snprintf(out, n, "%ld", (long)v); break;
+        case LV_SOG: snprintf_P(out, n, PSTR("%ld"), (long)v); break;
         case LV_SYNC_POLARITY: copyStr(out, n, v ? "Inverted" : "Normal"); break;
         case LV_OUT_RATE: copyStr(out, n, (v >= 565 && v <= 645) ? "60Hz" : (v >= 465 && v <= 545) ? "50Hz" : "-"); break;
         default: copyStr(out, n, ""); break;

@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <LittleFS.h>
 #include <memory>
 #include <new>
@@ -79,7 +80,7 @@ void setActive(int index) {
 
 void storeHash() {
     char hex[9];
-    snprintf(hex, sizeof(hex), "%08lx", (unsigned long)settingsScopeCrc(*uopt, SettingScope::Profile));
+    snprintf_P(hex, sizeof(hex), PSTR("%08lx"), (unsigned long)settingsScopeCrc(*uopt, SettingScope::Profile));
     int s = settingsStrFind("profile.hash");
     if (s >= 0) { StrSettingDef d; settingsStrDefAt((uint8_t)s, d); settingsStrPut(*uopt, d, hex); }
     gModified = false;
@@ -88,7 +89,7 @@ void storeHash() {
 
 bool computeModified() {
     char hex[9];
-    snprintf(hex, sizeof(hex), "%08lx", (unsigned long)settingsScopeCrc(*uopt, SettingScope::Profile));
+    snprintf_P(hex, sizeof(hex), PSTR("%08lx"), (unsigned long)settingsScopeCrc(*uopt, SettingScope::Profile));
     return profileModifiedRule(strcmp(hex, uopt->profileHash) != 0, gRegsTouched, gActive >= 0);
 }
 
@@ -153,7 +154,7 @@ const char* writeWorkingState(uint8_t index, const char* name, bool existed, uin
     if (!existed || !readMeta(index, m)) { profileMetaInit(m); }
     strncpy(m.name, name, sizeof(m.name) - 1);
     m.name[sizeof(m.name) - 1] = '\0';
-    if (region < PROFILE_REGION_COUNT) snprintf(m.region, sizeof(m.region), "%s", profileRegionName(region));
+    if (region < PROFILE_REGION_COUNT) snprintf_P(m.region, sizeof(m.region), PSTR("%s"), profileRegionName(region));
 
     bool signal = profileSignalPresent();
     uint8_t regMode = profileRegModeOf(rto->videoStandardInput, rto->presetIsPalForce60);
@@ -224,7 +225,7 @@ void regLine(const char* line, void* ctx) { ((RegCtx*)ctx)->r.line(line); }
 
 } // namespace
 
-void profilePath(uint8_t index, char out[24]) { snprintf(out, 24, "/profiles/p%02u.cfg", (unsigned)index); }
+void profilePath(uint8_t index, char out[24]) { snprintf_P(out, 24, PSTR("/profiles/p%02u.cfg"), (unsigned)index); }
 
 const ProfileList& profileList() { return gList; }
 int profileActiveIndex() { return gActive; }
@@ -540,7 +541,7 @@ void profileTick() {
     }
     if (gRev != sentListRev) {
         sentListRev = gRev;
-        char v[8]; snprintf(v, sizeof(v), "%u", gRev);
+        char v[8]; snprintf_P(v, sizeof(v), PSTR("%u"), gRev);
         settingsBroadcastStatusText("status.profiles_rev", v);
     }
 }
@@ -604,9 +605,9 @@ static void logProfileOp(const ProfileOp& op, const char* err) {
         default: break;
     }
     char who[PROFILE_NAME_BUF + 1] = "";   // " " + a whole name
-    if (op.kind == POP_SAVEAS && op.name[0]) snprintf(who, sizeof(who), " %s", op.name);
+    if (op.kind == POP_SAVEAS && op.name[0]) snprintf_P(who, sizeof(who), PSTR(" %s"), op.name);
     else if (op.index >= 0 && op.kind != POP_DEFAULTS && op.kind != POP_IMPORT && op.kind != POP_SAVEAS_GENERATED)
-        snprintf(who, sizeof(who), " p%02d", op.index);
+        snprintf_P(who, sizeof(who), PSTR(" p%02d"), op.index);
     if (err) logPrintf(LC_PROFILE, LL_INFO, PSTR("%s%s: failed (%s)"), what, who, err);
     else logPrintf(LC_PROFILE, LL_INFO, PSTR("%s%s: ok"), what, who);
 }

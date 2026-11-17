@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 #include "stv9426-driver.h"
 #include "stv9426-udc.h"
@@ -172,8 +173,8 @@ void Stv9426::romDump(void (*line)(const char* text, void* ctx), void* ctx, uint
     uint8_t data[32];
     for (uint16_t a = from, n = 0; a < 0x3300 && n < lines; a += 32, n++) {
         bus_.read(a, data, sizeof(data));
-        int o = snprintf(buf, sizeof(buf), "%04X:", a);
-        for (uint8_t i = 0; i < 32; i++) o += snprintf(buf + o, sizeof(buf) - o, " %02X", data[i]);
+        int o = snprintf_P(buf, sizeof(buf), PSTR("%04X:"), a);
+        for (uint8_t i = 0; i < 32; i++) o += snprintf_P(buf + o, sizeof(buf) - o, PSTR(" %02X"), data[i]);
         line(buf, ctx);
     }
 }

@@ -1,4 +1,5 @@
 #include "menu-keyboard.h"
+#include "../util/pgm.h"
 #include <string.h>
 #include <stdio.h>
 #include "menu-types.h"
@@ -19,7 +20,7 @@ uint8_t MenuKeyboard::maxLen() const {
 
 void MenuKeyboard::open(uint8_t purpose, const char* initial) {
     purpose_ = purpose;
-    snprintf(text_, (size_t)maxLen() + 1, "%s", initial ? initial : "");
+    snprintf_P(text_, (size_t)maxLen() + 1, PSTR("%s"), initial ? initial : "");
     cur_ = (uint8_t)strlen(text_);
     row_ = col_ = 0;
     upper_ = true;
@@ -34,7 +35,7 @@ char MenuKeyboard::keyChar(uint8_t r, uint8_t c) const {
 
 void MenuKeyboard::rowText(uint8_t r, char* out, size_t n) const {
     if (!n) return;
-    if (r == 3) { snprintf(out, n, "aA < > Space Del Done"); return; }
+    if (r == 3) { snprintf_P(out, n, PSTR("aA < > Space Del Done")); return; }
     size_t i = 0;
     for (uint8_t c = 0; c < rowLength(r) && i + 1 < n; c++) out[i++] = keyChar(r, c);
     out[i] = '\0';

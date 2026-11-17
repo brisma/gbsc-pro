@@ -1,7 +1,25 @@
 #include "oled-renderer.h"
+#include "../util/pgm.h"
 #include "marquee.h"
 #include <string.h>
 #include <stdio.h>
+
+namespace {
+// fontData is protected in OLEDDisplay: a member pointer taken through a derived type reads it (never instantiated)
+struct FontPeek : OLEDDisplay {
+    static const uint8_t* of(OLEDDisplay& d) { return d.*(&FontPeek::fontData); }
+};
+const uint8_t* gFont10 = nullptr;
+}  // namespace
+
+const uint8_t* oledFont10(OLEDDisplay& d) {
+    if (!gFont10) gFont10 = FontPeek::of(d);   // the library's default: ArialMT_Plain_10
+    return gFont10;
+}
+const uint8_t* oledFont16(OLEDDisplay& d) {
+    oledFont10(d);                             // the default is read before the first change of font
+    return ArialMT_Plain_16;
+}
 
 static const int16_t kW = 128;
 static const int16_t kTitleH = 14;        // inverted title band rows 0..12 (text rows 3..11), rows from 14
@@ -19,15 +37,15 @@ static uint16_t textW(OLEDDisplay& d, const char* s) { return d.getStringWidth(s
 
 // Copy of text cut with a trailing '.' so that it fits maxW pixels
 static void clipText(OLEDDisplay& d, const char* text, int16_t maxW, char* out, size_t n) {
-    snprintf(out, n, "%s", text);
+    snprintf_P(out, n, PSTR("%s"), text);
     if (maxW <= 0) { out[0] = 0; return; }
     if (textW(d, out) <= maxW) return;
     size_t len = strlen(out);
     while (len > 0) {
         out[--len] = 0;
         char t[40];
-        snprintf(t, sizeof(t), "%s.", out);
-        if (textW(d, t) <= maxW) { snprintf(out, n, "%s", t); return; }
+        snprintf_P(t, sizeof(t), PSTR("%s."), out);
+        if (textW(d, t) <= maxW) { snprintf_P(out, n, PSTR("%s"), t); return; }
     }
 }
 
@@ -71,7 +89,7 @@ static const char* shownValue(const MenuViewRow& r) {
 }
 
 bool OledRenderer::rowFits(OLEDDisplay& d, const char* label, const char* value, uint8_t kind) {
-    d.setFont(ArialMT_Plain_10);
+    d.setFont(oledFont10(d));
     if (kind == ROWK_SLIDER) return (int16_t)textW(d, value) <= kSliderValueW;   // the label is clipped to 66 px
     int16_t room = kRight - kLabelX;
     int16_t need = (int16_t)textW(d, label);
@@ -98,12 +116,12 @@ void OledRenderer::drawRow(const MenuViewRow& r, int16_t y) {
     }
     const char* val = shownValue(r);
     char v[40];
-    snprintf(v, sizeof(v), "%s", val);
+    snprintf_P(v, sizeof(v), PSTR("%s"), val);
     int16_t labelW = (int16_t)textW(d_, r.label);
     bool slider = (r.flags & ROWF_SLIDER) && r.slider >= 0 && !(r.flags & ROWF_DISABLED);
     bool subValue = r.kind == ROWK_SUB && r.value[0];   // "<value> >" on the Profiles row
     int16_t subW = subValue ? (int16_t)textW(d_, " >") : 0;
-    if (subValue) snprintf(v, sizeof(v), "%s", r.value);
+    if (subValue) snprintf_P(v, sizeof(v), PSTR("%s"), r.value);
     if (r.kind == ROWK_LIVE && v[0]) {                  // free text: the value is clipped, never the label
         int16_t room = kRight - (lx + labelW + kGap);
         clipText(d_, val, room, v, sizeof(v));
@@ -115,7 +133,7 @@ void OledRenderer::drawRow(const MenuViewRow& r, int16_t y) {
         if (sel && !edit) from += marqueeOffset((uint16_t)(skipToFit(base, room) + 1), 1, since(rowScroll_, base), kRowScroll);
         clipText(d_, from, room, v, sizeof(v));
     }
-    if (subValue) { size_t l = strlen(v); snprintf(v + l, sizeof(v) - l, " >"); }
+    if (subValue) { size_t l = strlen(v); snprintf_P(v + l, sizeof(v) - l, PSTR(" >")); }
     int16_t vw = (int16_t)textW(d_, v);
     int16_t vx = kRight - vw;
     int16_t limit = v[0] ? vx - kGap : kRight;
@@ -178,9 +196,9 @@ void OledRenderer::plainRow(int16_t y, const char* label, const char* value, Mar
 }
 
 void OledRenderer::bigValue(const char* text) {
-    d_.setFont(ArialMT_Plain_16);
+    d_.setFont(oledFont16(d_));
     centered(18, text);
-    d_.setFont(ArialMT_Plain_10);
+    d_.setFont(oledFont10(d_));
 }
 
 void OledRenderer::frameBar(int16_t fill108) {
@@ -209,7 +227,7 @@ uint8_t oledInfoRows(const MenuView& v, OledInfoRow out[5]) {
         if (n >= sizeof(val)) n = sizeof(val) - 1;
         memcpy(val, p, n);
         val[n] = 0;
-        if (!strncmp(l, "IN ", 3)) { snprintf(in.label, sizeof(in.label), "Input"); snprintf(in.value, sizeof(in.value), "%s", val); hIn = true; }
+        if (!strncmp(l, "IN ", 3)) { snprintf_P(in.label, sizeof(in.label), PSTR("Input")); snprintf_P(in.value, sizeof(in.value), PSTR("%s"), val); hIn = true; }
         else if (!strncmp(l, "OUT", 3)) {                 // resolution + rate ("60.0Hz" -> "60Hz")
             char hz[12] = "";
             if (gap) {
@@ -221,16 +239,16 @@ uint8_t oledInfoRows(const MenuView& v, OledInfoRow out[5]) {
                 char* dot = strstr(hz, ".0Hz");
                 if (dot) memmove(dot, dot + 2, strlen(dot + 2) + 1);
             }
-            snprintf(outr.label, sizeof(outr.label), "Output");
+            snprintf_P(outr.label, sizeof(outr.label), PSTR("Output"));
             snprintf(outr.value, sizeof(outr.value), hz[0] ? "%s %s" : "%s", val, hz);
             outr.lock = strstr(l, " LOCK") != nullptr;
             hOut = true;
         } else if (!strncmp(l, "PROF", 4)) {             // the whole name (user names may hold double spaces)
-            snprintf(prof.label, sizeof(prof.label), "Profile"); snprintf(prof.value, sizeof(prof.value), "%s", p); hProf = true;
+            snprintf_P(prof.label, sizeof(prof.label), PSTR("Profile")); snprintf_P(prof.value, sizeof(prof.value), PSTR("%s"), p); hProf = true;
         } else if (!strncmp(l, "NET", 3)) {              // the whole network name, as the profile
-            snprintf(net.label, sizeof(net.label), "WiFi"); snprintf(net.value, sizeof(net.value), "%s", p); hNet = true;
+            snprintf_P(net.label, sizeof(net.label), PSTR("WiFi")); snprintf_P(net.value, sizeof(net.value), PSTR("%s"), p); hNet = true;
         } else if (!strncmp(l, "IP ", 3)) {
-            snprintf(ip.label, sizeof(ip.label), "IP"); snprintf(ip.value, sizeof(ip.value), "%s", val); hIp = true;
+            snprintf_P(ip.label, sizeof(ip.label), PSTR("IP")); snprintf_P(ip.value, sizeof(ip.value), PSTR("%s"), val); hIp = true;
         }
     }
     uint8_t k = 0;
@@ -245,29 +263,29 @@ uint8_t oledInfoRows(const MenuView& v, OledInfoRow out[5]) {
 static const int16_t kLockW = 9;                       // 7 px icon + 2 px gap
 
 void oledInfoShownValue(OLEDDisplay& d, const OledInfoRow& r, char* out, size_t n) {
-    d.setFont(ArialMT_Plain_10);
+    d.setFont(oledFont10(d));
     int16_t room = kRight - (kLabelX + (int16_t)textW(d, r.label) + kGap) - (r.lock ? kLockW : 0);
-    snprintf(out, n, "%s", r.value);
+    snprintf_P(out, n, PSTR("%s"), r.value);
     const char* x = strchr(r.value, 'x');
     if ((int16_t)textW(d, out) > room && x && x > r.value) {   // "<w>x<h> <rate>" -> "<h>p <rate>"
         const char* sp = strchr(x, ' ');
         size_t hl = sp ? (size_t)(sp - x - 1) : strlen(x + 1);
-        snprintf(out, n, "%.*sp%s", (int)hl, x + 1, sp ? sp : "");
+        snprintf_P(out, n, PSTR("%.*sp%s"), (int)hl, x + 1, sp ? sp : "");
     }
     char t[40];
     clipText(d, out, room, t, sizeof(t));
-    snprintf(out, n, "%s", t);
+    snprintf_P(out, n, PSTR("%s"), t);
 }
 
 void OledRenderer::drawList(const MenuView& v) {
     char pos[8] = "";
-    if (v.posCount && v.posIndex) snprintf(pos, sizeof(pos), "%u/%u", v.posIndex, v.posCount);
+    if (v.posCount && v.posIndex) snprintf_P(pos, sizeof(pos), PSTR("%u/%u"), v.posIndex, v.posCount);
     // The selected row's description, once, after the cursor rests 1.5 s (not while editing a value)
     const MenuViewRow* cur = v.rowCount && v.cursorRow < v.rowCount ? &v.rows[v.cursorRow] : nullptr;
     bool shown = false;
     if (cur && v.help[0] && !(cur->flags & ROWF_EDITING)) {
         char key[sizeof(cur->label) + sizeof(v.help)];   // label + '|' + help + NUL
-        snprintf(key, sizeof(key), "%s|%s", cur->label, v.help);   // a new row restarts it, even with the same text
+        snprintf_P(key, sizeof(key), PSTR("%s|%s"), cur->label, v.help);   // a new row restarts it, even with the same text
         uint32_t e = since(bandScroll_, key);
         if (e >= kBandRestMs) {
             e -= kBandRestMs;
@@ -303,7 +321,7 @@ void OledRenderer::drawOverlay(const MenuView& v) {
     switch (v.overlay) {
         case OV_VOLUME:
             band(v.lines[0]);
-            snprintf(t, sizeof(t), "%d%%", v.value);
+            snprintf_P(t, sizeof(t), PSTR("%d%%"), v.value);
             bigValue(t);
             frameBar((int16_t)((v.value * 108 + 50) / 100));   // percent
             break;
@@ -385,10 +403,10 @@ void OledRenderer::drawOverlay(const MenuView& v) {
             if (n >= sizeof(label)) n = sizeof(label) - 1;
             memcpy(label, v.lines[0], n);
             label[n] = 0;
-            snprintf(value, sizeof(value), "%s", sep ? sep + 2 : "");
+            snprintf_P(value, sizeof(value), PSTR("%s"), sep ? sep + 2 : "");
             band(label);
             bigValue(value);
-            snprintf(t, sizeof(t), "Keep? %ds", v.value);
+            snprintf_P(t, sizeof(t), PSTR("Keep? %ds"), v.value);
             feet(t, "Click keep  Hold undo");
             break;
         }
@@ -407,7 +425,7 @@ void OledRenderer::drawOverlay(const MenuView& v) {
                 break;
             }
             int pct = v.value < 0 ? 0 : v.value;
-            snprintf(t, sizeof(t), "%d%%", pct);
+            snprintf_P(t, sizeof(t), PSTR("%d%%"), pct);
             bigValue(t);
             frameBar((int16_t)((pct * 108 + 50) / 100));
             break;
@@ -420,7 +438,7 @@ void OledRenderer::drawOverlay(const MenuView& v) {
         case OV_KEYBOARD: drawKeyboard(v); break;
         case OV_TVOSD:
             band(v.lines[0]);
-            snprintf(t, sizeof(t), "%ds", v.value);
+            snprintf_P(t, sizeof(t), PSTR("%ds"), v.value);
             bigValue(t);
             feet("Turn = change", "Click next  Hold exit");
             break;
@@ -443,7 +461,7 @@ void OledRenderer::drawKeyboard(const MenuView& v) {
     while (caret && textW(d_, f) > 118) { f++; caret--; }
     d_.drawString(2, 11, f);
     char before[40];
-    snprintf(before, sizeof(before), "%.*s", (int)caret, f);
+    snprintf_P(before, sizeof(before), PSTR("%.*s"), (int)caret, f);
     int16_t cx = (int16_t)(3 + textW(d_, before));
     d_.fillRect(cx, 14, 1, 9);
     uint8_t selRow = (uint8_t)(v.value / 16), selCol = (uint8_t)(v.value % 16);
@@ -512,20 +530,20 @@ void OledRenderer::drawIdle(const MenuIdle& idle) {
     wifiBars(d_, 116, 3, idle.rssi);
     d_.setColor(WHITE);
     if (!idle.noSignal) {
-        d_.setFont(ArialMT_Plain_16);
+        d_.setFont(oledFont16(d_));
         boxed(32, 13, idle.inRes, 1, 57);
         boxed(96, 13, idle.outRes, 70, 126);
-        d_.setFont(ArialMT_Plain_10);
+        d_.setFont(oledFont10(d_));
         icon(60, 19, kIcoArrow, 7);
         boxed(32, 29, idle.inLine, 1, 63);
         int16_t lockW = idle.locked ? 9 : 0;
         int16_t x = boxed(96, 29, idle.outHz, 66, (int16_t)(126 - lockW));
         if (idle.locked) icon((int16_t)(x + textW(d_, idle.outHz) + 2), 32, kIcoLock, 7);
     } else {
-        d_.setFont(ArialMT_Plain_16);
+        d_.setFont(oledFont16(d_));
         d_.setTextAlignment(TEXT_ALIGN_CENTER);
         d_.drawString(kW / 2, 13, idle.searching ? "Searching" : "No signal");
-        d_.setFont(ArialMT_Plain_10);
+        d_.setFont(oledFont10(d_));
         d_.drawString(kW / 2, 29, idle.inLine);
         d_.setTextAlignment(TEXT_ALIGN_LEFT);
     }
@@ -551,8 +569,8 @@ void OledRenderer::drawIdle(const MenuIdle& idle) {
         return;
     }
     char vol[8];
-    if (idle.muted) snprintf(vol, sizeof(vol), "Mute");
-    else snprintf(vol, sizeof(vol), "%u%%", idle.volume);
+    if (idle.muted) snprintf_P(vol, sizeof(vol), PSTR("Mute"));
+    else snprintf_P(vol, sizeof(vol), PSTR("%u%%"), idle.volume);
     int16_t vw = (int16_t)textW(d_, vol);
     d_.setTextAlignment(TEXT_ALIGN_RIGHT);
     d_.drawString(126, 52, vol);
@@ -565,13 +583,13 @@ void OledRenderer::drawIdle(const MenuIdle& idle) {
 // "No signal" and the input), placed at a random position that changes every kSaverStepMs (no pixel stays lit)
 void OledRenderer::drawSaver(const MenuIdle& idle) {
     char line2[40];
-    if (idle.noSignal) snprintf(line2, sizeof(line2), "%s", idle.inLine);
+    if (idle.noSignal) snprintf_P(line2, sizeof(line2), PSTR("%s"), idle.inLine);
     else if (idle.profile[0]) snprintf(line2, sizeof(line2), idle.region[0] ? "%s  %s" : "%s", idle.profile, idle.region);
     else snprintf(line2, sizeof(line2), idle.region[0] ? "%s  %s" : "%s%s", idle.region, idle.outHz);
-    d_.setFont(ArialMT_Plain_16);
+    d_.setFont(oledFont16(d_));
     int16_t wIn = (int16_t)textW(d_, idle.inRes), wOut = (int16_t)textW(d_, idle.outRes);
     int16_t w1 = idle.noSignal ? (int16_t)textW(d_, "No signal") : (int16_t)(wIn + 14 + wOut);
-    d_.setFont(ArialMT_Plain_10);
+    d_.setFont(oledFont10(d_));
     int16_t w2 = (int16_t)textW(d_, line2);
     if (w2 > kW) w2 = kW;
     int16_t w = w1 > w2 ? w1 : w2;
@@ -580,24 +598,24 @@ void OledRenderer::drawSaver(const MenuIdle& idle) {
     int16_t y = (int16_t)((lcg_ >> 8) % (uint32_t)(64 - h + 1));
     int16_t x1 = (int16_t)(x + (w - w1) / 2);
     d_.setColor(WHITE);
-    d_.setFont(ArialMT_Plain_16);
+    d_.setFont(oledFont16(d_));
     if (idle.noSignal) {
         d_.drawString(x1, y, "No signal");
     } else {
         d_.drawString(x1, y, idle.inRes);
-        d_.setFont(ArialMT_Plain_10);
+        d_.setFont(oledFont10(d_));
         icon((int16_t)(x1 + wIn + 3), (int16_t)(y + 6), kIcoArrow, 7);
-        d_.setFont(ArialMT_Plain_16);
+        d_.setFont(oledFont16(d_));
         d_.drawString((int16_t)(x1 + wIn + 14), y, idle.outRes);
     }
-    d_.setFont(ArialMT_Plain_10);
+    d_.setFont(oledFont10(d_));
     clipped((int16_t)(x + (w - w2) / 2), (int16_t)(y + 17), line2, kW);
 }
 
 void OledRenderer::draw(const MenuView& v, const MenuIdle& idle, bool saver, uint32_t now) {
     now_ = now;
     d_.clear();
-    d_.setFont(ArialMT_Plain_10);
+    d_.setFont(oledFont10(d_));
     d_.setTextAlignment(TEXT_ALIGN_LEFT);
     d_.setColor(WHITE);
     if (v.mode == VIEW_LIST) drawList(v);
@@ -615,7 +633,7 @@ bool OledRenderer::scrollPossible(const MenuView& v, const MenuIdle& idle, bool 
     if (v.mode == VIEW_LIST) return true;               // band description, selected long label
     if (v.mode == VIEW_OVERLAY && v.overlay == OV_INFO) return true;   // a long profile name
     if (v.mode != VIEW_CLOSED || saver || !idle.profile[0]) return false;
-    d_.setFont(ArialMT_Plain_10);
+    d_.setFont(oledFont10(d_));
     return (int16_t)textW(d_, idle.profile) > 70;      // the home screen's profile space may be too narrow for it
 }
 

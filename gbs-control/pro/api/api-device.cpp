@@ -1,4 +1,5 @@
 #include "../log/log.h"
+#include "../util/pgm.h"
 #include <Arduino.h>
 #include "../../options.h"
 #include "../settings/settings-registry.h"
@@ -33,9 +34,6 @@
 #include "../ui/menu-backend.h"
 #include <SSD1306Wire.h>
 void tv5725WriteReg(uint8_t segment, uint8_t reg, uint8_t value);   // gbs-control.ino
-void clockgenOutput(bool on);                                         // gbs-control.ino
-extern uint8_t gDevLoopPauseMs;                                       // gbs-control.ino
-void si5351Lab(const uint8_t* d, uint8_t n);                          // gbs-control.ino
 void contentProbe(const uint8_t* d, uint8_t n);                       // gbs-control.ino
 void tv5725ReadSegment(uint8_t segment, uint8_t out[256]);
 
@@ -294,21 +292,11 @@ static void runFunc(uint8_t id, const ActionRequest& r) {
         case AF_TV5725_READ:                                    // data: segment, then the gen set by the web handler
             readRegs(r.data[0], r.data[1]);
             break;
-        case AF_LOOP_PAUSE:                                     // no-signal WiFi experiments: CPU time for the SDK
-            gDevLoopPauseMs = r.data[0];
-            logPrintf(LC_SYS, LL_INFO, PSTR("loop pause: %u ms per pass"), (unsigned)gDevLoopPauseMs);
-            break;
-        case AF_SI5351:                                         // Si5351 measurements (gbs-control-nx evaluation)
-            si5351Lab(r.data, r.len);
-            break;
         case AF_LISTEN:                                         // input search: the decoder listening on pin 20 by hand
             advLinkSetListen(r.data[0] != 0);
             break;
         case AF_CONTENT_PROBE:                                  // input search: channel content before a preset
             contentProbe(r.data, r.len);
-            break;
-        case AF_CLOCKGEN:                                       // 0 off, 1 on: no-signal WiFi experiments
-            clockgenOutput(r.data[0] != 0);
             break;
         case AF_TV5725_REG:                                     // segment, register, value triplets
             for (uint8_t i = 0; i + 2 < r.len; i += 3) tv5725WriteReg(r.data[i], r.data[i + 1], r.data[i + 2]);
@@ -459,7 +447,7 @@ static void runRestore() {
     if (err) {
         LittleFS.remove(RESTORE_TMP_PATH);
         settingsSaverPause(SAVER_HOLD_RESTORE, false);
-        char v[24]; snprintf(v, sizeof(v), "error:%s", err);
+        char v[24]; snprintf_P(v, sizeof(v), PSTR("error:%s"), err);
         settingsBroadcastStatusText("status.restore", v);
         logPrintf(LC_API, LL_INFO, PSTR("restore refused: %s, nothing changed"), err);
         return;

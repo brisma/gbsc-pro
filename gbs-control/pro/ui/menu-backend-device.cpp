@@ -1,6 +1,7 @@
 // Device MenuBackend (whole file device-only)
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <ESP8266WiFi.h>
 #include "../../options.h"
 #include "../../tv5725.h"
@@ -167,7 +168,7 @@ bool DeviceMenuBackend::fn(uint8_t menuFn) {
             return a < 0 || profileQueueOp(POP_SAVE, (int8_t)a, nullptr);   // no profile: until the mode changes
         }
         case FN_ADV_CONTROLLER_SKIP:                             // boot prompt "No": this build is not offered again
-            snprintf(uopt->advControllerSkip, sizeof(uopt->advControllerSkip), "%08lX", (unsigned long)advControllerImageCrc());
+            snprintf_P(uopt->advControllerSkip, sizeof(uopt->advControllerSkip), PSTR("%08lX"), (unsigned long)advControllerImageCrc());
             settingsMarkDirty(SettingScope::Device);
             return true;
         default:
@@ -220,7 +221,7 @@ bool DeviceMenuBackend::setText(uint8_t lt, const char* v) {
     if (idx < 0) return false;
     SettingsStrWrite w;
     w.index = (int8_t)idx;
-    snprintf(w.value, sizeof(w.value), "%s", v);
+    snprintf_P(w.value, sizeof(w.value), PSTR("%s"), v);
     return apiQueueStrSetting(w);                  // applied and broadcast by apiLoop (one pending at a time)
 }
 

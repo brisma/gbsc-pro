@@ -1,5 +1,6 @@
 // Auto-load hook (device only): sampled every 20 ms from loop()
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include "../../options.h"
 #include "../gbs-control-pro.h"
 #include "../platform/platform-caps.h"
@@ -103,7 +104,7 @@ static void noticeTick() {
         case AutoloadNotice::AN_LOADED: {
             char msg[2 * PROFILE_LABEL_BUF + 2];
             const char* old = gNotice.discarded();
-            if (old[0]) snprintf(msg, sizeof(msg), "%s|%s", gNotice.label(), old);   // '|' is never in a profile name
+            if (old[0]) snprintf_P(msg, sizeof(msg), PSTR("%s|%s"), gNotice.label(), old);   // '|' is never in a profile name
             settingsBroadcastStatusText("status.profile_autoload", old[0] ? msg : gNotice.label());
             if (old[0]) logPrintf(LC_PROFILE, LL_INFO, PSTR("auto-load: %s (unsaved changes of %s discarded)"), gNotice.label(), old);
             else logPrintf(LC_PROFILE, LL_INFO, PSTR("auto-load: %s"), gNotice.label());
@@ -177,7 +178,7 @@ void profileAutoloadTick()
     char label[PROFILE_LABEL_BUF] = "";
     if (cand >= 0) profileLabel(profileList().at((uint8_t)cand).name, profileList().at((uint8_t)cand).region, label,
                                 sizeof(label));   // "Mega Drive PAL": two profiles may share a name across regions
-    if (d == AL_DEFAULTS) snprintf(label, sizeof(label), "Defaults");   // no profile for a signal foreign to the active one
+    if (d == AL_DEFAULTS) snprintf_P(label, sizeof(label), PSTR("Defaults"));   // no profile for a signal foreign to the active one
     if (d == AL_LOAD || d == AL_DEFAULTS) {
         char old[PROFILE_LABEL_BUF] = "";                               // whose unsaved changes the load drops
         int a = profileActiveIndex();

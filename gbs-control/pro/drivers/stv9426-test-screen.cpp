@@ -1,5 +1,6 @@
 // Developer test screen for the STV9426 (pure; drawn by the dev.osd_test action)
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 #include "stv9426-driver.h"
 #include "stv9426-udc.h"
@@ -38,13 +39,13 @@ void stvDrawTestScreen(Stv9426& d) {
         sh.setWidth(r, kRowWidth);
         sh.fill(r, 0, kRowWidth, 0x20, 0x11 /* blue on blue */);
     }
-    snprintf(buf, sizeof(buf), "STV9426 TEST 9x30 %s", stvOutStdName(d.output()));
+    snprintf_P(buf, sizeof(buf), PSTR("STV9426 TEST 9x30 %s"), stvOutStdName(d.output()));
     text(sh, 0, 0, buf, base);
     for (uint8_t r = 1; r <= 7; r++) {
         uint8_t bg = (uint8_t)((r + 4) & 7);
         uint8_t attr = (uint8_t)((bg << 4) | r);
         sh.fill(r, 0, kRowWidth, 0x20, (uint8_t)((bg << 4) | bg));
-        snprintf(buf, sizeof(buf), "ROW %u FG %u BG %u", r, r, bg);
+        snprintf_P(buf, sizeof(buf), PSTR("ROW %u FG %u BG %u"), r, r, bg);
         text(sh, r, 0, buf, attr);
     }
     d.glyphFrame();                                      // the first glyphs that fit the dynamic slots

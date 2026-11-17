@@ -76,7 +76,7 @@ bool LogRing::readAfter(int32_t since, LogRecord& out, uint16_t* dropped) const 
 
 size_t logFormatLine(const LogRecord& r, char* out, size_t n) {
     char tag[16];
-    snprintf(tag, sizeof(tag), "[%s]", logCatName(r.cat));
+    snprintf_P(tag, sizeof(tag), PSTR("[%s]"), logCatName(r.cat));
     int w = snprintf_P(out, n, PSTR("[%6lu.%03lu] %-10s %s\n"), (unsigned long)(r.ms / 1000), (unsigned long)(r.ms % 1000), tag,
                      r.text);
     if (w < 0) return 0;
@@ -92,7 +92,7 @@ size_t logRecordJson(const LogRecord& r, char* out, size_t n) {
         uint8_t c = (uint8_t)r.text[i];
         char esc[8];
         if (c == '"' || c == '\\') { esc[0] = '\\'; esc[1] = (char)c; esc[2] = '\0'; }
-        else if (c < 0x20) snprintf(esc, sizeof(esc), "\\u%04x", c);
+        else if (c < 0x20) snprintf_P(esc, sizeof(esc), PSTR("\\u%04x"), c);
         else { esc[0] = c >= 0x80 ? '?' : (char)c; esc[1] = '\0'; }
         size_t e = strlen(esc);
         if (k + e >= n) return 0;
@@ -122,7 +122,7 @@ void logJsonBegin(LogJsonCursor& c, int32_t since) {
 static bool logJsonNext(LogJsonCursor& c, const LogRing& ring) {
     c.off = 0;
     if (c.phase == 0) {
-        c.len = (uint16_t)snprintf(c.pending, sizeof(c.pending), "{\"lines\":[");
+        c.len = (uint16_t)snprintf_P(c.pending, sizeof(c.pending), PSTR("{\"lines\":["));
         c.phase = 1;
         return true;
     }

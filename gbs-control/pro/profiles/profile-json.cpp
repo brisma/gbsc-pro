@@ -51,7 +51,7 @@ void profilesJson(void (*sink)(const char*, void*), void* ctx, const void* state
         bool first = true;
         for (uint8_t m = 0; m < PROFILE_MODE_COUNT; m++) {
             if (!(e.modes & (1 << m))) continue;
-            snprintf(t, sizeof(t), "%s\"%s\"", first ? "" : ",", profileModeName(m));
+            snprintf_P(t, sizeof(t), PSTR("%s\"%s\""), first ? "" : ",", profileModeName(m));
             sink(t, ctx);
             first = false;
         }

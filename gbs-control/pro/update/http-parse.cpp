@@ -53,7 +53,7 @@ bool httpHeader(const char* line, const char* name, const char*& value) {
 
 bool httpRequest(const UrlParts& u, const char* userAgent, char* out, size_t n) {
     char port[8] = "";
-    if (u.port != 80) snprintf(port, sizeof(port), ":%u", (unsigned)u.port);
+    if (u.port != 80) snprintf_P(port, sizeof(port), PSTR(":%u"), (unsigned)u.port);
     int w = snprintf_P(out, n, PSTR("GET %s HTTP/1.0\r\nHost: %s%s\r\nUser-Agent: %s\r\nConnection: close\r\n\r\n"),
                        u.path, u.host, port, userAgent);
     return w > 0 && (size_t)w < n;

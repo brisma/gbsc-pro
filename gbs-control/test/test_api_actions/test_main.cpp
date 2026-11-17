@@ -257,37 +257,6 @@ void test_tv5725_read_param(void) {
     TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, two, 2));
 }
 
-// dev.clockgen: one byte, 0 = Si5351 output off, 1 = on (no-signal WiFi experiments); Developer only
-void test_clockgen_param(void) {
-    ActionDef d = def("dev.clockgen");
-    TEST_ASSERT_TRUE(d.flags & ACTION_DEV);
-    TEST_ASSERT_FALSE(actionsAvailable(d, false));
-    uint8_t off[] = {0}, on[] = {1}, two[] = {2};
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, off, 1));
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, on, 1));
-    TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, two, 1));
-}
-
-// dev.loop_pause: one byte, a pause in ms at every loop pass (0 off, at most 100); Developer only
-void test_loop_pause_param(void) {
-    ActionDef d = def("dev.loop_pause");
-    TEST_ASSERT_TRUE(d.flags & ACTION_DEV);
-    uint8_t zero[] = {0}, hundred[] = {100}, over[] = {101};
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, zero, 1));
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, hundred, 1));
-    TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, over, 1));
-}
-
-// dev.si5351: op (0 status, 1 vco648 rule, 2 crystal load, 3 lock timing, 4 output frame rate) + up to 2 bytes
-void test_si5351_param(void) {
-    ActionDef d = def("dev.si5351");
-    TEST_ASSERT_TRUE(d.flags & ACTION_DEV);
-    uint8_t one[] = {0}, three[] = {3, 4, 20}, four[] = {3, 4, 20, 1};
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, one, 1));
-    TEST_ASSERT_EQUAL_INT(0, actionsValidateParams(d, three, 3));
-    TEST_ASSERT_NOT_EQUAL(0, actionsValidateParams(d, four, 4));
-}
-
 // dev.adv_read: dev, map, reg, count (the link request; checked again by advRegReadReqUnpack)
 void test_adv_read_param_len_4(void) {
     ActionDef d = def("dev.adv_read");
@@ -321,9 +290,6 @@ int main(int, char**) {
     RUN_TEST(test_action_queue_full_is_busy);
     RUN_TEST(test_menu_key_available_without_devmode);
     RUN_TEST(test_tv5725_read_param);
-    RUN_TEST(test_clockgen_param);
-    RUN_TEST(test_loop_pause_param);
-    RUN_TEST(test_si5351_param);
     RUN_TEST(test_adv_read_param_len_4);
     return UNITY_END();
 }

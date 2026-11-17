@@ -19,7 +19,6 @@
 #include "options.h"
 #include "pro/screen/screen-borders.h"
 #include "pro/picture/geometry.h"
-#include "pro/clock/si5351-lab.h"
 #include "pro/api/api-router.h"
 #include "pro/profiles/profile-store.h"
 #include "pro/profiles/profile-modes.h"
@@ -6896,32 +6895,7 @@ boolean checkBoardPower()
     //return 1;
 }
 
-// Auto input, RGB SCART judge: content of the three ADC channels (G = Y on the YPbPr input) from 256
-// decimation test-bus reads each, 95th minus 15th percentile. Only with a preset loaded (the ADC is clocked).
-// mask bit0 R, bit1 G, bit2 B; every register touched is restored.
-// dev.loop_pause: a pause at every loop pass (no-signal WiFi experiments; 0 = off, not persisted)
-uint8_t gDevLoopPauseMs = 0;
-
-// dev.clockgen: the Si5351 CLK0 output on or off (it feeds the TV5725 clock pin; experiments on the WiFi noise
-// without a signal). The firmware enables it again at the next lock.
-void clockgenOutput(bool on)
-{
-    if (!rto->extClockGenDetected) {
-        SerialM.println(F("clockgen: no Si5351"));
-        return;
-    }
-    if (on) Si.enable(0);
-    else Si.disable(0);
-    SerialM.printf_P(PSTR("clockgen: output %s (%lu Hz)\n"), on ? "on" : "off", (unsigned long)rto->freqExtClockGen);
-}
-
-// dev.si5351: measurements for the gbs-control-nx evaluation. Ops:
-//   0          status: device status and sticky registers, frequency, divider, VCO, rule, crystal load
-//   1 r        the vco648 divider rule off/on (re-programs the current frequency)
-//   2 c        crystal load: 0 = 10 pF (0xD2, ours), 1 = 8 pF (0x92), 2 = 6 pF (0x52)
-//   3 f n      lock timing: n times (1..30) jump from a frequency with another divider to f (0 40.5, 1 54, 2 64.8,
-//              3 81, 4 108, 5 129.6, 6 162 MHz) and time LOL_A clearing (us), then the current frequency again
-//   4 n        output frame rate: n samples (1..60) of getOutputFrameRate(), mean and spread in ppm
+// Si5351 registers over I2C (the clock reset reads the lock state and clears the sticky flags)
 static uint8_t si5351Reg(uint8_t reg)
 {
     Wire.beginTransmission(SIADDR);
@@ -6949,86 +6923,6 @@ static uint32_t si5351WaitLock()
         delayMicroseconds(100);
     }
     return 0;
-}
-
-void si5351Lab(const uint8_t* d, uint8_t n)
-{
-    if (!rto->extClockGenDetected) {
-        SerialM.println(F("si5351: not detected"));
-        return;
-    }
-    static const uint32_t kFreqs[7] = {40500000, 54000000, 64800000, 81000000, 108000000, 129600000, 162000000};
-    switch (d[0]) {
-        case 1:
-            Si.vco648 = n > 1 && d[1];
-            Si.setFreq(0, rto->freqExtClockGen);
-            SerialM.printf_P(PSTR("si5351: vco648 rule %s\n"), Si.vco648 ? "on" : "off");
-            break;
-        case 2: {
-            static const uint8_t kCl[3] = {0xD2, 0x92, 0x52};
-            uint8_t c = n > 1 && d[1] < 3 ? d[1] : 0;
-            si5351RegWrite(183, kCl[c]);
-            delay(20);
-            SerialM.printf_P(PSTR("si5351: crystal load %u pF (0x%02X)\n"), (unsigned)(10 - 2 * c), kCl[c]);
-            break;
-        }
-        case 3: {
-            if (n < 3 || d[1] > 6 || d[2] < 1 || d[2] > 30) { SerialM.println(F("si5351: lock test needs f 0..6, n 1..30")); return; }
-            uint32_t f = kFreqs[d[1]];
-            uint32_t away = f >= 100000000UL ? 81000000UL : 162000000UL;   // another output divider: a PLL reset
-            uint32_t mn = 0xFFFFFFFF, mx = 0, sum = 0;
-            uint8_t ok = 0, fails = 0;
-            for (uint8_t i = 0; i < d[2]; i++) {
-                Si.setFreq(0, away);
-                si5351WaitLock();
-                si5351RegWrite(0x01, 0x00);                 // clear the sticky flags
-                uint32_t t0 = micros();
-                Si.setFreq(0, f);
-                uint32_t setUs = micros() - t0;
-                uint32_t us = si5351WaitLock();
-                if (!us) { fails++; continue; }
-                us += setUs;
-                ok++; sum += us; if (us < mn) mn = us; if (us > mx) mx = us;
-                yield();
-            }
-            Si.setFreq(0, rto->freqExtClockGen);
-            si5351WaitLock();
-            SerialM.printf_P(PSTR("si5351: lock %lu Hz vco %lu MHz rule %u: %u ok, %u timeouts, min %lu avg %lu max %lu us\n"),
-                             (unsigned long)f, (unsigned long)(si5351VcoHz(f, Si.vco648) / 1000000UL), (unsigned)Si.vco648,
-                             (unsigned)ok, (unsigned)fails, (unsigned long)(ok ? mn : 0), (unsigned long)(ok ? sum / ok : 0),
-                             (unsigned long)mx);
-            break;
-        }
-        case 4: {
-            uint8_t cnt = n > 1 && d[1] >= 1 && d[1] <= 60 ? d[1] : 20;
-            double s = 0, s2 = 0;
-            uint8_t got = 0;
-            for (uint8_t i = 0; i < cnt; i++) {
-                float r = getOutputFrameRate();
-                if (r > 20.0f && r < 250.0f) { s += r; s2 += (double)r * r; got++; }
-                yield();
-            }
-            if (!got) { SerialM.println(F("si5351: no output frame rate")); return; }
-            double mean = s / got, var = s2 / got - mean * mean;
-            double sd = var > 0 ? sqrt(var) : 0;
-            SerialM.printf_P(PSTR("si5351: output %.6f Hz over %u samples, sd %.1f ppm (PLL648 0x%02X, clock %lu Hz)\n"),
-                             mean, (unsigned)got, sd / mean * 1e6, GBS::PLL648_CONTROL_01::read(), (unsigned long)rto->freqExtClockGen);
-            break;
-        }
-        default: {
-            uint8_t st = si5351Reg(0x00), sticky = si5351Reg(0x01), cl = si5351Reg(183);
-            Si5351Status s = si5351DecodeStatus(st);
-            uint8_t r = 1;
-            uint32_t div = si5351OutDivider(rto->freqExtClockGen, Si.vco648, &r);
-            uint8_t again = si5351Reg(0x00);   // read twice: a flaky read shows as two different values
-            SerialM.printf_P(PSTR("si5351: status 0x%02X/0x%02X init %u lolA %u lolB %u los %u rev %u sticky 0x%02X\n"),
-                             st, again, s.sysInit, s.lolA, s.lolB, s.los, s.revId, sticky);
-            SerialM.printf_P(PSTR("si5351: %lu Hz div %lu r %u vco %lu MHz rule %u, crystal load 0x%02X\n"),
-                             (unsigned long)rto->freqExtClockGen, (unsigned long)div, r,
-                             (unsigned long)(si5351VcoHz(rto->freqExtClockGen, Si.vco648) / 1000000UL), (unsigned)Si.vco648, cl);
-            break;
-        }
-    }
 }
 
 // dev.content_probe (input search): can the channel content be read before a preset is loaded?
@@ -7266,6 +7160,9 @@ void tv5725ReadSegment(uint8_t segment, uint8_t out[256])
     for (uint16_t reg = 0; reg < 256; reg += 32) GBS::read(segment, (uint8_t)reg, out + reg, 32);
 }
 
+// Auto input, RGB SCART judge: content of the three ADC channels (G = Y on the YPbPr input) from 256
+// decimation test-bus reads each, 95th minus 15th percentile. Only with a preset loaded (the ADC is clocked).
+// mask bit0 R, bit1 G, bit2 B; every register touched is restored.
 void tv5725ChannelContent(uint8_t mask, uint16_t out[3])
 {
     uint8_t busSel = GBS::TEST_BUS_SEL::read(), busEn = GBS::TEST_BUS_EN::read(), decEn = GBS::DEC_TEST_ENABLE::read();
@@ -8112,7 +8009,6 @@ void loop()
     // ping lost 16-60 % and HTTP took 0.5-15 s; with 1 ms both match the picture's (0 %, ~40 ms). The source checks
     // run on millis() (every 500 ms), so the pause does not slow the search.
     if (rto->sourceDisconnected) delay(1);
-    if (gDevLoopPauseMs) delay(gDevLoopPauseMs);
     netStatsSample();  // heap / TCP connection marks for /api/info "net"
     safeModeHealthyTick();
     loopWatchMark(LW_API);

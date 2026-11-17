@@ -3,6 +3,7 @@
 // required. Handlers only check and queue: an upload streams to a temp file in its folder (advTempPath), advStoreLoop() validates it line by
 // line, renames it into place and answers s:status.adv_store=ok|error:<reason>.
 #include <Arduino.h>
+#include "../util/pgm.h"
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <memory>
@@ -339,12 +340,12 @@ void advListGet(AsyncWebServerRequest* req, uint8_t kind) {
                 s.pos += n; out += n;
                 continue;
             }
-            if (!s.opened) { s.opened = true; s.len = (size_t)snprintf(s.pending, sizeof(s.pending), "{\"items\":["); s.pos = 0; continue; }
+            if (!s.opened) { s.opened = true; s.len = (size_t)snprintf_P(s.pending, sizeof(s.pending), PSTR("{\"items\":[")); s.pos = 0; continue; }
             if (out) break;   // one file per chunk
             if (nextEntry(s)) continue;
             if (s.closed) break;
             s.closed = true;
-            s.len = (size_t)snprintf(s.pending, sizeof(s.pending), "]}");
+            s.len = (size_t)snprintf_P(s.pending, sizeof(s.pending), PSTR("]}"));
             s.pos = 0;
         }
         return out;

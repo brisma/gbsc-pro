@@ -1,4 +1,5 @@
 #include "adv-controller-format.h"
+#include "../util/pgm.h"
 #include <stdio.h>
 #include <string.h>
 #include "../ui/menu-model.h"
@@ -12,11 +13,11 @@
 
 void advControllerMenuText(const AdvControllerInfo& h, char* out, size_t n) {
     switch (h.status) {
-        case ADV_CONTROLLER_CHECKING: snprintf(out, n, "Checking..."); return;
-        case ADV_CONTROLLER_NO_REPLY: snprintf(out, n, "No reply"); return;
-        case ADV_CONTROLLER_INCOMPATIBLE: snprintf(out, n, "Incompatible"); return;
+        case ADV_CONTROLLER_CHECKING: snprintf_P(out, n, PSTR("Checking...")); return;
+        case ADV_CONTROLLER_NO_REPLY: snprintf_P(out, n, PSTR("No reply")); return;
+        case ADV_CONTROLLER_INCOMPATIBLE: snprintf_P(out, n, PSTR("Incompatible")); return;
         default:
-            snprintf(out, n, "%s", h.info.fw);
+            snprintf_P(out, n, PSTR("%s"), h.info.fw);
             menuSanitize(out);
             return;
     }
@@ -27,8 +28,8 @@ static const char* const kStandardNames[8] = {"NTSC_M", "NTSC_443", "PAL_M", "PA
 
 static int signalJson(const AdvSignal& g, char* out, size_t n) {
     char std[16], hz[8], enc[8];
-    if (g.standard < 8) snprintf(std, sizeof(std), "\"%s\"", kStandardNames[g.standard]); else strcpy(std, "null");
-    if (g.hz) snprintf(hz, sizeof(hz), "%u", (unsigned)g.hz); else strcpy(hz, "null");
+    if (g.standard < 8) snprintf_P(std, sizeof(std), PSTR("\"%s\""), kStandardNames[g.standard]); else strcpy(std, "null");
+    if (g.hz) snprintf_P(hz, sizeof(hz), PSTR("%u"), (unsigned)g.hz); else strcpy(hz, "null");
     static const char* const kEncoder[3] = {"null", "\"525p\"", "\"625p\""};
     strcpy(enc, g.encoder < 3 ? kEncoder[g.encoder] : "null");
 #define B(f) ((g.flags & (f)) ? "true" : "false")
@@ -53,8 +54,8 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
     int w;
     if (!h.haveInfo || h.status == ADV_CONTROLLER_NO_REPLY || h.status == ADV_CONTROLLER_CHECKING) {
         bool idle = !update || strcmp(update, "idle") == 0;
-        if (idle) w = snprintf(out, n, "{\"status\":\"%s\"}", st);
-        else w = snprintf(out, n, "{\"status\":\"%s\",\"update\":\"%s\"}", st, update);   // e.g. during the copy
+        if (idle) w = snprintf_P(out, n, PSTR("{\"status\":\"%s\"}"), st);
+        else w = snprintf_P(out, n, PSTR("{\"status\":\"%s\",\"update\":\"%s\"}"), st, update);   // e.g. during the copy
     } else {
         char ver[32];
         jsonEscape(h.info.fw, ver, sizeof(ver));
@@ -64,7 +65,7 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
             {ADV_INFO_CAP_SIGNAL, "signal"}, {ADV_INFO_CAP_REG_READ, "reg_read"}, {ADV_INFO_CAP_LISTEN, "listen"}};
         for (const auto& c : kCaps)
             if ((h.info.caps & c.bit) && k < sizeof(caps))
-                k += (size_t)snprintf(caps + k, sizeof(caps) - k, "%s\"%s\"", k ? "," : "", c.name);
+                k += (size_t)snprintf_P(caps + k, sizeof(caps) - k, PSTR("%s\"%s\""), k ? "," : "", c.name);
         w = snprintf_P(out, n,
                      PSTR("{\"status\":\"%s\",\"version\":\"%s\",\"build\":\"%08lX\",\"lock\":%u,\"standard\":%u,"
                      "\"uptime\":%u,\"bad_frames\":%u,\"not_applied\":%s,\"update_available\":%s,\"update\":\"%s\","
@@ -74,7 +75,7 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
                      h.notApplied ? "true" : "false", updateAvailable ? "true" : "false", update ? update : "idle", caps);
         if (sig && w > 1 && (size_t)w < n) {         // reopen the object: ,"signal":{...}}
             w--;
-            int a = snprintf(out + w, n - w, ",\"signal\":");
+            int a = snprintf_P(out + w, n - w, PSTR(",\"signal\":"));
             if (a < 0) return false;
             w += a;
             if ((size_t)w >= n) return false;
@@ -82,7 +83,7 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
             if (b < 0) return false;
             w += b;
             if ((size_t)w >= n) return false;
-            int c = snprintf(out + w, n - w, "}");
+            int c = snprintf_P(out + w, n - w, PSTR("}"));
             if (c < 0) return false;
             w += c;
         }
@@ -93,14 +94,14 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
 size_t advRegReadJson(const AdvRegRead& r, uint8_t announcedGen, char* out, size_t n) {
     static const char* const kState[] = {"idle", "pending", "done", "error", "unsupported"};
     int w;
-    if (announcedGen != r.gen) w = snprintf(out, n, "{\"state\":\"pending\",\"gen\":%u}", (unsigned)announcedGen);
+    if (announcedGen != r.gen) w = snprintf_P(out, n, PSTR("{\"state\":\"pending\",\"gen\":%u}"), (unsigned)announcedGen);
     else {
-        w = snprintf(out, n, "{\"state\":\"%s\",\"dev\":%u,\"map\":%u,\"reg\":%u,\"values\":[",
+        w = snprintf_P(out, n, PSTR("{\"state\":\"%s\",\"dev\":%u,\"map\":%u,\"reg\":%u,\"values\":["),
                      kState[r.state <= ADV_REG_UNSUPPORTED ? r.state : 0], (unsigned)r.dev, (unsigned)r.map, (unsigned)r.reg);
         uint8_t k = r.state == ADV_REG_DONE ? r.count : 0;
         for (uint8_t i = 0; i < k && w >= 0 && (size_t)w < n; i++)
             w += snprintf(out + w, n - w, i ? ",%u" : "%u", (unsigned)r.v[i]);
-        if (w >= 0 && (size_t)w < n) w += snprintf(out + w, n - w, "],\"gen\":%u}", (unsigned)r.gen);
+        if (w >= 0 && (size_t)w < n) w += snprintf_P(out + w, n - w, PSTR("],\"gen\":%u}"), (unsigned)r.gen);
     }
     if (w < 0 || (size_t)w >= n) { if (n) out[0] = '\0'; return 0; }
     return (size_t)w;

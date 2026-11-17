@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 #include "adv-store.h"
 #include "../api/api-json.h"
@@ -75,24 +76,24 @@ int advParseId(const char* id, AdvKind k) {
 }
 
 void advId(AdvKind k, uint8_t i, char out[4]) {
-    snprintf(out, 4, "%c%02u", k == ADV_PRESET ? 'p' : 'm', (unsigned)(i % 100));
+    snprintf_P(out, 4, PSTR("%c%02u"), k == ADV_PRESET ? 'p' : 'm', (unsigned)(i % 100));
 }
 
 void advPath(AdvKind k, uint8_t i, char* out, size_t n) {
     char id[4];
     advId(k, i, id);
-    snprintf(out, n, "/adv/%s/%s.yaml", k == ADV_PRESET ? "presets" : "macros", id);
+    snprintf_P(out, n, PSTR("/adv/%s/%s.yaml"), k == ADV_PRESET ? "presets" : "macros", id);
 }
 
 void advTempPath(AdvKind k, char* out, size_t n) {
-    snprintf(out, n, "/adv/%s/upload.tmp", k == ADV_PRESET ? "presets" : "macros");
+    snprintf_P(out, n, PSTR("/adv/%s/upload.tmp"), k == ADV_PRESET ? "presets" : "macros");
 }
 
 size_t advListEntryJson(const char* id, const AdvYamlCheck& c, uint32_t bytes, char* out, size_t n) {
     char name[ADV_NAME_MAX * 6 + 1], desc[ADV_DESC_MAX * 6 + 1];
     jsonEscape(c.name, name, sizeof(name));
     jsonEscape(c.desc, desc, sizeof(desc));
-    int w = snprintf(out, n, "{\"id\":\"%s\",\"name\":\"%s\",\"description\":\"%s\",\"count\":%u,\"bytes\":%lu}", id,
+    int w = snprintf_P(out, n, PSTR("{\"id\":\"%s\",\"name\":\"%s\",\"description\":\"%s\",\"count\":%u,\"bytes\":%lu}"), id,
                      name, desc, (unsigned)c.count, (unsigned long)bytes);
     if (w < 0 || (size_t)w >= n) { if (n) out[0] = '\0'; return 0; }
     return (size_t)w;

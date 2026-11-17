@@ -18,11 +18,11 @@ static bool fits(int w, size_t n) { return w > 0 && (size_t)w < n; }
 
 bool otaManifestUrl(const char* base, uint8_t ch, char* out, size_t n) {
     if (ch >= OTA_CHANNELS) return false;
-    return fits(snprintf(out, n, "%s%s/manifest.txt", base, kNames[ch]), n);
+    return fits(snprintf_P(out, n, PSTR("%s%s/manifest.txt"), base, kNames[ch]), n);
 }
 
 bool otaImageUrl(const char* base, const char* file, char* out, size_t n) {
-    return fits(snprintf(out, n, "%s%s", base, file), n);
+    return fits(snprintf_P(out, n, PSTR("%s%s"), base, file), n);
 }
 
 uint8_t otaChannelsToRead(uint8_t chosen, uint8_t out[OTA_CHANNELS]) {
@@ -103,30 +103,30 @@ const char* otaReasonWords(const char* code) {
 }
 
 void otaOfferText(const OtaOffer& o, char* out, size_t n) {
-    snprintf(out, n, "%s%s", otaChannelLabel(o.channel), o.older ? " older" : "");
+    snprintf_P(out, n, PSTR("%s%s"), otaChannelLabel(o.channel), o.older ? " older" : "");
 }
 
 void otaConfirmText(const OtaOffer& o, char* out, size_t n) {
-    if (o.older) snprintf(out, n, "Install an older version?");
+    if (o.older) snprintf_P(out, n, PSTR("Install an older version?"));
     else if (n) out[0] = '\0';
 }
 
 void otaCheckToast(const OtaOffer& o, bool read, const char* err, char* out, size_t n) {
-    if (!read) snprintf(out, n, "Check failed: %s", otaReasonWords(err));
-    else if (o.any) snprintf(out, n, "%s %s", o.m.version, o.older ? "older" : "available");
-    else snprintf(out, n, "Up to date");
+    if (!read) snprintf_P(out, n, PSTR("Check failed: %s"), otaReasonWords(err));
+    else if (o.any) snprintf_P(out, n, PSTR("%s %s"), o.m.version, o.older ? "older" : "available");
+    else snprintf_P(out, n, PSTR("Up to date"));
 }
 
-void otaInstallFailText(const char* code, char* out, size_t n) { snprintf(out, n, "Not installed: %s", otaReasonWords(code)); }
+void otaInstallFailText(const char* code, char* out, size_t n) { snprintf_P(out, n, PSTR("Not installed: %s"), otaReasonWords(code)); }
 
 void otaLastResultText(const char* last, char* out, size_t n) {
     if (!n) return;
-    if (!last || !*last) snprintf(out, n, "Not checked");
-    else if (!strcmp(last, "none")) snprintf(out, n, "Up to date");
+    if (!last || !*last) snprintf_P(out, n, PSTR("Not checked"));
+    else if (!strcmp(last, "none")) snprintf_P(out, n, PSTR("Up to date"));
     else if (!strncmp(last, "error:", 6)) {
-        snprintf(out, n, "%s", otaReasonWords(last + 6));
+        snprintf_P(out, n, PSTR("%s"), otaReasonWords(last + 6));
         if (out[0] >= 'a' && out[0] <= 'z') out[0] = (char)(out[0] - 'a' + 'A');
-    } else snprintf(out, n, "%s", last);
+    } else snprintf_P(out, n, PSTR("%s"), last);
 }
 
 

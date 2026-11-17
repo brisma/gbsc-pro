@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <stdlib.h>
 #include <string.h>
 #include "profile-file.h"
@@ -28,7 +29,7 @@ static void kv(SettingsSink sink, void* ctx, const char* key, const char* value)
 }
 
 static void kvNum(SettingsSink sink, void* ctx, const char* key, unsigned v) {
-    char b[8]; snprintf(b, sizeof(b), "%u", v); kv(sink, ctx, key, b);
+    char b[8]; snprintf_P(b, sizeof(b), PSTR("%u"), v); kv(sink, ctx, key, b);
 }
 
 void profileWriteHeader(const ProfileMeta& m, SettingsSink sink, void* ctx) {
@@ -106,7 +107,7 @@ void profileWriteRegs(uint8_t modeIndex, const uint8_t* regs, SettingsSink sink,
     const uint8_t per = PROFILE_REG_BYTES / PROFILE_REG_LINES;   // 48
     for (uint8_t l = 0; l < PROFILE_REG_LINES; l++) {
         char line[128];
-        int n = snprintf(line, sizeof(line), "reg.%s.%u=", profileModeName(modeIndex), l);
+        int n = snprintf_P(line, sizeof(line), PSTR("reg.%s.%u="), profileModeName(modeIndex), l);
         for (uint8_t i = 0; i < per; i++) {
             uint8_t b = regs[l * per + i];
             line[n++] = kHex[b >> 4];

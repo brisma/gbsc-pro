@@ -45,9 +45,6 @@ struct ParamRule { uint8_t af; uint8_t minLen; uint8_t maxLen; uint8_t maxValue;
 static const ParamRule kParamRules[] = {
     {AF_TV5725_READ, 1, 1, 5},     // segment
     {AF_ADV_READ, 4, 4, 0xFF},     // dev, map, reg, count: advRegReadReqUnpack decides
-    {AF_CLOCKGEN, 1, 1, 1},        // 0 Si5351 output off, 1 on
-    {AF_LOOP_PAUSE, 1, 1, 100},    // ms of pause at every loop pass, 0 off
-    {AF_SI5351, 1, 3, 0xFF},       // op, then op-specific bytes (si5351Lab checks them)
 };
 static const ParamRule kParamDefault = {0, 1, 30, 0xFF};   // ActionRequest.data
 
@@ -81,15 +78,15 @@ void actionsListJson(bool devmode, SettingsSink sink, void* ctx) {
         if (!first) sink(",", ctx);
         first = false;
         sink("{\"name\":\"", ctx); sink(d.name, ctx);
-        sink("\",\"caps\":", ctx); snprintf(num, sizeof(num), "%u", d.caps); sink(num, ctx);
+        sink("\",\"caps\":", ctx); snprintf_P(num, sizeof(num), PSTR("%u"), d.caps); sink(num, ctx);
         if (d.flags & ACTION_CONFIRM) sink(",\"confirm\":1", ctx);
         if (d.flags & ACTION_PARAM_HEX) sink(",\"params\":[{\"name\":\"data\",\"type\":\"hex_triplets\",\"max\":10}]", ctx);
         if (d.flags & ACTION_PARAM_BYTES) {   // hex bytes "01" or "06,1,4"
             const ParamRule& r = paramRule(d);
             sink(",\"params\":[{\"name\":\"data\",\"type\":\"bytes\",", ctx);
-            snprintf(num, sizeof(num), "%u", r.maxLen);
+            snprintf_P(num, sizeof(num), PSTR("%u"), r.maxLen);
             sink(r.minLen == r.maxLen ? "\"len\":" : "\"max_len\":", ctx); sink(num, ctx);
-            if (r.maxValue != 0xFF) { snprintf(num, sizeof(num), "%u", r.maxValue); sink(",\"max\":", ctx); sink(num, ctx); }
+            if (r.maxValue != 0xFF) { snprintf_P(num, sizeof(num), PSTR("%u"), r.maxValue); sink(",\"max\":", ctx); sink(num, ctx); }
             sink("}]", ctx);
         }
         if (d.flags & ACTION_PARAM_OPT_TEXT) {   // the accepted words (OTA)

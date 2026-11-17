@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <stdlib.h>
 #include <string.h>
 #include "profile-list.h"
@@ -61,7 +62,7 @@ uint8_t ProfileList::sorted(uint8_t* idx, uint8_t max) const {
     return n;
 }
 
-void ProfileList::idOf(uint8_t i, char out[4]) { snprintf(out, 4, "p%02u", (unsigned)(i % 100)); }   // i < PROFILE_MAX
+void ProfileList::idOf(uint8_t i, char out[4]) { snprintf_P(out, 4, PSTR("p%02u"), (unsigned)(i % 100)); }   // i < PROFILE_MAX
 
 int ProfileList::indexOfId(const char* id) {
     if (!id || id[0] != 'p' || id[1] < '0' || id[1] > '9' || id[2] < '0' || id[2] > '9' || id[3]) return -1;
@@ -73,7 +74,7 @@ void ProfileList::serializeLastused(SettingsSink sink, void* ctx) const {
     char line[24];
     for (uint8_t i = 0; i < PROFILE_MAX; i++) {
         if (!e_[i].used) continue;
-        snprintf(line, sizeof(line), "p%02u=%lu\n", (unsigned)i, (unsigned long)e_[i].lastused);
+        snprintf_P(line, sizeof(line), PSTR("p%02u=%lu\n"), (unsigned)i, (unsigned long)e_[i].lastused);
         sink(line, ctx);
     }
 }

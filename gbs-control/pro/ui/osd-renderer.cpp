@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 // Every snprintf here cuts its text to a screen line on purpose (28 OSD cells, the overlay and OLED widths)
 #if defined(__GNUC__) && !defined(__clang__)
@@ -30,7 +31,7 @@ uint8_t OsdRenderer::titleCells(const MenuView& v) {
     uint8_t first = v.deep ? 3 : 1, last = kLast;
     if (v.posCount) {
         char pos[8];
-        snprintf(pos, sizeof(pos), "%u/%u", v.posIndex, v.posCount);
+        snprintf_P(pos, sizeof(pos), PSTR("%u/%u"), v.posIndex, v.posCount);
         last = (uint8_t)(kLast - strlen(pos) - 1);    // one blank before the position
     }
     return (uint8_t)(last >= first ? last - first + 1 : 0);
@@ -233,7 +234,7 @@ void OsdRenderer::drawHelp(const MenuView& v) {
     if (v.mode == VIEW_OVERLAY && v.overlay == OV_REVERT) {
         uint8_t aa = a(R_MSG);
         fillRow(8, aa);
-        snprintf(t, sizeof(t), "%s  %ds", v.lines[1], v.value);
+        snprintf_P(t, sizeof(t), PSTR("%s  %ds"), v.lines[1], v.value);
         put(8, 1, t, aa);
         return;
     }
@@ -281,7 +282,7 @@ void OsdRenderer::drawList(const MenuView& v) {
     put(0, c, v.title + (toff < strlen(v.title) ? toff : 0), t, (uint8_t)(c + tc - 1));
     if (v.posCount) {
         char pos[8];
-        snprintf(pos, sizeof(pos), "%u/%u", v.posIndex, v.posCount);
+        snprintf_P(pos, sizeof(pos), PSTR("%u/%u"), v.posIndex, v.posCount);
         putRight(0, pos, t);
     }
     for (uint8_t i = 0; i < 7; i++) {
@@ -414,7 +415,7 @@ void OsdRenderer::drawPill(const MenuView& v) {
     putCode(0, (uint8_t)(9 + dx), d_.glyph(UDC_SPEAKER), t);
     drawBar(0, (uint8_t)(11 + dx), 5, (v.value * 10 + 50) / 100, t);   // percent, 5 cells
     char num[6];
-    snprintf(num, sizeof(num), "%d%%", v.value);
+    snprintf_P(num, sizeof(num), PSTR("%d%%"), v.value);
     putRight(0, num, t, (uint8_t)(20 + dx));
 }
 
@@ -467,8 +468,8 @@ void OsdRenderer::drawLow(const MenuView& v) {
         return;
     }
     fillRow(0, t);                                     // a countdown without a menu
-    if (v.overlay == OV_REVERT) snprintf(buf, sizeof(buf), "%s  %ds", v.lines[0], v.value);
-    else snprintf(buf, sizeof(buf), "%s", v.lines[0]);
+    if (v.overlay == OV_REVERT) snprintf_P(buf, sizeof(buf), PSTR("%s  %ds"), v.lines[0], v.value);
+    else snprintf_P(buf, sizeof(buf), PSTR("%s"), v.lines[0]);
     put(0, 1, buf, t);
 }
 
@@ -480,7 +481,7 @@ void OsdRenderer::drawKeyboard(const MenuView& v) {
     put(0, 1, v.lines[0], t);
     fillRow(1, n);
     char field[29];
-    snprintf(field, sizeof(field), "%s", v.lines[1]);
+    snprintf_P(field, sizeof(field), PSTR("%s"), v.lines[1]);
     for (char* p = field; *p; p++) if (*p != ',' && !menuCharOk(*p)) *p = '.';   // ',' is a UDC (put)
     put(1, 1, field, n);
     if (v.caret < 27) {                                // the cursor: the character under it, inverted
@@ -529,7 +530,7 @@ void OsdRenderer::drawUpdate(const MenuView& v) {
         return;
     }
     char pct[6];
-    snprintf(pct, sizeof(pct), "%d%%", v.value);   // the OLED shows "N%" too
+    snprintf_P(pct, sizeof(pct), PSTR("%d%%"), v.value);   // the OLED shows "N%" too
     putRight(0, pct, t);
     drawBar(1, 2, 26, v.value * 52 / 100, a(R_BF));
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include "event-ring.h"
 #include "log-ring.h"
 
@@ -30,14 +31,14 @@ const char* eventTypeName(uint8_t type) {
 }
 
 size_t eventJson(const Event& e, char* out, size_t cap) {
-    int n = snprintf(out, cap, "{\"seq\":%u,\"ms\":%lu,\"type\":\"%s\",\"a\":%u,\"b\":%u}", (unsigned)e.seq,
+    int n = snprintf_P(out, cap, PSTR("{\"seq\":%u,\"ms\":%lu,\"type\":\"%s\",\"a\":%u,\"b\":%u}"), (unsigned)e.seq,
                      (unsigned long)e.ms, eventTypeName(e.type), (unsigned)e.a, (unsigned)e.b);
     if (n < 0 || (size_t)n >= cap) { if (cap) out[0] = '\0'; return 0; }
     return (size_t)n;
 }
 
 size_t eventsJson(const EventRing& r, uint16_t since, uint16_t boot, char* out, size_t cap) {
-    int w = snprintf(out, cap, "{\"boot\":%u,\"events\":[", (unsigned)boot);
+    int w = snprintf_P(out, cap, PSTR("{\"boot\":%u,\"events\":["), (unsigned)boot);
     if (w < 0 || (size_t)w >= cap) return 0;
     size_t n = (size_t)w;
     Event e;

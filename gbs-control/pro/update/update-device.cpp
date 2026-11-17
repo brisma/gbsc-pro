@@ -1,4 +1,5 @@
 #include "../log/log.h"
+#include "../util/pgm.h"
 #include "../log/event-ring.h"
 #include <Arduino.h>
 #include <Updater.h>
@@ -126,7 +127,7 @@ uint8_t updateStage() { return g.state == DONE ? 2 : g.state == VERIFY ? 1 : 0; 
 int updateUploadJson(char* out, size_t n) {
     static const char* const kState[] = {"idle", "receiving", "verifying", "failed", "done"};
     char err[24];
-    if (g.error) snprintf(err, sizeof(err), "\"%s\"", g.error); else strcpy(err, "null");
+    if (g.error) snprintf_P(err, sizeof(err), PSTR("\"%s\""), g.error); else strcpy(err, "null");
     return snprintf_P(out, n, PSTR("{\"state\":\"%s\",\"error\":%s,\"received\":%u,\"total\":%u}"),
                       kState[g.state <= DONE ? g.state : 0], err, (unsigned)g.received, (unsigned)g.total);
 }
@@ -174,11 +175,11 @@ void updateLoop() {
     if (g.state == RECEIVING && pct != g.lastPct && pct % 5 == 0) {
         g.lastPct = pct;
         if (pct % 25 == 0) logPrintf(LC_UPDATE, LL_DEBUG, PSTR("upload %u %%"), (unsigned)pct);
-        char v[8]; snprintf(v, sizeof(v), "%u", pct);
+        char v[8]; snprintf_P(v, sizeof(v), PSTR("%u"), pct);
         settingsBroadcastStatusText("status.update", v);
     }
     if (g.state == FAILED) {
-        char v[32]; snprintf(v, sizeof(v), "error:%s", g.error ? g.error : "unknown");
+        char v[32]; snprintf_P(v, sizeof(v), PSTR("error:%s"), g.error ? g.error : "unknown");
         settingsBroadcastStatusText("status.update", v);
         logPrintf(LC_UPDATE, LL_INFO, PSTR("%s failed: %s"), g.source == US_PULL ? "download" : "upload",
                   g.error ? g.error : "unknown");

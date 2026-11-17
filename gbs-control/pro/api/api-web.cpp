@@ -1,5 +1,6 @@
 // HTTP routes of the unified API and the request guard middleware (device only)
 #include "../input/input-auto-device.h"
+#include "../util/pgm.h"
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include "../../options.h"
@@ -269,14 +270,14 @@ void actionsPost(AsyncWebServerRequest* req, uint8_t) {
     if (d.kind == ACT_FUNC && d.arg == AF_ADV_READ) {         // as dev.tv5725_read: the gen of the result comes back now
         r.data[4] = advLinkRegReadAnnounce();
         apiQueueAction(r);
-        char body[24]; snprintf(body, sizeof(body), "{\"ok\":1,\"gen\":%u}", (unsigned)r.data[4]);
+        char body[24]; snprintf_P(body, sizeof(body), PSTR("{\"ok\":1,\"gen\":%u}"), (unsigned)r.data[4]);
         sendJson(req, 200, body);
         return;
     }
     if (d.kind == ACT_FUNC && d.arg == AF_TV5725_READ) {      // the result's gen: a GET never shows an older read as new
         r.data[1] = apiRegsAnnounce(r.data[0]);
         apiQueueAction(r);
-        char body[24]; snprintf(body, sizeof(body), "{\"ok\":1,\"gen\":%u}", (unsigned)r.data[1]);
+        char body[24]; snprintf_P(body, sizeof(body), PSTR("{\"ok\":1,\"gen\":%u}"), (unsigned)r.data[1]);
         sendJson(req, 200, body);
         return;
     }
@@ -311,10 +312,10 @@ void devRegsGet(AsyncWebServerRequest* req, uint8_t) {
     TvRegsResult r = apiRegsResult();
     std::unique_ptr<char[]> json(new (std::nothrow) char[600]);
     if (!json) { sendJson(req, 503, F("{\"error\":\"memory\"}")); return; }
-    int w = snprintf(json.get(), 600, "{\"state\":\"%s\",\"seg\":%u,\"gen\":%u,\"hex\":\"", kState[r.state & 3],
+    int w = snprintf_P(json.get(), 600, PSTR("{\"state\":\"%s\",\"seg\":%u,\"gen\":%u,\"hex\":\""), kState[r.state & 3],
                      (unsigned)r.seg, (unsigned)r.gen);
     if (r.v) w += (int)regsHexFormat(r.v, 256, json.get() + w, 600 - w);
-    snprintf(json.get() + w, 600 - w, "\"}");
+    snprintf_P(json.get() + w, 600 - w, PSTR("\"}"));
     sendJson(req, 200, json.get());
 }
 

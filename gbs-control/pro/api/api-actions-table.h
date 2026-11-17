@@ -57,9 +57,6 @@
     ACTION(dev_print_info,     "dev.print_info",           CAP_NONE, ACTION_DEV, ACT_SERIAL, 'i') \
     ACTION(dev_tv5725_dump,    "dev.tv5725_dump",          CAP_NONE, ACTION_DEV, ACT_SERIAL, 'd') \
     ACTION(dev_tv5725_read,    "dev.tv5725_read",          CAP_NONE, ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_TV5725_READ) \
-    ACTION(dev_si5351,         "dev.si5351",               CAP_NONE, ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_SI5351) \
-    ACTION(dev_loop_pause,     "dev.loop_pause",           CAP_NONE, ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_LOOP_PAUSE) \
-    ACTION(dev_clockgen,       "dev.clockgen",             CAP_NONE, ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_CLOCKGEN) \
     ACTION(dev_content_probe,  "dev.content_probe",        CAP_NONE, ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_CONTENT_PROBE) \
     ACTION(dev_listen,         "dev.listen",               CAP_ADV,  ACTION_DEV | ACTION_PARAM_BYTES, ACT_FUNC, AF_LISTEN) \
     ACTION(dev_tv5725_reg,     "dev.tv5725_reg",           CAP_NONE, ACTION_DEV | ACTION_PARAM_HEX | ACTION_REGS, ACT_FUNC, AF_TV5725_REG) \

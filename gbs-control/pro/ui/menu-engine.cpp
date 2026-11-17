@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../util/pgm.h"
 #include <string.h>
 // Every snprintf here cuts its text to a screen line on purpose (28 OSD cells, the overlay and OLED widths)
 #if defined(__GNUC__) && !defined(__clang__)
@@ -764,7 +765,7 @@ void MenuEngine::activate(const Row& r, uint8_t k) {
         profileRowLabel((int8_t)a, name, sizeof(name));
         copyStr(base, sizeof(base), name);              // 20 characters: "Save to " + name fill the question's 28 cells
         for (size_t l = strlen(base); l && base[l - 1] == ' '; l--) base[l - 1] = '\0';
-        snprintf(t, sizeof(t), "%s %s", s, base);
+        snprintf_P(t, sizeof(t), PSTR("%s %s"), s, base);
         openConfirm(r, t);
         return;
     }
@@ -858,7 +859,7 @@ void MenuEngine::keyboardDone() {
             const ProfileEntry& pe = be_.profiles().at((uint8_t)kbProfile_);
             if (!pe.used || strcmp(pe.name, kbOrig_)) {    // deleted or renamed from the web meanwhile
                 char f[12], t[29]; menuStrCopy(S_T_FAILED, f, sizeof(f));
-                snprintf(t, sizeof(t), "%s changed", f);
+                snprintf_P(t, sizeof(t), PSTR("%s changed"), f);
                 toastText(t);
                 return;
             }
@@ -1226,12 +1227,12 @@ bool MenuEngine::waitDone(Wait& w, bool autoload) {
     }
     if (!res[0]) {
         char d[12]; menuStrCopy(autoload ? S_T_LOADED : S_T_DONE, d, sizeof(d));
-        if (autoload) snprintf(t, sizeof(t), "%s %s", d, w.name);
+        if (autoload) snprintf_P(t, sizeof(t), PSTR("%s %s"), d, w.name);
         else copyStr(t, sizeof(t), d);
     } else {
         char f[12]; menuStrCopy(S_T_FAILED, f, sizeof(f));
         menuSanitize(res);
-        snprintf(t, sizeof(t), "%s %s", f, res);
+        snprintf_P(t, sizeof(t), PSTR("%s %s"), f, res);
     }
     toastText(t);
     if (discarded) { discardedText(w.discarded, t, sizeof(t)); toastText(t); }   // queued behind "Loaded ..."
@@ -1241,7 +1242,7 @@ bool MenuEngine::waitDone(Wait& w, bool autoload) {
 void MenuEngine::discardedText(const char* name, char* out, size_t len) {
     char u[16];
     menuStrCopy(S_T_DISCARDED, u, sizeof(u));
-    snprintf(out, len, "%s %s", u, name);
+    snprintf_P(out, len, PSTR("%s %s"), u, name);
 }
 
 void MenuEngine::autoloadStarted(const char* name, uint32_t now, const char* discarded) {
@@ -1298,7 +1299,7 @@ void MenuEngine::statusPopup(uint32_t now, bool due) {
         if (loaded[0]) {                                // what the pop-up would have named
             char d[12];
             menuStrCopy(S_T_LOADED, d, sizeof(d));
-            snprintf(t, sizeof(t), "%s %s", d, loaded);
+            snprintf_P(t, sizeof(t), PSTR("%s %s"), d, loaded);
             toastText(t);
         }
         if (notice) {
@@ -1528,7 +1529,7 @@ void MenuEngine::buildOverlay(MenuView& v) {
             else if (q) menuStrCopy(q, v.lines[0], sizeof(v.lines[0]));
             else {                                      // no question in the table: "<label>?"
                 menuStrCopy(confirmNode_.label, tmp, sizeof(tmp) - 1);
-                snprintf(v.lines[0], sizeof(v.lines[0]), "%s?", tmp);
+                snprintf_P(v.lines[0], sizeof(v.lines[0]), PSTR("%s?"), tmp);
             }
             v.lineCount = 1;
             v.choice = confirmChoice_;
@@ -1550,7 +1551,7 @@ void MenuEngine::buildOverlay(MenuView& v) {
             char label[21], value[21];
             menuStrCopy(rv_.node.label, label, sizeof(label));
             menuFormatValue(rv_.node, be_, value, sizeof(value));
-            snprintf(v.lines[0], sizeof(v.lines[0]), "%s: %s", label, value);
+            snprintf_P(v.lines[0], sizeof(v.lines[0]), PSTR("%s: %s"), label, value);
             menuStrCopy(S_T_KEEP, v.lines[1], sizeof(v.lines[1]));
             v.lineCount = 2;
             uint32_t left = kRevertMs - (now_ - rv_.at);
@@ -1645,7 +1646,7 @@ static const char* presetName(uint8_t id) {
 // A rate in tenths of Hz: "49.7Hz"; 0 is "not measured yet" (the first ~1.5 s of a source): "--.-Hz"
 static void hzText(uint16_t x10, char* out, size_t n) {
     if (!x10) copyStr(out, n, "--.-Hz");
-    else snprintf(out, n, "%u.%uHz", x10 / 10, x10 % 10);
+    else snprintf_P(out, n, PSTR("%u.%uHz"), x10 / 10, x10 % 10);
 }
 
 static bool near(uint16_t v, uint16_t target) { return v + 10 >= target && v <= target + 10; }
@@ -1659,7 +1660,7 @@ static void sourceRes(const MenuSignal& s, char* res, size_t n) {
     else if (near(s.srcLines, 562)) copyStr(res, n, "1080i");    // the lines of one field
     else if (near(s.srcLines, 1125)) copyStr(res, n, s.interlaced ? "1080i" : "1080p");
     else if (!s.srcLines) copyStr(res, n, "--");   // not stable yet (MenuLineFilter)
-    else snprintf(res, n, "%uL", s.srcLines);
+    else snprintf_P(res, n, PSTR("%uL"), s.srcLines);
 }
 
 // Source text of the info panel (after "IN   ")
@@ -1671,7 +1672,7 @@ static void sourceText(MenuBackend& be, char* out, size_t n) {
     sourceRes(s, res, sizeof(res));
     char hz[8];
     hzText(s.srcHzX10, hz, sizeof(hz));
-    snprintf(out, n, "%s %s  %s", inputLongName(in), res, hz);
+    snprintf_P(out, n, PSTR("%s %s  %s"), inputLongName(in), res, hz);
 }
 
 // Status pop-up: "<input> <lines> <standard>", "<output> <rate> <profile>" (the profile clipped first),
@@ -1685,7 +1686,7 @@ void MenuEngine::buildStatus(MenuView& v) {
     snprintf(v.lines[0], sizeof(v.lines[0]), std[0] ? "%s %s %s" : "%s %s", inputLongName(in), res, std);
     char hz[8];
     hzText(s.outHzX10, hz, sizeof(hz));
-    int n = snprintf(v.lines[1], sizeof(v.lines[1]), "%s %s ", presetName(s.presetId), hz);
+    int n = snprintf_P(v.lines[1], sizeof(v.lines[1]), PSTR("%s %s "), presetName(s.presetId), hz);
     menuProfileLabel(be_, label, sizeof(label));
     if (n > 0 && n < (int)sizeof(v.lines[1])) copyStr(v.lines[1] + n, sizeof(v.lines[1]) - (size_t)n, label);
     v.lineCount = 2;
@@ -1704,10 +1705,10 @@ void MenuEngine::buildStatus(MenuView& v) {
         char prof[10], of[4];
         menuStrCopy(S_PROFILE, prof, sizeof(prof));
         menuStrCopy(S_T_OF, of, sizeof(of));
-        snprintf(v.lines[2], sizeof(v.lines[2]), "%s %d %s %u: %s", prof, pos, of, m, keys);
+        snprintf_P(v.lines[2], sizeof(v.lines[2]), PSTR("%s %d %s %u: %s"), prof, pos, of, m, keys);
     } else {                                           // none of them active: "2 profiles: Left/Right"
         char profs[10]; menuStrCopy(S_T_PROFILES, profs, sizeof(profs));
-        snprintf(v.lines[2], sizeof(v.lines[2]), "%u %s: %s", m, profs, keys);
+        snprintf_P(v.lines[2], sizeof(v.lines[2]), PSTR("%u %s: %s"), m, profs, keys);
     }
     v.lineCount = 3;
 }
@@ -1734,7 +1735,7 @@ void MenuEngine::mainTitle(char* out, size_t n) {
     menuStrCopy(S_MENU, out, n);
     if (ver[0]) {
         size_t l = strlen(out);
-        snprintf(out + l, n - l, " v%s", ver);
+        snprintf_P(out + l, n - l, PSTR(" v%s"), ver);
     }
 }
 
@@ -1750,12 +1751,12 @@ void MenuEngine::idle(MenuIdle& o) {
     if (o.searching) {
         copyStr(o.inLine, sizeof(o.inLine), "Source: Auto");      // not the path being probed
     } else if (absent) {
-        snprintf(o.inLine, sizeof(o.inLine), "Input %s", inputLongName(in));
+        snprintf_P(o.inLine, sizeof(o.inLine), PSTR("Input %s"), inputLongName(in));
     } else {
         sourceRes(s, o.inRes, sizeof(o.inRes));
         char hz[8];
         hzText(s.srcHzX10, hz, sizeof(hz));
-        snprintf(o.inLine, sizeof(o.inLine), "%s %s", inputShortName(in), hz);
+        snprintf_P(o.inLine, sizeof(o.inLine), PSTR("%s %s"), inputShortName(in), hz);
         copyStr(o.outRes, sizeof(o.outRes), presetShort(s.presetId));
         hzText(s.outHzX10, o.outHz, sizeof(o.outHz));
         o.locked = s.frameLocked;
@@ -1773,7 +1774,7 @@ void MenuEngine::idle(MenuIdle& o) {
     char ip[20], mode[12];
     be_.text(LT_WIFI_IP, ip, sizeof(ip));
     be_.text(LT_WIFI_MODE, mode, sizeof(mode));
-    snprintf(o.net, sizeof(o.net), "%s%s", strcmp(mode, "AP") ? "" : "AP ", ip);
+    snprintf_P(o.net, sizeof(o.net), PSTR("%s%s"), strcmp(mode, "AP") ? "" : "AP ", ip);
     o.hasVolume = (be_.caps() & CAP_AUDIO) != 0;
     o.volume = (uint8_t)be_.value(SID_audio_volume);
     o.muted = be_.value(SID_audio_mute) != 0 || o.volume == 0;
@@ -1788,25 +1789,25 @@ void MenuEngine::buildInfo(MenuView& v) {
     // No sync/stripper rows (not useful at a glance): the IP address instead
     char src[24];
     sourceText(be_, src, sizeof(src));
-    snprintf(v.lines[n++], sizeof(v.lines[0]), "IN   %s", src);
+    snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("IN   %s"), src);
     if (s.noSignal || s.advFreeRun) {                   // say how to pick the input
         char c[24]; menuStrCopy(S_T_CHOOSE_INPUT, c, sizeof(c));
-        snprintf(v.lines[n++], sizeof(v.lines[0]), "OK   %s", c);
+        snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("OK   %s"), c);
     }
     if (!s.noSignal) {
         char hz[8];
         hzText(s.outHzX10, hz, sizeof(hz));
-        snprintf(v.lines[n++], sizeof(v.lines[0]), "OUT  %s  %s%s", presetName(s.presetId), hz, s.frameLocked ? " LOCK" : "");
+        snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("OUT  %s  %s%s"), presetName(s.presetId), hz, s.frameLocked ? " LOCK" : "");
     }
     be_.text(LT_PROFILE_ACTIVE, t, sizeof(t));
     menuSanitize(t);
     if (!t[0]) menuStrCopy(S_DEFAULTS, t, sizeof(t));   // no active profile: "Defaults", as the Profiles row
-    snprintf(v.lines[n++], sizeof(v.lines[0]), "PROF %s", t);
+    snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("PROF %s"), t);
     be_.text(LT_WIFI_SSID, t, sizeof(t));
     if (!t[0]) be_.text(LT_WIFI_MODE, t, sizeof(t));
     menuSanitize(t);
-    snprintf(v.lines[n++], sizeof(v.lines[0]), "NET  %s", t);
+    snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("NET  %s"), t);
     be_.text(LT_WIFI_IP, t, sizeof(t));
-    snprintf(v.lines[n++], sizeof(v.lines[0]), "IP   %s", t);
+    snprintf_P(v.lines[n++], sizeof(v.lines[0]), PSTR("IP   %s"), t);
     v.lineCount = n;
 }

@@ -1,4 +1,5 @@
 #include "oled-splash.h"
+#include "../util/pgm.h"
 #include <stdio.h>
 #include "oled-splash-art.h"
 
@@ -6,11 +7,11 @@ void oledDrawSplash(OLEDDisplay& d, const char* version) {
     static const char kHost[] = "https://github.com";
     static const char kPath[] = "/brisma";
     char ver[24];
-    snprintf(ver, sizeof(ver), "v%s", version);
+    snprintf_P(ver, sizeof(ver), PSTR("v%s"), version);
     d.clear();
     d.setColor(WHITE);
     d.drawXbm(0, 0, gbsicon_width, gbsicon_height, gbsicon_bits);
-    d.setFont(ArialMT_Plain_10);
+    d.setFont(oledFont10(d));
     // "by Brisma" centred under "GBSC"; a long version (right-aligned) pushes it left so they keep 4 px apart, and a
     // channel build too long for both (e.g. "3.10.10-beta999") shows the version alone (the link names the author)
     static const char kBy[] = "by Brisma";
