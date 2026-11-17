@@ -3,14 +3,15 @@ import type { Ctx } from "./http.ts";
 import { sendJson, parseMultipart } from "./http.ts";
 import type { Sim } from "./server.ts";
 import { advBackupText, advRestore } from "./routes-adv-store.ts";
+import { parseSetting, storedValue } from "./validate.ts";
 
 export function backupText(sim: Sim): string {
   const st = sim.state;
   const keys = (scope: string) => st.gen.registry.settings
     .filter((e) => e.scope === scope && !e.secret && !e.ro && st.values.has(e.key))
-    .map((e) => `${e.key}=${st.values.get(e.key)}`).join("\n");
+    .map((e) => `${e.key}=${e.type === "str" ? st.values.get(e.key) : storedValue(e, Number(st.values.get(e.key)))}`).join("\n");
   const active = sim.profiles.active >= 0 ? `\nprofile.active=p${String(sim.profiles.active).padStart(2, "0")}` : "";   // read-only over HTTP, but in a backup
-  let t = `# gbsc-backup 1\n[file cfg/device.cfg]\nschema=1\n${keys("device")}${active}\n[file cfg/current.cfg]\nschema=1\n${keys("profile")}\n[profiles]\n`;
+  let t = `# gbsc-backup 1\n[file cfg/device.cfg]\nschema=2\n${keys("device")}${active}\n[file cfg/current.cfg]\nschema=2\n${keys("profile")}\n[profiles]\n`;
   sim.profiles.slots.forEach((p, i) => { if (p) t += `[profile p${String(i).padStart(2, "0")}]\n${sim.profiles.exportText(i)}`; });
   t += advBackupText(sim);
   if (sim.faults.has("bigBackup")) t += "# padding\n".repeat(70000);   // a device full of profiles and ADV files
@@ -42,7 +43,9 @@ export function restorePost(sim: Sim, ctx: Ctx): void {
       if (m[1] === "profile.active") { active = m[2]; continue; }
       const e = sim.state.entry(m[1]);
       if (!e || e.ro || e.secret) continue;
-      sim.state.values.set(m[1], e.type === "str" ? m[2] : Number(m[2]));
+      if (e.type === "str") { sim.state.values.set(m[1], m[2]); continue; }
+      const v = parseSetting(e, m[2]);
+      if (v !== null) sim.state.values.set(m[1], v);
     }
     if (text.includes("\n[profiles]\n")) sim.profiles.restore(profiles, active);
     advRestore(sim, text);

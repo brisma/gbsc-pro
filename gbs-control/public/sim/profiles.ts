@@ -1,6 +1,7 @@
 // Profiles store of the simulator: the JSON of profilesJson, the ops of profile-store.cpp with their results on the
 // WebSocket (status.profile_op, status.profile, status.profile_modified, status.profiles_rev)
 import type { DeviceState } from "./state.ts";
+import { parseSetting, storedValue } from "./validate.ts";
 
 export const PROFILE_MAX = 36;
 export const REGIONS = ["NTSC-U", "NTSC-J", "PAL", "PAL60", "None"];
@@ -59,9 +60,11 @@ export class ProfileStore {
 
   exportText(i: number): string {
     const p = this.slots[i]!;
-    let t = `schema=1\nprofile.name=${p.name}\nprofile.region=${p.region}\nprofile.modes=${p.modes.join(",")}\n`;
-    if (p.hasFp) t += `profile.fp.input=${p.fpInput}\nprofile.fp.lines=${p.fpLines}\n`;
-    for (const [k, v] of Object.entries(p.settings)) t += `${k}=${v}\n`;
+    let t = `schema=2\nprofile.name=${p.name}\nprofile.region=${p.region}\nprofile.modes=${p.modes.join(",")}\n`;
+    const src = this.state.entry("input.last");
+    const source = src ? storedValue(src, p.fpInput) : "";
+    if (p.hasFp && source && !/^[0-9]+$/.test(source)) t += `profile.fp.source=${source}\nprofile.fp.lines=${p.fpLines}\n`;
+    for (const [k, v] of Object.entries(p.settings)) { const e = this.state.entry(k); t += `${k}=${e ? storedValue(e, v) : v}\n`; }
     return t;
   }
 
@@ -73,10 +76,16 @@ export class ProfileStore {
     const nm = sanitizeName(get("profile.name") ?? null); if (!nm) return null;
     const settings: Record<string, number> = {};
     for (const line of text.split("\n")) {
-      const m = /^([a-z0-9_.]+)=(\d+)$/.exec(line.trim());
-      if (m && !m[1].startsWith("profile.") && this.state.entry(m[1])?.scope === "profile") settings[m[1]] = Number(m[2]);
+      const m = /^([a-z0-9_.]+)=(.+)$/.exec(line.trim());
+      const e = m && !m[1].startsWith("profile.") ? this.state.entry(m[1]) : undefined;
+      if (!m || !e || e.scope !== "profile" || e.type === "str") continue;
+      const v = parseSetting(e, m[2]);
+      if (v !== null) settings[m[1]] = v;
     }
-    return { name: nm, region: get("profile.region") ?? "None", hasFp: !!get("profile.fp.input"), fpInput: Number(get("profile.fp.input") ?? 0),
+    const src = this.state.entry("input.last");
+    const fpText = get("profile.fp.source");
+    const fpInput = src && fpText ? parseSetting(src, fpText) : null;   // the fingerprint exists only with a known source
+    return { name: nm, region: get("profile.region") ?? "None", hasFp: fpInput !== null, fpInput: fpInput ?? 0,
              fpLines: Number(get("profile.fp.lines") ?? 0), lastused: this.clock++, modes: (get("profile.modes") ?? "ntsc").split(","), settings };
   }
 

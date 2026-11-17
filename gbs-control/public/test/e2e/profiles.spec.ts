@@ -171,7 +171,7 @@ test("import then export round trip", async ({ page, sim }) => {
   await a.getByRole("menuitem", { name: "Export" }).click();
   const file = await (await dl).path();
   const text = readFileSync(file!, "utf8");
-  expect(text).toMatch(/^schema=1\nprofile\.name=SNES\n/);
+  expect(text).toMatch(/^schema=2\nprofile\.name=SNES\n/);
   await api(sim, "POST", "/api/profiles/delete", { id: (await list(sim)).profiles[0].id });
   await new Promise((r) => setTimeout(r, 120));
   await page.reload();

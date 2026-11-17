@@ -37,20 +37,30 @@ export function settingValid(e: RegEntry, v: number): boolean {
   return true;
 }
 
+// settingsIdFromLabel: lower case, every run of characters other than a-z and 0-9 one '_', none at the ends; ""
+// when it does not fit (n = the C buffer size)
+export function idFromLabel(label: string, n = 32): string {
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  return id.length + 1 > n ? "" : id;
+}
+
+// settingsParse: a plain number first, then for an enum or a bool the text normalised to an option id
 export function parseSetting(e: RegEntry, input: string): number | null {
-  let text = input;
-  while (text.startsWith(" ") || text.startsWith("\t")) text = text.slice(1);
-  if (e.type === "bool") {
-    if (text === "true" || text === "on") return 1;
-    if (text === "false" || text === "off") return 0;
-  }
-  if (e.type === "enum") {
-    const label = text.replace(/[ \r]+$/, "");
-    const hit = e.options.find((o) => o.n.slice(0, 31) === label);
-    if (hit) return hit.v;
-  }
-  const v = parseUnsigned(text);
-  return v !== null && settingValid(e, v) ? v : null;
+  const v = parseUnsigned(input);
+  if (v !== null) return settingValid(e, v) ? v : null;
+  if (e.type !== "enum" && e.type !== "bool") return null;
+  const id = idFromLabel(input);
+  if (!id || /^[0-9]+$/.test(id)) return null;
+  if (e.type === "bool") return id === "on" || id === "true" ? 1 : id === "off" || id === "false" ? 0 : null;
+  const hit = e.options.find((o) => o.id === id);
+  return hit ? hit.v : null;
+}
+
+// settingsFormatStored: what a file holds (an enum's id, on/off, the number otherwise)
+export function storedValue(e: RegEntry, v: number): string {
+  if (e.type === "bool") return v ? "on" : "off";
+  if (e.type === "enum") { const o = e.options.find((x) => x.v === v); if (o) return o.id; }
+  return String(v);
 }
 
 export function optionAvailable(e: RegEntry, v: number, caps: number): boolean {
