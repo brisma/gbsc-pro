@@ -249,7 +249,7 @@ void test_screen_page_has_no_50hz_row(void) {
     FakeBackend& be = easy(1, false, false);
     be.apply(SID_sys_menu_mode, 1);
     be.settle();
-    TEST_ASSERT_EQUAL_STRING("Position, Size, Edge mask, Reset screen, Mask position", rows(be, "Screen").c_str());
+    TEST_ASSERT_EQUAL_STRING("Position, Size, Edge mask, Mask position, Reset screen", rows(be, "Screen").c_str());
 }
 
 void test_easy_pages_rgb_scart_240p(void) {
@@ -352,6 +352,17 @@ void test_hdmi_level_rows(void) {
     be.apply(SID_output_hdmi, 0); be.settle();                           // Full: nothing to tune
     TEST_ASSERT_FALSE(shown(be, "HDMI black"));
     TEST_ASSERT_FALSE(shown(be, "HDMI white"));
+}
+
+// Reset screen closes the Screen page in both modes: Mask position (Advanced) sits above it, with the other masks
+void test_reset_screen_is_the_last_screen_row(void) {
+    for (uint8_t mode = 0; mode < 2; mode++) {
+        FakeBackend& be = easy(1, false, false);
+        be.apply(SID_sys_menu_mode, mode); be.settle();
+        std::string r = rows(be, "Screen");
+        const std::string last = "Reset screen";
+        TEST_ASSERT_TRUE_MESSAGE(r.size() >= last.size() && r.compare(r.size() - last.size(), last.size(), last) == 0, r.c_str());
+    }
 }
 
 // Knob direction is an Easy row (TV menu too) of System > Device; the knob's steps stay Advanced, right under it.
@@ -478,6 +489,7 @@ int main() {
     RUN_TEST(test_digital_sync_row);
     RUN_TEST(test_sync_dejitter_row);
     RUN_TEST(test_hdmi_level_rows);
+    RUN_TEST(test_reset_screen_is_the_last_screen_row);
     RUN_TEST(test_easy_pages_rgb_scart_240p);
     RUN_TEST(test_easy_pages_component_480i);
     RUN_TEST(test_easy_pages_svideo_ntsc);

@@ -52,6 +52,7 @@ being asked for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz sty
   moves it left and right; it sat at the left. (#72)
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
   and the greyed Scanlines row no longer points to Bob for it. (#72)
+- TV menu and OLED, Advanced: Screen > Reset screen is the last row again (Mask position was under it).
 - Web app: System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the
   OLED were right.
 - HDMI range Auto also compresses 480p and 576p, which the HDMI converter sends as limited range like 720p and
