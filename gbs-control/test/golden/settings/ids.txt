@@ -39,7 +39,7 @@ output.frame_lock_method method_1=0 method_2=1
 output.force_60hz on=1 off=0
 output.style_50hz pal_tv=0 full_height=1 as_60hz=2
 output.match_preset on=1 off=0
-output.hdmi_range auto=1 full=0 limited=3
+output.hdmi_range full=0 limited=1
 output.hdmi_black
 output.hdmi_white
 input.auto_gain on=1 off=0

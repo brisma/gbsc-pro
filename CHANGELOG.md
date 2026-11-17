@@ -7,10 +7,10 @@ refer to brisma/gbsc-pro.
 
 ## 3.0.0-beta3
 
-The shape of the picture becomes a choice (three new rows in Output, under Resolution), HDMI range gets black and
-white levels, and the settings files store fixed names. Two things change without being asked for: a 50 Hz source is
-now shown as a PAL TV showed it (see 50Hz style), and profiles saved by an earlier beta need one step each to auto-load
-again (see Settings files).
+The shape of the picture becomes a choice (three new rows in Output, under Resolution), HDMI range becomes Full or
+Limited with black and white levels, and the settings files store fixed names. Three things change without being asked
+for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz style), HDMI range is Full by default (see HDMI
+range), and profiles saved by an earlier beta need one step each to auto-load again (see Settings files).
 
 ### Output
 - **Aspect**: Auto keeps the picture's shape, as before. **Force 4:3** puts side bars on 480p, 576p, 960p and 1024p,
@@ -31,10 +31,11 @@ again (see Settings files).
   70 Hz and faster PC modes, on HD sources passed through, or on the Downscale output. (#69)
 - The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
   grid are welcome.
-- **HDMI black** and **HDMI white** (Output, Advanced, per profile like HDMI range; shown while the range
-  compresses): where the compression puts black (0..20, default 16) and white (215..255, default 235). The defaults
-  are the standard's; lower HDMI black for a TV that shows black grey, raise it for one that crushes the darkest
-  greys.
+- **HDMI range** is **Full** (the default: the scaler's whole range, as on upstream gbs-control and as PC monitors
+  and most adapters expect) or **Limited** (every scaled mode compressed into the TV range); Auto and Limited SD are
+  gone. With Limited, **HDMI black** and **HDMI white** (Advanced, per profile) set that range: 16 and 235 by default,
+  0..20 and 215..255. On a TV whose darkest greys merge into black, choose Limited, then lower HDMI black until black
+  is black with every dark step still apart (a grey scale such as the 240p Test Suite's helps). (#72)
 
 ### Input
 - **Digital sync** (Advanced, per profile, off by default; boards with the sync separator, RGB inputs): the scaler
@@ -70,11 +71,6 @@ again (see Settings files).
 - TV menu and OLED, Advanced: Screen > Reset screen is the last row again (Mask position was under it).
 - Web app: System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the
   OLED were right.
-- HDMI range Auto also compresses 480p and 576p, which a TV reads as limited range like 720p and 1080p (HDMI
-  standard, CEA-861): their darkest greys were crushed into black. 960p, 1024p and 1200p stay full range, as the HDMI standard
-  (CEA-861) says; Limited SD is gone. A black that looks grey with Auto or Limited: lower HDMI black. On the standard
-  board, which has no HDMI converter of its own and drives VGA monitors and adapters in full range, Auto no longer
-  compresses: Limited does when an adapter needs it. (#72)
 
 ## 3.0.0-beta2 - 2026-11-14
 

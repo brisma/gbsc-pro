@@ -14,7 +14,6 @@ static ColorIn neutral(bool yuv, bool component) {
     in.hdmiRange = 0;
     in.hdmiBlack = 16;
     in.hdmiWhite = 235;
-    in.builtInHdmi = true;
     in.presetId = 0x01;
     return in;
 }
@@ -39,31 +38,31 @@ void test_defaults_match_today(void) {
 
 void test_hdmi_last(void) {
     ColorIn in = neutral(false, false);
-    in.hdmiRange = 1;                       // Auto: the TV formats the HDMI converter sends as limited range
-    in.presetId = 0x05;
-    ColorRegs r = pictureColor(in);
-    TEST_ASSERT_EQUAL_HEX8(0x80 * 219 / 255, r.yGain);   // black 16 .. white 235, the CEA-861 limited range
-    TEST_ASSERT_EQUAL_INT8(16, r.yOff);
-    static const uint8_t tv[] = {0x03, 0x13, 0x04, 0x14, 0x05, 0x15};   // 720p, 480p, 576p, 1080p (60/50 Hz)
-    for (uint8_t id : tv) { in.presetId = id; TEST_ASSERT_EQUAL_HEX8_MESSAGE(0x6D, pictureColor(in).yGain, "TV format"); }
-    static const uint8_t pc[] = {0x01, 0x11, 0x02, 0x12, 0x07, 0x17};   // 960p, 1024p, 1200p: left alone
-    for (uint8_t id : pc) { in.presetId = id; TEST_ASSERT_EQUAL_HEX8_MESSAGE(0x80, pictureColor(in).yGain, "PC format"); }
-    in.hdmiRange = 3;                       // Limited: every scaled mode
-    in.presetId = 0x12;
-    TEST_ASSERT_EQUAL_HEX8(0x6D, pictureColor(in).yGain);
+    in.hdmiRange = 1;                       // Limited: every scaled mode, black 16 .. white 235 (CEA-861) by default
+    static const uint8_t scaled[] = {0x01, 0x11, 0x02, 0x12, 0x03, 0x13, 0x04, 0x14, 0x05, 0x15, 0x07, 0x17};
+    for (uint8_t id : scaled) {
+        in.presetId = id;
+        ColorRegs r = pictureColor(in);
+        TEST_ASSERT_EQUAL_HEX8_MESSAGE(0x80 * 219 / 255, r.yGain, "scaled mode");
+        TEST_ASSERT_EQUAL_INT8_MESSAGE(16, r.yOff, "scaled mode");
+    }
     in.presetId = 0x06;                     // the downscale output is not compressed
     TEST_ASSERT_EQUAL_HEX8(0x80, pictureColor(in).yGain);
     in.presetId = 0x13;
-    in.hdBypass = true;
+    in.hdBypass = true;                     // nor an HD source passed through
     TEST_ASSERT_EQUAL_HEX8(0x80, pictureColor(in).yGain);
+    in.hdBypass = false;
+    in.hdmiRange = 0;                       // Full: the whole 0..255
+    TEST_ASSERT_EQUAL_HEX8(0x80, pictureColor(in).yGain);
+    TEST_ASSERT_EQUAL_INT8(0, pictureColor(in).yOff);
     ColorIn y = neutral(true, false);       // the compression scales the existing offset, then lifts by the black level
-    y.hdmiRange = 3;
+    y.hdmiRange = 1;
     TEST_ASSERT_EQUAL_INT8((-2 * 219) / 255 + 16, pictureColor(y).yOff);
 }
 
 void test_hdmi_black_and_white_levels(void) {
     ColorIn in = neutral(false, false);
-    in.hdmiRange = 3;
+    in.hdmiRange = 1;
     in.hdmiBlack = 16;                      // the nominal limited range
     in.hdmiWhite = 235;
     ColorRegs r = pictureColor(in);
@@ -89,7 +88,7 @@ void test_hdmi_black_and_white_levels(void) {
 
 void test_custom_preset_not_double_compressed(void) {
     ColorIn a = neutral(true, false), b = a;
-    a.hdmiRange = b.hdmiRange = 3;
+    a.hdmiRange = b.hdmiRange = 1;
     b.customPreset = true;
     ColorRegs ra = pictureColor(a), rb = pictureColor(b);
     TEST_ASSERT_EQUAL_HEX8(ra.yGain, rb.yGain);
@@ -161,27 +160,12 @@ void test_adc_gain_step_stops_at_the_ends(void) {
 }
 
 
-// The standard board has no HDMI converter of its own: its VGA output goes to monitors and adapters that expect full
-// range, so Auto does not compress there; Limited still does
-void test_auto_compresses_only_with_the_built_in_hdmi(void) {
-    ColorIn in = neutral(false, false);
-    in.presetId = 0x05;                     // 1080p
-    in.hdmiRange = 1;
-    in.builtInHdmi = false;
-    TEST_ASSERT_EQUAL_HEX8(0x80, pictureColor(in).yGain);
-    TEST_ASSERT_EQUAL_INT8(0, pictureColor(in).yOff);
-    in.hdmiRange = 3;
-    TEST_ASSERT_EQUAL_HEX8(0x80 * 219 / 255, pictureColor(in).yGain);
-    in.hdmiRange = 1; in.builtInHdmi = true;
-    TEST_ASSERT_EQUAL_HEX8(0x80 * 219 / 255, pictureColor(in).yGain);
-}
 
 
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_defaults_match_today);
     RUN_TEST(test_hdmi_last);
-    RUN_TEST(test_auto_compresses_only_with_the_built_in_hdmi);
     RUN_TEST(test_hdmi_black_and_white_levels);
     RUN_TEST(test_custom_preset_not_double_compressed);
     RUN_TEST(test_brightness_contrast_saturation);

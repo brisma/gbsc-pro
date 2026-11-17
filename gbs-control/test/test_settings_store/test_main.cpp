@@ -240,7 +240,7 @@ void test_serialize_writes_ids(void) {
 
 // The profile hash is the CRC of the serialised scope: the same state gives the same CRC, also after a write and load
 void test_scope_crc_stable_across_serialisations(void) {
-    u.outputAspect = 2; u.hdmiLimitedRange = 3; u.deintMode = 1; u.wantScanlines = 1;
+    u.outputAspect = 2; u.hdmiLimitedRange = 1; u.deintMode = 1; u.wantScanlines = 1;
     uint32_t a = settingsScopeCrc(u, SettingScope::Profile), b = settingsScopeCrc(u, SettingScope::Profile);
     TEST_ASSERT_EQUAL_HEX32(a, b);
     std::string text;

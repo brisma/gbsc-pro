@@ -338,28 +338,23 @@ void test_sync_dejitter_row(void) {
     TEST_ASSERT_TRUE(there);                                             // the standard board's VGA input too
 }
 
-// The HDMI levels tune the compression: shown only while HDMI range compresses (not Full), Advanced only
+// The HDMI levels tune the compression: shown only with HDMI range = Limited, Advanced only, on both boards
 void test_hdmi_level_rows(void) {
     auto shown = [](FakeBackend& be, const char* label) { return rows(be, "Output").find(label) != std::string::npos; };
     FakeBackend& be = easy(1, false, false);
-    be.apply(SID_output_hdmi, 3); be.settle();
-    TEST_ASSERT_FALSE(shown(be, "HDMI black"));                    // not in Easy
+    be.apply(SID_output_hdmi, 1); be.settle();
+    TEST_ASSERT_FALSE(shown(be, "HDMI black"));                          // not in Easy
     be.apply(SID_sys_menu_mode, 1); be.settle();
     TEST_ASSERT_TRUE_MESSAGE(shown(be, "HDMI black"), rows(be, "Output").c_str());
     TEST_ASSERT_TRUE(shown(be, "HDMI white"));
-    be.apply(SID_output_hdmi, 1); be.settle();                           // Auto compresses too
-    TEST_ASSERT_TRUE(shown(be, "HDMI black"));
     be.apply(SID_output_hdmi, 0); be.settle();                           // Full: nothing to tune
     TEST_ASSERT_FALSE(shown(be, "HDMI black"));
     TEST_ASSERT_FALSE(shown(be, "HDMI white"));
-    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);    // standard board: Auto does not compress
+    platformSetCaps(CAP_ORIGINAL | CAP_OLED | CAP_ENCODER | CAP_LED);    // the standard board: the same rule
     FakeBackend& std = easy(1, false, false);
     std.apply(SID_sys_menu_mode, 1); std.apply(SID_output_hdmi, 1); std.settle();
-    bool autoShown = shown(std, "HDMI black");
-    std.apply(SID_output_hdmi, 3); std.settle();
     bool limitedShown = shown(std, "HDMI black");
     platformSetCaps(CAPS_DEFAULT);
-    TEST_ASSERT_FALSE(autoShown);
     TEST_ASSERT_TRUE(limitedShown);
 }
 

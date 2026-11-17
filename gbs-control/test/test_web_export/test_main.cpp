@@ -444,6 +444,7 @@ static std::vector<Scenario> scenarios() {
     { Scenario s = base("hotspot", "pro", 1, 1); s.wifiAp = true; v.push_back(s); }
     { Scenario s = base("profile-active", "pro", 1, 1); s.profile = 0; v.push_back(s); }
     { Scenario s = base("digital-sync-on", "pro", 1, 1); s.values = {{SID_input_digital_sync, 1}}; v.push_back(s); }
+    { Scenario s = base("hdmi-limited", "pro", 1, 1); s.values = {{SID_output_hdmi, 1}}; v.push_back(s); }
     return v;
 }
 

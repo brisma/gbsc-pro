@@ -69,7 +69,7 @@ void test_defaults_match_legacy_defaults(void) {
     TEST_ASSERT_EQUAL_UINT8(1, u.advSyncStripper);
     TEST_ASSERT_EQUAL_UINT8(50, u.advBrightness);    // menu v3: decoder levels 0..100
     TEST_ASSERT_EQUAL_UINT8(19, u.advFilterWYShaping);
-    TEST_ASSERT_EQUAL_UINT8(1, u.hdmiLimitedRange);   // Auto: compress where the HDMI converter flags limited range
+    TEST_ASSERT_EQUAL_UINT8(0, u.hdmiLimitedRange);   // Full: the scaler's whole range, as upstream
 }
 
 void test_comb_defaults_are_set(void) {   // legacy loadDefaultUserOptions() forgot these
@@ -114,10 +114,8 @@ void test_parse_enum_accepts_number(void) {
 
 void test_format_enum_by_name(void) {
     char buf[32];
-    settingsFormat(defOf("output.hdmi_range"), 3, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("Limited", buf);
     settingsFormat(defOf("output.hdmi_range"), 1, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("Auto", buf);
+    TEST_ASSERT_EQUAL_STRING("Limited", buf);
     settingsFormat(defOf("output.hdmi_range"), 0, buf, sizeof(buf));
     TEST_ASSERT_EQUAL_STRING("Full", buf);
     settingsFormat(defOf("adv.format_sv"), 6, buf, sizeof(buf));
@@ -355,7 +353,7 @@ void test_flash_ids_with_suffixes(void) {
 
 void test_format_stored_ids_and_words(void) {
     TEST_ASSERT_EQUAL_STRING("force_4_3", stored("output.aspect", 1).c_str());
-    TEST_ASSERT_EQUAL_STRING("auto", stored("output.hdmi_range", 1).c_str());
+    TEST_ASSERT_EQUAL_STRING("limited", stored("output.hdmi_range", 1).c_str());
     TEST_ASSERT_EQUAL_STRING("off", stored("picture.scanlines", 0).c_str());
     TEST_ASSERT_EQUAL_STRING("on", stored("system.ext_clock", 1).c_str());       // the setting's meaning (INVERT is in uopt)
     TEST_ASSERT_EQUAL_STRING("80", stored("audio.volume", 80).c_str());
@@ -389,8 +387,9 @@ void test_parse_ids_labels_numbers(void) {
     TEST_ASSERT_TRUE(parses("output.aspect", "force 4:3", 1));
     TEST_ASSERT_TRUE(parses("output.aspect", "1", 1));
     TEST_ASSERT_TRUE(rejects("output.aspect", "nope"));
-    TEST_ASSERT_TRUE(parses("output.hdmi_range", "Limited", 3));
-    TEST_ASSERT_TRUE(parses("output.hdmi_range", "limited", 3));
+    TEST_ASSERT_TRUE(parses("output.hdmi_range", "Limited", 1));
+    TEST_ASSERT_TRUE(parses("output.hdmi_range", "limited", 1));
+    TEST_ASSERT_TRUE(rejects("output.hdmi_range", "auto"));
 }
 
 void test_bool_words_normalised(void) {

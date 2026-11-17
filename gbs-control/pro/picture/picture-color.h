@@ -8,10 +8,9 @@ struct ColorIn {
     bool customPreset;      // registers came from a profile dump (never read back: the bases are constants)
     uint8_t r, g, b;        // picture.red/green/blue, 128 = neutral
     uint8_t brightness, contrast, saturation;   // 0..100, 50 = neutral
-    uint8_t hdmiRange;      // output.hdmi_range: 0 Full, 1 Auto (the TV formats), 3 Limited (every scaled mode)
+    uint8_t hdmiRange;      // output.hdmi_range: 0 Full, 1 Limited (every scaled mode)
     uint8_t hdmiBlack;      // output.hdmi_black: the level black is lifted to when compressing
     uint8_t hdmiWhite;      // output.hdmi_white: the level white is brought down to when compressing
-    bool builtInHdmi;       // the board's own HDMI converter (Pro): Auto compresses only there
     uint8_t presetId;       // rto->presetID of the running output mode
     bool hdBypass;          // HD bypass: no HDMI compression
 };

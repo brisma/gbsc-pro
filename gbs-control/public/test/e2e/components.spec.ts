@@ -62,8 +62,8 @@ test("long option lists use the dropdown", async ({ page, sim }) => {
   await expect.poll(async () => (await posts(sim, "/api/settings")).length).toBe(1);
   expect((await posts(sim, "/api/settings"))[0]).toMatch(/^osd\.position=\d+$/);
   const hdmi = row(page, "menu:output/hdmi-range");   // short lists: segments
-  await hdmi.getByRole("radio", { name: "Full" }).click();
-  await expect.poll(async () => (await posts(sim, "/api/settings")).at(-1)).toBe("output.hdmi_range=0");   // Full = 0 (OPT_HDMI)
+  await hdmi.getByRole("radio", { name: "Limited" }).click();
+  await expect.poll(async () => (await posts(sim, "/api/settings")).at(-1)).toBe("output.hdmi_range=1");   // Limited = 1 (OPT_HDMI)
 });
 
 test("look choices are segments, always open, one click each", async ({ page, sim }) => {

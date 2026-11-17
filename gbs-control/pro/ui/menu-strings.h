@@ -337,7 +337,7 @@
     S(H_EXT_CLOCK, "Uses the board's external clock chip when one is fitted. Applies after a restart.") \
     S(H_HDMI_BLACK, "Lower it if black looks grey. Raise it if the darkest greys vanish into black.") \
     S(H_HDMI_WHITE, "Lower it if the brightest greys merge into white. Raise it for a brighter white.") \
-    S(H_HDMI_RANGE, "Grey blacks: try Full. Crushed dark areas: try Limited. Auto: Limited at TV formats on Pro HDMI.") \
+    S(H_HDMI_RANGE, "Darkest greys merge into black: try Limited and set HDMI black. Grey blacks: use Full.") \
     S(H_SHARPNESS, "Edge sharpening of the scaler. 0 turns it off. The Filter row sets it too.") \
     S(H_DEINTERLACE, "How 480i/576i are shown. Adaptive: sharper still images. Bob: no combing and allows scanlines.") \
     S(H_RESET_GEOMETRY, "Undoes Position/Size/Edge mask for this signal mode. The profile in use forgets them too.") \

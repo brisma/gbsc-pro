@@ -21,10 +21,10 @@ const posts = async (sim: SimHandle, path: string) =>
   (await sim.requests()).requests.filter((r) => r.method === "POST" && r.path === path).map((r) => r.body);
 const getJson = async (sim: SimHandle, path: string) => (await fetch(sim.url + path, { headers: { Host: "gbscontrol.local" } })).json();
 
-// A row greyed by another setting (menuEnabled): the setting a user turns on first, as the TV reason says
+// A row greyed or hidden by another setting: the setting a user turns on first (HDMI black/white: Limited)
 const DEPENDS: Record<string, Record<string, number>> = {
   ftl_on: { "output.frame_lock": 1 }, ftl_ok: { "output.force_60hz": 0 }, i2p_on: { "adv.i2p": 1 }, deint_ok: { "adv.i2p": 0 },
-  ace_on: { "adv.ace": 1 }, sv_wy: { "adv.filter_wy_override": 1 },
+  ace_on: { "adv.ace": 1 }, sv_wy: { "adv.filter_wy_override": 1 }, hdmi_limited: { "output.hdmi_range": 1 },
 };
 
 async function findScenario(sim: SimHandle, it: Item): Promise<{ state: PredState; values: Record<string, number> } | null> {
@@ -38,7 +38,7 @@ async function findScenario(sim: SimHandle, it: Item): Promise<{ state: PredStat
     let state = stateFromStore({ values, info, wifiMode: wifi.mode, mode: "advanced", profileActive: false });
     let st = rowState(it.row, state, it.group, it.section);
     const dep = DEPENDS[rowNode(it.row)?.pred ?? ""];
-    if (st.visible && st.reason && dep) {
+    if (dep && (!st.visible || st.reason)) {   // greyed or hidden by a setting the user turns on first
       for (const [k, v] of Object.entries(dep)) await sim.post("/__sim/tv", { key: k, value: String(v) });
       await new Promise((ok) => setTimeout(ok, 250));
       const v2 = await getJson(sim, "/api/settings");
