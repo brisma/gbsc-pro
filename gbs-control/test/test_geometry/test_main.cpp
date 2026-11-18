@@ -437,6 +437,23 @@ void test_shorter_picture_stays_centred(void) {
     TEST_ASSERT_EQUAL_UINT16(12, k.ifVbSp);
 }
 
+// Integer at 1080p 50 Hz: x4 (1152 lines) does not fit 1080 and cut the frame's top and bottom; x3 keeps the whole
+// 288-line frame in view (864 lines, bars above and below) and the width follows (x3/4)
+void test_integer_at_1080p_50_shows_the_whole_frame(void) {
+    GeoTarget t;
+    TEST_ASSERT_TRUE(geoTarget(0x15, st(GEO_AUTO, true, GEO_PAL_TV), t));
+    TEST_ASSERT_EQUAL_UINT16(683, t.vert.vScale);
+    TEST_ASSERT_EQUAL_UINT16(750, t.widthPm);
+
+    GeoRegs r = table(0x15);
+    GeoResult g = geometryApply(r, 0x15, st(GEO_AUTO, true, GEO_PAL_TV));
+    TEST_ASSERT_TRUE(g.acted && g.changed && !g.failed);
+    TEST_ASSERT_EQUAL_UINT16(683, r.vScale);
+    TEST_ASSERT_UINT16_WITHIN(3, 864, r.disVbSt - r.disVbSp);                 // the picture's lines, no more
+    TEST_ASSERT_UINT16_WITHIN(2, (28 + 1125) / 2, (r.disVbSp + r.disVbSt) / 2);   // centred on the table's window
+    TEST_ASSERT_TRUE(r.disVbSp > 28 && r.disVbSt < 1125);
+}
+
 void test_full_height_with_integer_is_pal_tv(void) {
     GeoState n = geoNormalise(0x15, st(GEO_AUTO, true, GEO_FULL_HEIGHT));
     TEST_ASSERT_EQUAL_UINT8(GEO_PAL_TV, n.style50);
@@ -658,6 +675,7 @@ int main(int, char**) {
     RUN_TEST(test_unmarked_full_height_registers_are_recognised);
     RUN_TEST(test_taller_picture_stays_centred);
     RUN_TEST(test_shorter_picture_stays_centred);
+    RUN_TEST(test_integer_at_1080p_50_shows_the_whole_frame);
     RUN_TEST(test_full_height_with_integer_is_pal_tv);
     RUN_TEST(test_style_only_on_50hz_tables);
     RUN_TEST(test_full_ignores_style_and_integer_width);

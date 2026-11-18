@@ -18,7 +18,8 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
   1200p; it is the only value that changes the shape. (#49, #66)
 - **Integer scale**: every line of the console becomes the same number of lines on the TV, and the width follows so
   that the shape stays. At 60 Hz it changes 1080p (x4, 960 lines, bars above and below); 720p, 960p and 1200p are
-  whole multiples already. (#49)
+  whole multiples already. At 50 Hz the whole 288-line frame stays in view: 720p x2, 960p, 1024p and 1080p x3,
+  1200p x4. (#49)
 - **50Hz style** replaces Screen > PAL full height and works at every resolution. **PAL TV**, the new default, shows
   a 50 Hz source the way a PAL TV did: nothing is stretched, and a game that draws 224 or 240 lines has black bands
   above and below. **Full height** is the picture of earlier versions (taller, a little wide). **As 60Hz** fills the
