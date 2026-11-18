@@ -14,6 +14,7 @@ import { Card, GroupBand } from "../../sections/Card.tsx";
 import type { Group } from "../../layout/types.ts";
 import type { ProfileEntry } from "../../store/device.ts";
 import { op, loadProfile, discardChanges, profileError } from "./ops.tsx";
+import { palRate } from "../../model/chain.ts";
 import { exportOne, exportAll, importFiles } from "./transfer.tsx";
 
 const MAX = 36;
@@ -92,7 +93,7 @@ function openRename(p: ProfileEntry): void {
 // New profile: name with the console catalog, region, and when a profile already matches the signal: Replace it /
 // Keep both (the menu's same-signal prompt)
 function openNew(): void {
-  const pal = Number(device.info.value?.signal?.src_hz10 ?? 600) < 550;
+  const pal = palRate(device.info.value?.signal?.src_hz10);
   const Body = () => {
     const [name, setName] = useState("");
     const [region, setRegion] = useState(pal ? "PAL" : "NTSC-U");

@@ -11,12 +11,10 @@ import { Frame } from "./Frame.tsx";
 import { rowNode } from "./resolve.ts";
 import { rowOptions, type RowProps } from "./controls.tsx";
 import { RES_HELP } from "./looks.tsx";
+import { signalText } from "../model/chain.ts";
 
 const cableName = (v: number) => rowOptions(undefined, "input.source").find((o) => o.v === v)?.n ?? "";
-const signalText = () => {
-  const sig = device.info.value?.signal;
-  return sig && !sig.none ? `${sig.lines}${sig.interlaced ? "i" : "p"} ${Math.round(Number(sig.src_hz10) / 10)} Hz` : "";
-};
+const signalNow = () => signalText(device.info.value?.signal);
 const Check = () => <Icon name="check_circle" cls="ck" />;
 
 // Phone: the cables as a list (picture, name, what it carries now)
@@ -37,7 +35,7 @@ function SourceList({ onPick }: { onPick: () => void }) {
         return (
           <button type="button" class={`po${c.v === choice ? " on" : ""}`} role="option" aria-selected={c.v === choice} onClick={() => pick(c.v)}>
             <span class="pi"><img alt="" src={connectorUrl(c.v)} /></span>
-            <span><b>{c.n}</b><small class={on ? "sig" : ""}>{on ? signalText() || T.signal : "no signal"}</small></span>{c.v === choice ? <Check /> : <span />}
+            <span><b>{c.n}</b><small class={on ? "sig" : ""}>{on ? signalNow() || T.signal : "no signal"}</small></span>{c.v === choice ? <Check /> : <span />}
           </button>
         );
       })}
@@ -125,7 +123,7 @@ export function SourceStrip() {
   const info = device.info.value;
   const active = Number(info?.input?.active ?? 0);
   const searching = info?.input?.state === "searching";
-  const sigText = signalText();
+  const sigText = signalNow();
   const cables = rowOptions(undefined, "input.source").filter((o) => o.v > 0);
   const pick = (v: number) => { if (v !== choice) void device.writeSettings([["input.source", v]]); };
   const scanVisible = (v: number) => {

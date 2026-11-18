@@ -1,7 +1,7 @@
 // The signal chain model: stages, texts and cable states
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chain, outputLines, upscaleText, scanlinesText, type ChainIn } from "../../app/model/chain.ts";
+import { chain, outputLines, upscaleText, scanlinesText, signalText, palRate, type ChainIn } from "../../app/model/chain.ts";
 
 const base: ChainIn = { offline: false, searching: false, signal: { none: 0, lines: 240, interlaced: 0, src_hz10: 600, out_hz10: 600 },
   cable: "RGB SCART", resolution: "960p/1024p", filter: "Normal", scanlines: "Off", frameLock: false, ypbpr: false };
@@ -26,6 +26,16 @@ test("a 50 Hz source on 960p/1024p goes out at 1024p", () => {
 test("interlaced input, non-integer factor, frame lock, YPbPr, scanlines", () => {
   const c = chain({ ...base, signal: { none: 0, lines: 480, interlaced: 1, src_hz10: 599, out_hz10: 599 }, resolution: "1080p", frameLock: true, ypbpr: true, scanlines: "30", filter: "Sharp" });
   assert.deepEqual(c.stages.map((s) => [s.value, s.detail]), [["RGB SCART", "480i 60 Hz"], ["Upscale ×2.3", "Frame lock on"], ["Sharp filter", "Scanlines 30"], ["1080p", "59.9 Hz, YPbPr"]]);
+});
+
+test("VGA pass-through (VGA upscaling off): bypass whatever the Resolution says, no 0 Hz", () => {
+  const c = chain({ ...base, cable: "VGA", signal: { none: 0, lines: 525, interlaced: 0, src_hz10: 0, out_hz10: 0, preset: 0x22 } });
+  assert.deepEqual(c.stages.map((s) => [s.value, s.detail]), [["VGA", "525p"], ["Bypass", "no scaling"], ["Normal filter", "Scanlines off"], ["Same as input", "RGB"]]);
+});
+
+test("HD bypass: the rate of the source on the output", () => {
+  const c = chain({ ...base, resolution: "HD bypass", signal: { none: 0, lines: 750, interlaced: 0, src_hz10: 600, out_hz10: 600, preset: 0x21 } });
+  assert.deepEqual([c.stages[1].value, c.stages[3].value, c.stages[3].detail], ["Bypass", "Same as input", "60.0 Hz, RGB"]);
 });
 
 test("searching: the first cable searches, the rest is off, the output is dimmed", () => {
@@ -63,4 +73,19 @@ test("helpers", () => {
   assert.equal(scanlinesText("Light"), "Light scanlines");
   assert.equal(scanlinesText("40"), "Scanlines 40");
   assert.equal(scanlinesText("Custom"), "Custom scanlines");
+});
+
+test("signal text: lines and rate, no rate while it is not measured", () => {
+  assert.equal(signalText({ none: 0, lines: 240, interlaced: 0, src_hz10: 601 }), "240p 60 Hz");
+  assert.equal(signalText({ none: 0, lines: 480, interlaced: 1, src_hz10: 500 }), "480i 50 Hz");
+  assert.equal(signalText({ none: 0, lines: 525, interlaced: 0, src_hz10: 0, preset: 0x22 }), "525p");
+  assert.equal(signalText({ none: 1 }), "");
+  assert.equal(signalText(undefined), "");
+});
+
+test("a PAL rate only when one was measured", () => {
+  assert.equal(palRate(500), true);
+  assert.equal(palRate(600), false);
+  assert.equal(palRate(0), false);          // VGA pass-through: not measured, not PAL
+  assert.equal(palRate(undefined), false);
 });

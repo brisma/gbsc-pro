@@ -10,6 +10,7 @@ import { download, copyText } from "../../shell/files.ts";
 import { eventText, ago } from "../../texts/events.ts";
 import { rowOptions } from "../../rows/controls.tsx";
 import { choiceValue, choiceOptions } from "../../model/choices.ts";
+import { isBypass, signalText } from "../../model/chain.ts";
 import { profileLabel } from "../../store/profiles.ts";
 import { activeProfile } from "../profiles/ops.tsx";
 import { Card, GroupBand } from "../../sections/Card.tsx";
@@ -125,9 +126,9 @@ function SignalCard() {
       <div class="facts">
         <Fact k="Input" v={searching ? "Searching" : inputName(Number(i?.input?.active ?? 0))}
               d={`${auto ? "Auto" : "chosen by hand"}${i?.input?.termination ? ", 75 ohm on" : ""}`} />
-        <Fact k="Signal" v={g.none ? "No signal" : `${g.lines}${g.interlaced ? "i" : "p"} ${hz(g.src_hz10)}`}
+        <Fact k="Signal" v={g.none ? "No signal" : signalText(g)}
               d={searching ? "still looking" : g.none ? "nothing on this input" : lastFound && since(lastFound.ms) !== "now" ? `stable for ${since(lastFound.ms)}` : "stable"} />
-        <Fact k="Output" v={res} d={[Number(g.out_hz10) ? hz(g.out_hz10) : "", lock ? "frame lock" : ""].filter(Boolean).join(", ") || "rate not measured"} />
+        <Fact k="Output" v={!g.none && isBypass(g) ? "Bypass" : res} d={[Number(g.out_hz10) ? hz(g.out_hz10) : "", lock ? "frame lock" : ""].filter(Boolean).join(", ") || "rate not measured"} />
         <Fact k="Profile" v={p ? profileLabel(p) : "Defaults"} d={unsaved.value ? "unsaved changes" : p ? "saved" : "no profile loaded"} />
         <Fact k="Sync losses" v={lost.length ? String(lost.length) : "None"}
               d={lost.length ? `last one ${since(lost[lost.length - 1].ms) === "now" ? "just now" : ago(lost[lost.length - 1].ms, now)}` : "in the history below"} />
