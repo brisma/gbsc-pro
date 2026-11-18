@@ -3051,6 +3051,45 @@ static void applyProfileSyncWatcher()
 // as mode 1..4 and sets its own capture start after it (rgbhvCaptureStart): the step's move is kept for that.
 static int16_t gGeoCaptureMove = 0;   // IF_VB lines the last step moved the capture start by
 static float gRgbhvHz = 0;            // scaled RGBHV: the source's field rate, measured before its table loads
+// The PRO's HDMI converter (its only video output) knows no 480p or 576p: it takes them for VESA 640x480 and 800x600
+// (the same line counts) and shows the lines and the part of each line those modes have. The 576p table's picture sat
+// 3.9 cm high and 1.2 cm left on a TV (its window starts 33 lines after the vertical sync, where 576p starts later and
+// 800x600 sooner), the 480p table's 0.55 cm left. Measured with the SNES (576p: PAL TV at 50 Hz; 480p at 60 Hz): 576p
+// window and memory read 23 lines lower (centred in the lines the converter shows) and the capture 23 half lines
+// earlier (the picture centred in it); the memory read and the window 13 clocks later at 576p, 8 sooner at 480p (the
+// tables' capture start moved too, for every board: the picture centred in what the scaler shows). The standard board's
+// analog output keeps the tables (its display takes the 480p / 576p window), and so does the VGA input, whose 480p
+// capture start was measured through the converter (rgbhvCaptureLine). Before the geometry step, which works on the
+// table as loaded
+struct ProHdmiPlace { uint8_t preset; uint8_t lines; int8_t clocks; };
+static const ProHdmiPlace kProHdmiPlace[] = {{0x04, 0, -8}, {0x14, 23, 13}};
+static void proHdmiPlacement()
+{
+    if (rto->isCustomPreset || hwHas(CAP_ORIGINAL) || uopt->activeInputType == InputTypeVGA) return;
+    const ProHdmiPlace* p = nullptr;
+    for (const ProHdmiPlace& c : kProHdmiPlace)
+        if (c.preset == rto->presetID) p = &c;
+    if (!p) return;
+    if (p->lines) {
+        GBS::VDS_DIS_VB_SP::write(GBS::VDS_DIS_VB_SP::read() + p->lines);
+        GBS::VDS_DIS_VB_ST::write(GBS::VDS_DIS_VB_ST::read() + p->lines);
+        GBS::VDS_VB_SP::write(GBS::VDS_VB_SP::read() + p->lines);
+        int st = (int)GBS::IF_VB_ST::read() - p->lines;
+        if (st < 0) st = 0;
+        GBS::IF_VB_SP::write((uint16_t)(st + 2));
+        GBS::IF_VB_ST::write((uint16_t)st);
+    }
+    uint16_t total = GBS::VDS_HSYNC_RST::read();
+    if (!total) return;
+    auto later = [&](uint16_t v) { return (uint16_t)(((int)v + p->clocks + total) % total); };
+    GBS::VDS_HB_ST::write(later(GBS::VDS_HB_ST::read()));
+    GBS::VDS_HB_SP::write(later(GBS::VDS_HB_SP::read()));
+    GBS::VDS_DIS_HB_ST::write(later(GBS::VDS_DIS_HB_ST::read()));   // the window with it: no dirt at the left
+    GBS::VDS_DIS_HB_SP::write(later(GBS::VDS_DIS_HB_SP::read()));
+    logPrintf(LC_PRESET, LL_INFO, PSTR("%s: placed for the PRO's HDMI converter (it shows %s)"),
+              p->preset == 0x14 ? "576p" : "480p", p->preset == 0x14 ? "800x600" : "640x480");
+}
+
 static void geometryStep()
 {
     gGeoCaptureMove = 0;
@@ -3667,6 +3706,7 @@ void doPostPresetLoadSteps()
         GBS::VDS_UV_STEP_BYPS::write(1);
     }
 
+    proHdmiPlacement();
     geometryStep();   // before the clock generator takes the preset's display clock: the step may change it
 
     // transfer preset's display clock to ext. gen
