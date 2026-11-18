@@ -133,7 +133,12 @@ void WifiTune::burstDone(const WifiBurst& b) {
     aborts_ = 0;
     if (b.got == 0 && firstBurst_) {                      // the router may not answer ping at all
         if (!retried_) { retried_ = true; pending_ = true; return; }
+        if (pendingClock_ == pc_) {                       // or the preset's clock silences the radio (129.6 MHz with
+            p90_[pc_] = (uint16_t)(kWifiLostMs * 10);     // VGA at 960p): next() tries a candidate, a burst that
+            return;                                       // answers there ends the doubt
+        }
         gaveUp_ = true;
+        restore_ = applied_ != clockFor(pc_);             // silent there too: the router; back to the preset's clock
         return;
     }
     firstBurst_ = false;

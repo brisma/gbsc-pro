@@ -108,9 +108,24 @@ void test_router_ignores_ping_gives_up(void) {
     WifiTune t; ready(t);
     expect(t, WT_MEASURE, 2);       t.burstDone(burst(250, 0));
     expect(t, WT_MEASURE, 2);       t.burstDone(burst(250, 0));   // the one retry, same clock
+    expect(t, WT_SET_MEASURE, 4);   t.burstDone(burst(250, 0));   // silent on 144 too: the router
+    expect(t, WT_APPLY, 2);                                       // back to the preset's clock
     expect(t, WT_NONE, 0);
     TEST_ASSERT_TRUE(t.gaveUp());
     TEST_ASSERT_EQUAL_UINT8(2, t.clockFor(2));
+}
+
+// VGA at 960p (preset clock 129.6 MHz): every echo lost twice on the preset's clock, and the round ended as "the router
+// does not answer ping" with the radio left silenced. The clock itself can be the cause: one burst on 144 tells
+void test_silent_preset_clock_tries_144_before_giving_up(void) {
+    WifiTune t; ready(t);
+    expect(t, WT_MEASURE, 2);       t.burstDone(burst(250, 0));
+    expect(t, WT_MEASURE, 2);       t.burstDone(burst(250, 0));
+    expect(t, WT_SET_MEASURE, 4);   t.burstDone(burst(9));       // 144 answers: the clock was the cause
+    expect(t, WT_NONE, 0);
+    TEST_ASSERT_FALSE(t.gaveUp());
+    TEST_ASSERT_EQUAL_UINT8(4, t.clockFor(2));
+    TEST_ASSERT_TRUE(t.roundComplete());
 }
 
 void test_lossy_burst_is_not_a_silent_router(void) {
@@ -325,6 +340,7 @@ int main(int, char**) {
     RUN_TEST(test_better_but_not_good_144_still_tries_162);
     RUN_TEST(test_no_clear_winner_back_to_preset_clock);
     RUN_TEST(test_router_ignores_ping_gives_up);
+    RUN_TEST(test_silent_preset_clock_tries_144_before_giving_up);
     RUN_TEST(test_lossy_burst_is_not_a_silent_router);
     RUN_TEST(test_new_preset_clock_measured_silently);
     RUN_TEST(test_candidate_equal_to_preset_clock_skipped);
