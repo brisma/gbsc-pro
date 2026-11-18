@@ -62,12 +62,16 @@ uint32_t profileSignalMilliHzKnown(uint8_t input, uint8_t mode, uint16_t lines, 
 static uint32_t signalRate(uint8_t input, uint8_t mode, uint16_t lines, bool interlaced, bool fresh) {
     bool held = rateHolds(input, mode, lines, interlaced);
     if (fresh || !held || (!gRate.milliHz && millis() - gRate.at >= 5000)) {
+        bool retry = held && !fresh;   // the same signal measured again after a failure
         gRate.valid = true;
         gRate.input = input; gRate.mode = mode; gRate.lines = lines; gRate.interlaced = interlaced;
         gRate.milliHz = profileSourceMilliHz();
         gRate.at = millis();
-        logPrintf(LC_PROFILE, LL_DEBUG, PSTR("source rate %lu.%03lu Hz (%u lines%s)"), (unsigned long)(gRate.milliHz / 1000),
-                  (unsigned long)(gRate.milliHz % 1000), (unsigned)lines, interlaced ? ", interlaced" : "");
+        // a retry that fails again says nothing new (the VGA pass-through has no rate to time: every 5 s)
+        if (!retry || gRate.milliHz)
+            logPrintf(LC_PROFILE, LL_DEBUG, PSTR("source rate %lu.%03lu Hz (%u lines%s)"),
+                      (unsigned long)(gRate.milliHz / 1000), (unsigned long)(gRate.milliHz % 1000), (unsigned)lines,
+                      interlaced ? ", interlaced" : "");
     }
     return gRate.milliHz;
 }
