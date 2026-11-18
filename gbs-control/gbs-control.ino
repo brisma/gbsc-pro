@@ -3140,12 +3140,38 @@ static void geometryStep()
         logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: %u edge(s) held inside the line or the capture start"), (unsigned)now.clamps);
 }
 
-// Scaled RGBHV from a 31 kHz source: upstream's capture start for that path (6 / 8) plus the geometry step's move, on a
-// table. A profile holds the value captured after this, the step's move included: it stays.
+// Scaled RGBHV from a 31 kHz source (the 480p table): where the capture starts in the line (IF_HB_SP2) and in the
+// frame (IF_VB_ST, IF_VB_SP 2 later), per output. Upstream wrote 0x68 and 6 for every output (1080p 0x8E with the
+// capture ending at 0x480, which cut the picture's right edge): a 640x480 picture sat right and low, its bottom cut.
+// Measured with a Dreamcast test card (its BootROM 640x480: picture 168 of 858 clocks, line 40), both ways centred;
+// a VESA 640x480 starts 5 lines and 0.4 us sooner, about 1 % of the picture. Outputs not measured (50 Hz tables,
+// 576p, 15 kHz) take the most common pair. A profile holds the values captured after this: they stay.
+struct RgbhvCapture { uint8_t preset; uint8_t lineStart; uint8_t frameStart; };
+static const RgbhvCapture kRgbhvCapture[] = {
+    {0x03, 161, 27},   // 720p
+    {0x04, 154, 25},   // 480p: 480 lines out, no margin
+    {0x05, 200, 27},   // 1080p
+};
+static const RgbhvCapture kRgbhvCaptureOther = {0, 146, 27};   // 960p, 1024p, 1200p
+static const RgbhvCapture* rgbhvCaptureOf(uint8_t preset)
+{
+    for (const RgbhvCapture& c : kRgbhvCapture)
+        if (c.preset == preset) return &c;
+    return &kRgbhvCaptureOther;
+}
+
+static void rgbhvCaptureLine()
+{
+    GBS::IF_HB_ST2::write(0x08);
+    GBS::IF_HB_SP2::write(rgbhvCaptureOf(rto->presetID)->lineStart);
+    GBS::IF_HBIN_SP::write(0x50);
+}
+
+// ... plus the geometry step's move, on a table
 static void rgbhvCaptureStart()
 {
     if (rto->isCustomPreset) return;
-    int st = 6 + gGeoCaptureMove;
+    int st = rgbhvCaptureOf(rto->presetID)->frameStart + gGeoCaptureMove;
     if (st < 0) st = 0;
     GBS::IF_VB_SP::write((uint16_t)(st + 2));
     GBS::IF_VB_ST::write((uint16_t)st);
@@ -6512,14 +6538,7 @@ void runSyncWatcher()
                     // note: this is all duplicated below. unify!
                     if (needPostAdjust) {
                         // base preset was "3" / no line doubling
-                        // info: actually the position needs to be adjusted based on hor. freq or "h:" value (todo!)
-                        GBS::IF_HB_ST2::write(0x08);  // patches
-                        GBS::IF_HB_SP2::write(0x68);  // image
-                        GBS::IF_HBIN_SP::write(0x50); // position
-                        if (rto->presetID == 0x05) {
-                            GBS::IF_HB_ST2::write(0x480);
-                            GBS::IF_HB_SP2::write(0x8E);
-                        }
+                        rgbhvCaptureLine();
 
                         float sfr = getSourceFieldRate(0);
                         if (sfr >= 69.0) {
@@ -6531,7 +6550,7 @@ void runSyncWatcher()
                         } else {
                             // 50/60Hz, presumably
                             // adjust vposition
-                            rgbhvCaptureStart();   // upstream: IF_VB 6 / 8
+                            rgbhvCaptureStart();
                         }
                     }
                 }
@@ -6625,14 +6644,7 @@ void runSyncWatcher()
                         // note: this is all duplicated above. unify!
                         if (needPostAdjust) {
                             // base preset was "3" / no line doubling
-                            // info: actually the position needs to be adjusted based on hor. freq or "h:" value (todo!)
-                            GBS::IF_HB_ST2::write(0x08);  // patches
-                            GBS::IF_HB_SP2::write(0x68);  // image
-                            GBS::IF_HBIN_SP::write(0x50); // position
-                            if (rto->presetID == 0x05) {
-                                GBS::IF_HB_ST2::write(0x480);
-                                GBS::IF_HB_SP2::write(0x8E);
-                            }
+                            rgbhvCaptureLine();
 
                             float sfr = getSourceFieldRate(0);
                             if (sfr >= 69.0) {
@@ -6644,7 +6656,7 @@ void runSyncWatcher()
                             } else {
                                 // 50/60Hz, presumably
                                 // adjust vposition
-                                rgbhvCaptureStart();   // upstream: IF_VB 6 / 8
+                                rgbhvCaptureStart();
                             }
                         }
                     } else {
