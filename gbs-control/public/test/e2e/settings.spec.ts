@@ -169,8 +169,13 @@ test("adaptive contrast rows write their settings and Reset adaptive", async ({ 
   await expect.poll(() => posts(sim, "/api/actions/adv.ace_defaults")).toEqual([""]);
 });
 
-test("analog out picks RGB or YPbPr", async ({ page, sim }) => {
+test("analog out: none on the Pro, RGB or YPbPr on the standard board", async ({ page, sim }) => {
   await open(page, "#/settings/output", "advanced");
+  await expect(row(page, "menu:output/resolution")).toBeVisible();
+  await expect(row(page, "menu:output/analog-out")).toHaveCount(0);   // the Pro's output feeds its HDMI converter
+  await sim.post("/__sim/scenario", { name: "standard-rgbs" });
+  await page.reload();
+  await expect(page.locator(".ui[data-ready]")).toBeVisible();
   const group = row(page, "menu:output/analog-out").getByRole("radiogroup", { name: "Analog out" });
   await expect(group.getByRole("radio", { name: "RGB", exact: true })).toHaveAttribute("aria-checked", "true");
   await group.getByRole("radio", { name: "YPbPr", exact: true }).click();

@@ -20,6 +20,9 @@ bool platformDetectDone(const PlatformProbes& p, uint8_t round);
 uint8_t platformCaps();
 void platformSetCaps(uint8_t caps);
 inline bool hwHas(uint8_t cap) { return (platformCaps() & cap) == cap; }
+// YPbPr on the scaler's analog output: the standard board's analog port only. On the Pro that output feeds the HDMI
+// converter, which reads RGB, so a stored YPbPr choice is ignored there
+inline bool platformYpbprOut(bool wanted) { return wanted && hwHas(CAP_ORIGINAL); }
 
 // "adv", "osd", "audio", "ir", "oled", "encoder", "led", "original" → bit; 0 when unknown
 uint8_t platformCapFromName(const char* name, size_t len);

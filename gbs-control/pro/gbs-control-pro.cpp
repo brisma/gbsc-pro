@@ -119,7 +119,7 @@ void applyPictureColor(void)
     // every colour register computed from the settings (picture-color.cpp), HDMI range last
     ColorIn in = {};
     in.yuvInput = rto->inputIsYpBpR;
-    in.componentOut = uopt->wantOutputComponent;
+    in.componentOut = platformYpbprOut(uopt->wantOutputComponent);
     in.customPreset = GBS::GBS_PRESET_CUSTOM::read() != 0;
     in.r = uopt->gbsColorR;
     in.g = uopt->gbsColorG;

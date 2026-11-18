@@ -246,6 +246,9 @@ void test_setting_availability_follows_caps_and_devmode(void) {
     TEST_ASSERT_FALSE(settingsAvailable(defOf("adv.brightness"), true));
     TEST_ASSERT_FALSE(settingsAvailable(defOf("osd.theme"), true));
     TEST_ASSERT_TRUE(settingsAvailable(defOf("picture.scanlines"), false));
+    TEST_ASSERT_TRUE(settingsAvailable(defOf("output.component"), false));    // the standard board's analog port
+    platformSetCaps(CAPS_PRO);
+    TEST_ASSERT_FALSE(settingsAvailable(defOf("output.component"), false));   // the Pro's output is its HDMI converter
     platformSetCaps(CAPS_DEFAULT);
     TEST_ASSERT_FALSE(settingsAvailable(defOf("dev.syncwatcher"), false));
     TEST_ASSERT_TRUE(settingsAvailable(defOf("dev.syncwatcher"), true));

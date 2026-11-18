@@ -58,6 +58,15 @@ void test_cap_names(void) {
     TEST_ASSERT_EQUAL_HEX8(0, platformCapFromName("", 0));
 }
 
+// The Pro's scaler output feeds its HDMI converter, which reads RGB only: a stored YPbPr choice must not blank it
+void test_ypbpr_out_only_on_the_standard_board(void) {
+    platformSetCaps(CAP_ORIGINAL | CAP_LED);
+    TEST_ASSERT_TRUE(platformYpbprOut(true));
+    TEST_ASSERT_FALSE(platformYpbprOut(false));
+    platformSetCaps(CAPS_PRO);
+    TEST_ASSERT_FALSE(platformYpbprOut(true));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_stv_alone_means_pro);
@@ -69,5 +78,6 @@ int main(int, char**) {
     RUN_TEST(test_probes_say_pro);
     RUN_TEST(test_hwhas_requires_all_bits);
     RUN_TEST(test_cap_names);
+    RUN_TEST(test_ypbpr_out_only_on_the_standard_board);
     return UNITY_END();
 }

@@ -5,6 +5,13 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
+## 3.0.0-beta4
+
+### Fixed
+- PRO: Output > Analog out (RGB / YPbPr) is gone from the menus and the web app. It is the standard board's analog
+  port; on the PRO that output feeds the HDMI converter, so YPbPr left the screen without a picture. A PRO that had
+  it on YPbPr is back to RGB by itself. (#80)
+
 ## 3.0.0-beta3 - 2026-11-18
 
 This beta is mostly about the picture. You can now choose its shape: **Aspect**, **Integer scale** and **50Hz style**

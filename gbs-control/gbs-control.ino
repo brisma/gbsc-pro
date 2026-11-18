@@ -908,7 +908,7 @@ void OutputComponentOrVGA()
 
     // TODO replace with rto->isCustomPreset?
     boolean isCustomPreset = GBS::GBS_PRESET_CUSTOM::read();
-    if (uopt->wantOutputComponent) {
+    if (platformYpbprOut(uopt->wantOutputComponent)) {
         SerialM.println(F("Output Format: Component"));
         GBS::VDS_SYNC_LEV::write(0x80); // 0.25Vpp sync (leave more room for Y)
         GBS::VDS_CONVT_BYPS::write(1);  // output YUV
@@ -2621,7 +2621,7 @@ boolean runAutoBestHTotal()
                 rto->syncLockFailIgnore--;
                 if (rto->syncLockFailIgnore == 0) {
                     GBS::DAC_RGBS_PWDNZ::write(1); // xth chance
-                    if (!uopt->wantOutputComponent) {
+                    if (!platformYpbprOut(uopt->wantOutputComponent)) {
                         GBS::PAD_SYNC_OUT_ENZ::write(0); // enable sync out // xth chance
                     }
                     rto->autoBestHtotalEnabled = false;
@@ -3731,7 +3731,7 @@ void doPostPresetLoadSteps()
         resetInterruptSogBadBit();
         delay(10);
         // works reliably now on my test HDMI dongle
-        if (rto->useHdmiSyncFix && !uopt->wantOutputComponent) {
+        if (rto->useHdmiSyncFix && !platformYpbprOut(uopt->wantOutputComponent)) {
             GBS::PAD_SYNC_OUT_ENZ::write(0); // sync out
         }
         delay(70); // minimum delay without random failures: TBD
@@ -3767,7 +3767,7 @@ void doPostPresetLoadSteps()
         // scaling rgbhv, HD modes, no autobesthtotal
         delay(10);
         // works reliably now on my test HDMI dongle
-        if (rto->useHdmiSyncFix && !uopt->wantOutputComponent) {
+        if (rto->useHdmiSyncFix && !platformYpbprOut(uopt->wantOutputComponent)) {
             GBS::PAD_SYNC_OUT_ENZ::write(0); // sync out
         }
         delay(20);
@@ -3778,7 +3778,7 @@ void doPostPresetLoadSteps()
     //SerialM.print(F("pp time: ")); SerialM.println(millis() - postLoadTimer);
 
     // make sure
-    if (rto->useHdmiSyncFix && !uopt->wantOutputComponent) {
+    if (rto->useHdmiSyncFix && !platformYpbprOut(uopt->wantOutputComponent)) {
         GBS::PAD_SYNC_OUT_ENZ::write(0); // sync out
     }
 
@@ -3855,7 +3855,7 @@ void doPostPresetLoadSteps()
     GBS::SP_CS_CLP_ST::write(32);
     GBS::SP_CS_CLP_SP::write(48); // same as reset parameters
 
-    if (!uopt->wantOutputComponent) {
+    if (!platformYpbprOut(uopt->wantOutputComponent)) {
         GBS::PAD_SYNC_OUT_ENZ::write(0); // enable sync out if needed
     }
     GBS::DAC_RGBS_PWDNZ::write(1); // DAC on if needed
@@ -9261,7 +9261,7 @@ void loop()
         if (rto->applyPresetDoneStage == 1) {
             // 2nd chance
             GBS::DAC_RGBS_PWDNZ::write(1); // 2nd chance
-            if (!uopt->wantOutputComponent) {
+            if (!platformYpbprOut(uopt->wantOutputComponent)) {
                 GBS::PAD_SYNC_OUT_ENZ::write(0); // enable sync out // 2nd chance
             }
             if (!rto->syncWatcherEnabled) {
@@ -9289,7 +9289,7 @@ void loop()
     } else if (rto->applyPresetDoneStage == 1 && (rto->continousStableCounter > 35)) {
         // 3rd chance
         GBS::DAC_RGBS_PWDNZ::write(1); // enable DAC // 3rd chance
-        if (!uopt->wantOutputComponent) {
+        if (!platformYpbprOut(uopt->wantOutputComponent)) {
             GBS::PAD_SYNC_OUT_ENZ::write(0); // enable sync out // 3rd chance
         }
 

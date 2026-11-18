@@ -66,7 +66,7 @@
     SETTING(osd_tv_changes,    "osd.tv_changes",        Bool, tvChanges,                     1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_ORIGINAL) \
     SETTING(audio_volume,      "audio.volume",          U8,   volume,                        80,     0, 100,    Profile, APPLY_AUDIO,       nullptr,     0, CAP_AUDIO) \
     SETTING(audio_mute,        "audio.mute",            Bool, audioMuted,                    0,      0, 1,      Device,  APPLY_AUDIO,       nullptr,     0, CAP_AUDIO) \
-    SETTING(output_component,  "output.component",      Bool, wantOutputComponent,           0,      0, 1,      Device,  APPLY_PRESET,      nullptr,     0, CAP_NONE) \
+    SETTING(output_component,  "output.component",      Bool, wantOutputComponent,           0,      0, 1,      Device,  APPLY_PRESET,      nullptr,     0, CAP_ORIGINAL) \
     SETTING(output_aspect,     "output.aspect",         Enum, outputAspect,                  0,      0, 2,      Device,  APPLY_PRESET,      OPT_ASPECT,  0, CAP_NONE) \
     SETTING(output_integer,    "output.integer_scale",  Bool, integerScale,                  0,      0, 1,      Device,  APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(sys_adc_cal,       "system.adc_calibration",Bool, enableCalibrationADC,          1,      0, 1,      Device,  APPLY_NONE,        nullptr,     0, CAP_NONE) \
