@@ -112,6 +112,19 @@ void test_bypass_uses_the_measured_rate(void) {
     TEST_ASSERT_EQUAL_UINT8(32, stvTimingForRate(OUT_BYPASS, 0, STV_XTAL_HZ).ld);       // unknown: conservative
 }
 
+// VGA pass-through: the line rate from the IF's line period (a quarter of the 27 MHz oscillator's counts)
+void test_line_rate_from_if_period(void) {
+    TEST_ASSERT_UINT32_WITHIN(100, 31469, stvLineHzFromIfPeriod(214));   // 640x480@60, read on the unit
+    TEST_ASSERT_UINT32_WITHIN(100, 15734, stvLineHzFromIfPeriod(429));   // 15 kHz NTSC
+    TEST_ASSERT_UINT32_WITHIN(1000, 80000, stvLineHzFromIfPeriod(84));   // SXGA@75
+    TEST_ASSERT_EQUAL_UINT32(0, stvLineHzFromIfPeriod(0));
+    TEST_ASSERT_EQUAL_UINT32(0, stvLineHzFromIfPeriod(511));             // the counter's top: overflowed
+    TEST_ASSERT_EQUAL_UINT32(0, stvLineHzFromIfPeriod(60));              // over 100 kHz: not a line rate
+    // 640x480 with the rate it gives: LD 63, the menu as on the scaled 480p output
+    TEST_ASSERT_EQUAL_UINT8(stvTimingFor(OUT_480P, STV_XTAL_HZ).ld,
+                            stvTimingForRate(OUT_BYPASS, stvLineHzFromIfPeriod(214), STV_XTAL_HZ, 504).ld);
+}
+
 // Bypass: the rows follow the visible lines of the source (18 lines at 480, as the scaled outputs), not 480p's
 void test_bypass_rows_follow_the_visible_lines(void) {
     StvTiming t = stvTimingForRate(OUT_BYPASS, 45000, STV_XTAL_HZ, 720);     // 720p
@@ -160,6 +173,137 @@ void test_bypass_window_of_hd_formats(void) {
     TEST_ASSERT_FALSE(w.valid);
     TEST_ASSERT_FALSE(stvBypassWindow(806, 48363, w));                   // 1024x768: not an HD video format
     TEST_ASSERT_FALSE(stvBypassWindow(525, 31469, w));                   // 480p: left as it is (not measured)
+}
+
+// VGA pass-through (VGA upscaling off): 640x480 at 60 Hz has the VESA timing (800 pixels, sync 96, back porch 48, sync
+// low). The chip locks on the falling edge, the start of a negative sync. Seen on a TV with a Dreamcast: with the
+// fixed DD 38 the panel's centre sat about 140 STV pixels left of the picture's
+void test_vga_pass_window_of_640x480(void) {
+    StvWindow w;
+    TEST_ASSERT_TRUE(stvVgaPassWindow(525, 31469, 120, w));                  // sync 96 of 800
+    TEST_ASSERT_TRUE(w.valid);
+    TEST_ASSERT_EQUAL_UINT16(800, w.htotal);
+    TEST_ASSERT_EQUAL_UINT16(144 + 21, w.act0 - w.hsSp);   // + the pass-through's delay, 2.6 % of 800
+    TEST_ASSERT_EQUAL_UINT16(640, w.act1 - w.act0);
+    TEST_ASSERT_TRUE(stvVgaPassWindow(525, stvLineHzFromIfPeriod(214), 0, w)); // the rate as measured, no pulse
+    uint8_t ld = stvTimingForRate(OUT_BYPASS, 31469, STV_XTAL_HZ).ld;
+    TEST_ASSERT_EQUAL_INT(87, stvDdForWindow(ld, w, STV_ALIGN_CENTER, 0));    // was 38 (fixed), 80 without the delay
+    TEST_ASSERT_FALSE(stvVgaPassWindow(525, 0, 120, w));                      // no rate
+    TEST_ASSERT_FALSE(w.valid);
+    TEST_ASSERT_FALSE(stvVgaPassWindow(525, 15734, 120, w));                  // 30 Hz: no VGA mode
+    // vertically: the picture's 480 lines start 35 lines after the sync's start (sync 2 + back porch 33)
+    StvVgaMode m;
+    TEST_ASSERT_TRUE(stvVgaPassMode(525, 31469, 120, m));
+    TEST_ASSERT_EQUAL_UINT16(35, m.vstart);
+    TEST_ASSERT_EQUAL_UINT16(480, m.vactive);
+    TEST_ASSERT_FALSE(stvVgaPassMode(525, 0, 120, m));
+}
+
+// The Dreamcast's own 640x480 (its BootROM: 858 clocks of 27 MHz, picture at 168, first line 40) has the lines and the
+// rate of the VESA one, and a shorter sync: 64 of 858, measured on the unit as 141 of 1857 (76 thousandths). With the
+// VESA window its menu sat 1.5 % of the picture left of the centre
+void test_vga_pass_dreamcast_640x480_by_its_sync(void) {
+    StvVgaMode m;
+    TEST_ASSERT_TRUE(stvVgaPassMode(525, stvLineHzFromIfPeriod(214), 76, m));
+    TEST_ASSERT_EQUAL_UINT16(858, m.htotal);
+    TEST_ASSERT_EQUAL_UINT16(168, m.hstart);
+    TEST_ASSERT_EQUAL_UINT16(40, m.vstart);
+    TEST_ASSERT_EQUAL_UINT16(480, m.vactive);
+    TEST_ASSERT_TRUE(stvVgaPassMode(525, 31469, 118, m));   // a VESA source
+    TEST_ASSERT_EQUAL_UINT16(800, m.htotal);
+    TEST_ASSERT_TRUE(stvVgaPassMode(525, 31469, 0, m));     // not measured: VESA
+    TEST_ASSERT_EQUAL_UINT16(800, m.htotal);
+    StvWindow vesa, dc;
+    TEST_ASSERT_TRUE(stvVgaPassWindow(525, 31469, 120, vesa));
+    TEST_ASSERT_TRUE(stvVgaPassWindow(525, 31469, 76, dc));
+    uint8_t ld = stvTimingForRate(OUT_BYPASS, 31469, STV_XTAL_HZ).ld;
+    TEST_ASSERT_TRUE(stvDdForWindow(ld, dc, STV_ALIGN_CENTER, 0) < stvDdForWindow(ld, vesa, STV_ALIGN_CENTER, 0));
+}
+
+// Every VGA mode of the table is found from its own lines and line rate (as measured: one line off the standard's
+// count, the rate rounded), and no other mode is found instead
+void test_vga_pass_modes_are_found_and_unambiguous(void) {
+    for (uint8_t i = 0; i < stvVgaPassModeCount(); i++) {
+        StvVgaMode want = stvVgaPassModeAt(i), got;
+        uint32_t fh = (uint32_t)want.lines * want.hz;
+        for (int dl = -1; dl <= 1; dl++) {
+            TEST_ASSERT_TRUE(stvVgaPassMode((uint16_t)(want.lines + dl), fh, stvVgaSyncPermille(want), got));
+            TEST_ASSERT_EQUAL_UINT16(want.lines, got.lines);
+            TEST_ASSERT_EQUAL_UINT8(want.hz, got.hz);
+            TEST_ASSERT_EQUAL_UINT16(want.htotal, got.htotal);
+        }
+        TEST_ASSERT_TRUE(want.hstart + want.hactive < want.htotal);
+        TEST_ASSERT_TRUE(want.vstart + want.vactive < want.lines);
+        for (uint8_t j = 0; j < stvVgaPassModeCount(); j++) {   // no two modes both near one measurement
+            StvVgaMode o = stvVgaPassModeAt(j);
+            if (j == i) continue;
+            int dl = (int)o.lines - want.lines, dr = (int)o.hz - want.hz;
+            int ds = (int)stvVgaSyncPermille(o) - stvVgaSyncPermille(want);   // or pulses 3 % apart
+            TEST_ASSERT_FALSE(dl >= -6 && dl <= 6 && dr >= -2 && dr <= 2 && ds > -30 && ds < 30);
+        }
+    }
+}
+
+// The Dreamcast moved from 640x480 to 800x600 under the same preset and the menu stayed placed for 640x480: the source
+// is read again, and a change seen twice in a row places it again
+void test_source_watch_needs_two_agreeing_readings(void) {
+    StvSourceWatch w;
+    TEST_ASSERT_FALSE(w.changed(525, 31469, 525, 31469));   // as placed
+    TEST_ASSERT_FALSE(w.changed(526, 31500, 525, 31469));   // within a count
+    TEST_ASSERT_FALSE(w.changed(628, 37879, 525, 31469));   // new, once
+    TEST_ASSERT_TRUE(w.changed(628, 37868, 525, 31469));    // the same again: place it
+    TEST_ASSERT_FALSE(w.changed(628, 37879, 628, 37879));   // placed
+    TEST_ASSERT_FALSE(w.changed(806, 48363, 628, 37879));   // a reading during the switch...
+    TEST_ASSERT_FALSE(w.changed(500, 37500, 628, 37879));   // ... and another one: not the same
+    TEST_ASSERT_FALSE(w.changed(500, 0, 628, 37879));       // no rate: skipped
+    TEST_ASSERT_TRUE(w.changed(500, 37500, 628, 37879));    // 640x480 75 Hz settled
+    StvSourceWatch t;
+    TEST_ASSERT_FALSE(t.due(0));
+    TEST_ASSERT_FALSE(t.due(500));
+    TEST_ASSERT_TRUE(t.due(1000));
+    TEST_ASSERT_FALSE(t.due(1999));
+    TEST_ASSERT_TRUE(t.due(2000));
+}
+
+// A scaled output's picture lines from the scaler's vertical registers, counted from the end of its vertical sync (the
+// edge the chip counts from). 480p: sync 4 -> 0 (the short span is lines 0..4), picture 32..520; the menu centred on
+// 480 lines from the sync sat 31 lines above the picture's centre on a TV (model: 32). 960p: sync 1..4, picture 38..1000
+void test_vds_lines_from_the_sync_end(void) {
+    uint16_t first = 0, active = 0;
+    TEST_ASSERT_TRUE(stvVdsLines(4, 0, 520, 32, 525, first, active));
+    TEST_ASSERT_EQUAL_UINT16(28, first);
+    TEST_ASSERT_EQUAL_UINT16(488, active);
+    TEST_ASSERT_TRUE(stvVdsLines(1, 4, 1000, 38, 1000, first, active));
+    TEST_ASSERT_EQUAL_UINT16(34, first);
+    TEST_ASSERT_EQUAL_UINT16(962, active);
+    TEST_ASSERT_FALSE(stvVdsLines(1, 4, 1000, 38, 0, first, active));     // no frame
+    TEST_ASSERT_FALSE(stvVdsLines(1, 4, 60, 38, 1000, first, active));    // 22 lines: not a picture
+}
+
+// Other VGA modes, from the VESA DMT: 800x600 60 Hz (1056 pixels, sync 128 + back porch 88, 4 + 23 lines), and 720x400
+// 70 Hz (DOS text). The Dreamcast (DreamHAL timings) puts its 800x600 picture at 146 of 713 clocks = 216 of 1056
+static void checkWindow(uint16_t lines, uint32_t fh, uint16_t htotal, uint16_t start, uint16_t width) {
+    StvWindow w;
+    TEST_ASSERT_TRUE(stvVgaPassWindow(lines, fh, 0, w));
+    TEST_ASSERT_EQUAL_UINT16(htotal, w.htotal);
+    TEST_ASSERT_EQUAL_UINT16(start + (htotal * 26 + 500) / 1000, w.act0 - w.hsSp);   // + the pass-through's delay
+    TEST_ASSERT_EQUAL_UINT16(width, w.act1 - w.act0);
+}
+
+void test_vga_pass_other_modes(void) {
+    checkWindow(628, 37879, 1056, 216, 800);
+    checkWindow(449, 31469, 900, 162, 720);
+    checkWindow(806, 48363, 1344, 296, 1024);   // 1024x768 60 Hz
+    checkWindow(806, 56476, 1328, 280, 1024);   // 1024x768 70 Hz: same lines, another rate
+    StvVgaMode m;
+    TEST_ASSERT_TRUE(stvVgaPassMode(628, 37879, 0, m));
+    TEST_ASSERT_EQUAL_UINT16(27, m.vstart);
+    TEST_ASSERT_EQUAL_UINT16(600, m.vactive);
+    TEST_ASSERT_FALSE(stvVgaPassMode(600, 36000, 0, m));      // not a standard mode: fixed place
+    TEST_ASSERT_FALSE(stvVgaPassMode(1125, 67500, 0, m));     // 1080p: not in the table
+    StvWindow w;
+    TEST_ASSERT_FALSE(stvVgaPassWindow(600, 36000, 0, w));
+    TEST_ASSERT_FALSE(w.valid);
 }
 
 // ... and the panel is then centred in the picture (and follows Left / Right) as on a scaled output
@@ -279,6 +423,13 @@ int main() {
     RUN_TEST(test_bypass_window_of_hd_formats);
     RUN_TEST(test_bypass_panel_is_centred_in_the_picture);
     RUN_TEST(test_bypass_rate_is_asked_again);
+    RUN_TEST(test_line_rate_from_if_period);
+    RUN_TEST(test_vga_pass_window_of_640x480);
+    RUN_TEST(test_vga_pass_dreamcast_640x480_by_its_sync);
+    RUN_TEST(test_vga_pass_modes_are_found_and_unambiguous);
+    RUN_TEST(test_vga_pass_other_modes);
+    RUN_TEST(test_source_watch_needs_two_agreeing_readings);
+    RUN_TEST(test_vds_lines_from_the_sync_end);
     RUN_TEST(test_menu_fits_the_line_for_ld_35_to_63);
     RUN_TEST(test_dd_centres_the_panel_on_the_active_window);
     RUN_TEST(test_dd_left_and_right_keep_a_margin);

@@ -11,9 +11,13 @@ class Stv9426 {
 public:
     explicit Stv9426(OsdBus& bus);
     void begin(uint32_t xtalHz);          // PLL regs, FM, UDC upload, compat layout, shadow reset+flush, power off
-    // fhHz: measured line rate (bypass), 0 = nominal; activeLines: measured visible lines (bypass), 0 = the table
-    void setOutput(StvOutStd s, uint32_t fhHz = 0, uint16_t activeLines = 0);
+    // fhHz: measured line rate (bypass), 0 = nominal; activeLines: measured visible lines (bypass), 0 = the table;
+    // firstLine: lines from the vertical sync to the picture's first (VGA pass-through), 0 = counted from the sync
+    void setOutput(StvOutStd s, uint32_t fhHz = 0, uint16_t activeLines = 0, uint16_t firstLine = 0);
     uint16_t activeLines() const { return active_ ? active_ : stvActiveLines(out_); }
+    uint16_t firstLine() const { return first_; }
+    // A scaled output's picture lines read from the scaler (stvVdsLines); setOutput clears them
+    void setLines(uint16_t firstLine, uint16_t activeLines) { first_ = firstLine; active_ = activeLines; }
     bool setLayout(const stv::Layout& l, uint8_t ch);   // true when rewritten; display off until the next service()
     void setTimingOverride(uint8_t ld, uint8_t dd, uint8_t ch);   // Developer tuning; cleared by setOutput
     // Horizontal placement: DD from the scaler's output window and the alignment (stvDdForWindow); an invalid
@@ -60,7 +64,8 @@ private:
 
     uint32_t xtal_ = STV_XTAL_HZ;
     uint32_t fh_ = 0;                     // measured line rate (bypass), 0 = nominal
-    uint16_t active_ = 0;                 // measured visible lines (bypass), 0 = stvActiveLines
+    uint16_t active_ = 0;                // visible lines (bypass, scaled outputs), 0 = stvActiveLines
+    uint16_t first_ = 0;                 // lines before the picture's first (VGA pass-through, scaled outputs)
     uint8_t fm_ = 10;
     bool powered_ = false, displayOn_ = false, alwaysOn_ = false, wantOn_ = false, displayPending_ = false;
     uint32_t displayAt_ = 0, lastService_ = 0;

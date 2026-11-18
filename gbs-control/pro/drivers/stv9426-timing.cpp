@@ -1,4 +1,5 @@
 #include "stv9426-timing.h"
+#include "../util/pgm.h"
 
 static const uint32_t kLineHz[OUT_STD_COUNT] = {31469, 31250, 45000, 37500, 60000, 50000, 63981, 53300,
                                                 67500, 56250, 15734, 15625, 87500,    // bypass: unknown rate, LD 32 is safe to 87.5 kHz
@@ -124,6 +125,87 @@ bool stvBypassWindow(uint16_t lines, uint32_t fhHz, StvWindow& w) {
     return true;
 }
 
+uint32_t stvLineHzFromIfPeriod(uint16_t hperiodIf) {
+    if (!hperiodIf) return 0;
+    uint32_t fh = (27000000UL / 4 + hperiodIf / 2) / hperiodIf;
+    return fh >= 15000 && fh <= 100000 ? fh : 0;
+}
+
+// VESA DMT (and CTA-861 720p): lines a frame, refresh, pixels a line, sync, sync + back porch, active pixels, vertical
+// sync + back porch, active lines. Two modes within 2 * kLinesNear lines have refresh rates more than 2 * kHzNear
+// apart, or sync pulses at least 3 % of the line apart (the measured pulse picks one)
+static const StvVgaMode kVgaModes[] PROGMEM = {
+    {449, 70, 900, 108, 108 + 54, 720, 2 + 35, 400},      // 720x400 (and 640x400: the same proportions)
+    {500, 75, 840, 64, 64 + 120, 640, 3 + 16, 480},       // 640x480
+    {509, 85, 832, 56, 56 + 80, 640, 3 + 25, 480},
+    {517, 60, 1088, 112, 112 + 112, 848, 8 + 23, 480},    // 848x480
+    {520, 72, 832, 40, 40 + 128, 640, 3 + 28, 480},       // 640x480
+    {525, 60, 800, 96, 96 + 48, 640, 2 + 33, 480},
+    {525, 60, 858, 64, 168, 640, 40, 480},                // Dreamcast (BootROM; 27 MHz clocks): sync 7.5 %
+    {625, 56, 1024, 72, 72 + 128, 800, 2 + 22, 600},      // 800x600
+    {625, 75, 1056, 80, 80 + 160, 800, 3 + 21, 600},
+    {628, 60, 1056, 128, 128 + 88, 800, 4 + 23, 600},
+    {631, 85, 1048, 64, 64 + 152, 800, 3 + 27, 600},
+    {666, 72, 1040, 120, 120 + 64, 800, 6 + 23, 600},
+    {750, 60, 1650, 40, 40 + 220, 1280, 5 + 20, 720},     // 1280x720 (CTA-861)
+    {800, 75, 1312, 96, 96 + 176, 1024, 3 + 28, 768},     // 1024x768
+    {806, 60, 1344, 136, 136 + 160, 1024, 6 + 29, 768},
+    {806, 70, 1328, 136, 136 + 144, 1024, 6 + 29, 768},
+    {808, 85, 1376, 96, 96 + 208, 1024, 3 + 36, 768},
+    {831, 60, 1680, 128, 128 + 200, 1280, 6 + 22, 800},   // 1280x800
+    {900, 75, 1600, 128, 128 + 256, 1152, 3 + 32, 864},   // 1152x864
+    {934, 60, 1904, 152, 152 + 232, 1440, 6 + 25, 900},   // 1440x900
+    {1000, 60, 1800, 112, 112 + 312, 1280, 3 + 36, 960},  // 1280x960
+    {1066, 60, 1688, 112, 112 + 248, 1280, 3 + 38, 1024}, // 1280x1024
+};
+static const uint8_t kVgaModeCount = sizeof(kVgaModes) / sizeof(kVgaModes[0]);
+static const uint16_t kLinesNear = 3;   // the sync processor's count against the standard's
+static const uint16_t kPassDelayPermille = 26;   // the pass-through's video delay, thousandths of a line
+static const uint8_t kHzNear = 1;       // the line rate is one IF count from exact: under 0.5 % up to 60 kHz
+
+uint8_t stvVgaPassModeCount() { return kVgaModeCount; }
+
+StvVgaMode stvVgaPassModeAt(uint8_t i) {
+    StvVgaMode m;
+    memcpy_P(&m, &kVgaModes[i < kVgaModeCount ? i : 0], sizeof m);
+    return m;
+}
+
+uint16_t stvVgaSyncPermille(const StvVgaMode& m) { return (uint16_t)((m.hsync * 1000UL + m.htotal / 2) / m.htotal); }
+
+bool stvVgaPassMode(uint16_t lines, uint32_t fhHz, uint16_t syncPermille, StvVgaMode& m) {
+    if (!fhHz || !lines) return false;
+    uint32_t rate = (fhHz + lines / 2) / lines;
+    bool found = false;
+    uint16_t best = 0xFFFF;
+    for (uint8_t i = 0; i < kVgaModeCount; i++) {
+        StvVgaMode c = stvVgaPassModeAt(i);
+        uint16_t dl = lines > c.lines ? lines - c.lines : c.lines - lines;
+        uint32_t dr = rate > c.hz ? rate - c.hz : c.hz - rate;
+        if (dl > kLinesNear || dr > kHzNear) continue;
+        uint16_t sp = stvVgaSyncPermille(c);
+        uint16_t d = !syncPermille ? 0 : syncPermille > sp ? syncPermille - sp : sp - syncPermille;
+        if (!found || d < best) { m = c; best = d; found = true; }
+    }
+    return found;
+}
+
+bool stvVgaPassWindow(uint16_t lines, uint32_t fhHz, uint16_t syncPermille, StvWindow& w) {
+    w = {0, 0, 0, 0, false};
+    StvVgaMode m;
+    if (!stvVgaPassMode(lines, fhHz, syncPermille, m)) return false;
+    // The picture leaves the pass-through kPassDelayPermille of a line after its sync (the ADC to DAC path: a fixed
+    // count of the ADC's clocks, 1857 a line in every mode). Measured with a Dreamcast in 12 modes, 31 to 68 kHz: the
+    // menu sat 2.2 to 3.0 % of a line left of the picture's centre at any rate (a delay in time would double at 60 kHz)
+    uint16_t delay = (uint16_t)((m.htotal * (uint32_t)kPassDelayPermille + 500) / 1000);
+    w.htotal = m.htotal;
+    w.hsSp = 0;
+    w.act0 = (uint16_t)(m.hstart + delay);
+    w.act1 = (uint16_t)(m.hstart + delay + m.hactive);
+    w.valid = true;
+    return true;
+}
+
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz) { return stvTimingForRate(s, 0, xtalHz); }
 
 StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz, uint16_t activeLines) {
@@ -141,4 +223,33 @@ StvTiming stvTimingForRate(StvOutStd s, uint32_t fhHz, uint32_t xtalHz, uint16_t
         t.topMenu = t.chMenu >= 27 ? 58 : t.chMenu >= 18 ? 40 : 20;
     }
     return t;
+}
+
+static bool linesNear(uint16_t a, uint16_t b) { return (a > b ? a - b : b - a) <= 3; }
+static bool rateNear(uint32_t a, uint32_t b) { return (a > b ? a - b : b - a) * 50 <= (a > b ? a : b); }
+
+bool StvSourceWatch::changed(uint16_t lines, uint32_t fh, uint16_t placedLines, uint32_t placedFh) {
+    if (!fh || !lines) return false;
+    if (linesNear(lines, placedLines) && rateNear(fh, placedFh)) {
+        lastLines_ = 0;
+        lastFh_ = 0;
+        return false;
+    }
+    bool again = lastFh_ && linesNear(lines, lastLines_) && rateNear(fh, lastFh_);
+    lastLines_ = again ? 0 : lines;
+    lastFh_ = again ? 0 : fh;
+    return again;
+}
+
+bool stvVdsLines(uint16_t vsSt, uint16_t vsSp, uint16_t disVbSt, uint16_t disVbSp, uint16_t vTotal, uint16_t& first,
+                 uint16_t& active) {
+    if (vTotal < 200 || vsSt >= vTotal || vsSp >= vTotal || disVbSt > vTotal || disVbSp >= vTotal) return false;
+    uint16_t span = (uint16_t)((vsSp + vTotal - vsSt) % vTotal);        // vsSt -> vsSp
+    uint16_t end = span <= vTotal / 2 ? vsSp : vsSt;                   // the sync is the shorter span: its end
+    uint16_t f = (uint16_t)((disVbSp + vTotal - end) % vTotal);
+    uint16_t a = (uint16_t)((disVbSt + vTotal - disVbSp) % vTotal);
+    if (a < vTotal / 3 || f + a > vTotal) return false;
+    first = f;
+    active = a;
+    return true;
 }

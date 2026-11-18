@@ -66,6 +66,11 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
   get one look. (#69)
 - TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
   moves it left and right; it sat at the left. (#72)
+- VGA upscaling off (the VGA source passed through): the TV menu ran off the left of the screen; it now sits in the
+  middle of the picture in the VESA modes from 720x400 to 1280x1024 (and in the Dreamcast's own 640x480), and follows
+  the source when it changes mode. The web app showed the Resolution choice and "0 Hz" there; it now shows Bypass,
+  with no rate.
+- TV menu: on the scaled outputs it is centred on the picture's lines; at 480p it sat about 30 lines high.
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
   and the greyed Scanlines row no longer points to Bob for it. (#72)
 - TV menu and OLED, Advanced: Screen > Reset screen is the last row again (Mask position was under it).

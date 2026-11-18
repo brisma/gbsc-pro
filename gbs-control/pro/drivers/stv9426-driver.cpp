@@ -88,10 +88,11 @@ void Stv9426::setHAlign(uint8_t align) {
     applyDd();
 }
 
-void Stv9426::setOutput(StvOutStd s, uint32_t fhHz, uint16_t activeLines) {
+void Stv9426::setOutput(StvOutStd s, uint32_t fhHz, uint16_t activeLines, uint16_t firstLine) {
     out_ = s;
     fh_ = fhHz;
     active_ = activeLines;
+    first_ = firstLine;
     t_ = stvTimingForRate(s, fhHz, xtal_, activeLines);
     override_ = false;
     if (powered_) writeActiveTiming();

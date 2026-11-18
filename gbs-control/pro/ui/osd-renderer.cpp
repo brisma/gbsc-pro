@@ -89,12 +89,13 @@ bool OsdRenderer::applyLayout(uint8_t lay, uint8_t rows, uint8_t vrow) {
     Layout l;
     l.count = 0;
     int active = (int)d_.activeLines();
+    int first = (int)d_.firstLine();   // lines before the picture's first (VGA pass-through)
     if (lay == LAY_LIST) {   // title, 7 rows, help with no transparent lines between them
-        addSpacing(l, (uint16_t)panelTop(active, 9 * rowLines, vrow, t.topMenu));
+        addSpacing(l, (uint16_t)(first + panelTop(active, 9 * rowLines, vrow, t.topMenu)));
         if (l.count + 9 > kMaxContent) return false;
         for (uint8_t r = 0; r <= 8; r++) l.strips[l.count++] = {STRIP_ROW, r, t.zoomMenu};
     } else {
-        addSpacing(l, (uint16_t)panelTop(active, rows * rowLines, vrow, t.topMenu));
+        addSpacing(l, (uint16_t)(first + panelTop(active, rows * rowLines, vrow, t.topMenu)));
         for (uint8_t r = 0; r < rows && l.count < kMaxContent; r++) l.strips[l.count++] = {STRIP_ROW, r, t.zoomMenu};
     }
     bool changed = d_.setLayout(l, t.chMenu);

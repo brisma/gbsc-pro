@@ -36,6 +36,7 @@ extern bool gSettingsPresetPending;   // pro/settings/settings-apply.cpp: preset
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include "pro/drivers/stv9426-device.h"
+#include "pro/drivers/stv9426-timing.h"
 #include "pro/ui/menu-device.h"
 #include "pro/link/adv-link-device.h"
 #include "pro/ui/menu-types.h"   // MenuKey for the HAVE_BUTTONS mapping
@@ -7495,13 +7496,27 @@ bool profileSignalPresent()
 // STV9426 line rate in bypass (the output follows the source): lines per field x field rate; 0 when unknown
 uint32_t osdSourceLineHz()
 {
-    if (rto->presetID == PresetBypassRGBHV) return 0;   // VGA pass-through: no pulse to time, no stall
+    if (rto->presetID == PresetBypassRGBHV) {   // VGA pass-through: no pulse to time, the IF's line period still runs
+        uint16_t a = GBS::HPERIOD_IF::read(), b = GBS::HPERIOD_IF::read();
+        return (a > b ? a - b : b - a) <= 1 ? stvLineHzFromIfPeriod(a) : 0;   // two reads that agree
+    }
     uint16_t lines = profileSourceLines();
     // HD bypass: the IF test bus carries no pulse, the sync processor still sees the source
     float sfr = getSourceFieldRate(rto->outModeHdBypass);
     if (lines < 200 || sfr < 40.0f || sfr > 120.0f) return 0;   // ~18.5 Hz from the sync processor = no vsync found
     uint32_t fh = (uint32_t)(lines * sfr);
     return (fh >= 15000 && fh <= 100000) ? fh : 0;
+}
+
+// The source's H-SYNC pulse in thousandths of the line (VGA pass-through: it tells the Dreamcast's 640x480 from the
+// VESA one), from the sync processor's low time and line length, two reads that agree; 0 when unknown
+uint16_t osdSourceSyncPermille()
+{
+    uint16_t t = GBS::STATUS_SYNC_PROC_HTOTAL::read(), a = GBS::STATUS_SYNC_PROC_HLOW_LEN::read();
+    uint16_t b = GBS::STATUS_SYNC_PROC_HLOW_LEN::read();
+    if (!t || (a > b ? a - b : b - a) > 2 || a > t) return 0;
+    uint32_t pulse = GBS::STATUS_SYNC_PROC_HSPOL::read() ? (uint32_t)t + 1 - a : a;   // positive: the high time
+    return (uint16_t)((pulse * 1000 + (t + 1) / 2) / (t + 1));
 }
 
 // Menu backend: frame time lock currently locked (FrameSync is header-only in this translation unit)

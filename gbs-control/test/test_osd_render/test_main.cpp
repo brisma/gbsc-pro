@@ -450,6 +450,28 @@ void test_bypass_centres_on_the_measured_lines(void) {
     TEST_ASSERT_UINT_WITHIN(2, 720 / 2 - 9 * rowLines / 2, leadingSpacing(s.screen()));
 }
 
+// VGA pass-through at 640x480: the picture starts 35 lines after the vertical sync (sync 2 + back porch 33) and has
+// 480 lines; the menu is centred on those. Seen on a TV: centred on 504 lines from the sync it sat about 25 lines high
+void test_vga_pass_centres_on_the_picture_lines(void) {
+    Scene s(OUT_BYPASS);
+    s.d.setOutput(OUT_BYPASS, 31469, 480, 35);
+    s.key(K_MENU);
+    const StvTiming& t = s.d.timing();
+    unsigned rowLines = t.chMenu * (t.zoomMenu ? 2 : 1);
+    TEST_ASSERT_UINT_WITHIN(2, 35 + 480 / 2 - 9 * rowLines / 2, leadingSpacing(s.screen()));
+}
+
+// A scaled output: the menu is centred on the picture lines the scaler shows (480p: 488 lines from 28 lines after the
+// vertical sync), not on 480 lines from the sync (31 lines high on a TV)
+void test_scaled_output_centres_on_the_scaler_lines(void) {
+    Scene s(OUT_480P);
+    s.d.setLines(28, 488);
+    s.key(K_MENU);
+    const StvTiming& t = s.d.timing();
+    unsigned rowLines = t.chMenu * (t.zoomMenu ? 2 : 1);
+    TEST_ASSERT_UINT_WITHIN(2, 28 + 488 / 2 - 9 * rowLines / 2, leadingSpacing(s.screen()));
+}
+
 // The MUTE/ON box was wider than its word with the word left-aligned: the box is padding,
 // icon, space, word, padding, centred in the panel
 static int opaqueFrom(Scene& s, int& first) {
@@ -902,6 +924,8 @@ int main() {
     RUN_TEST(test_mute_box_fits_its_word);
     RUN_TEST(test_toast_box_fits_its_text);
     RUN_TEST(test_bypass_centres_on_the_measured_lines);
+    RUN_TEST(test_vga_pass_centres_on_the_picture_lines);
+    RUN_TEST(test_scaled_output_centres_on_the_scaler_lines);
     RUN_TEST(test_menu_positions_move_the_panel);
     RUN_TEST(test_menu_redraws_when_only_the_column_changes);
     RUN_TEST(test_pill_hugs_its_side);

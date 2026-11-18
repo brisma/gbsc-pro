@@ -28,6 +28,25 @@ int stvDdForWindow(uint8_t ld, const StvWindow& w, uint8_t align, int16_t refOff
 // porch after the end of the sync pulse, the edge the chip locks on. false (w.valid false): no rate, or another
 // format (the fixed stvDdFor placement stays)
 bool stvBypassWindow(uint16_t lines, uint32_t fhHz, StvWindow& w);
+// The VGA pass-through (VGA upscaling off) has no scaler window either: a VGA mode found by its lines and refresh
+// rate gets its standard timing (VESA DMT; 720p CTA-861). The picture starts sync + back porch after the start of
+// the sync, the edge the chip locks on with a negative sync. hstart, hactive in the mode's pixels (htotal a line);
+// vstart, vactive in lines (vstart from the start of the vertical sync)
+struct StvVgaMode { uint16_t lines; uint8_t hz; uint16_t htotal, hsync, hstart, hactive, vstart, vactive; };
+// The mode of a source of these lines (a frame's, sync to sync) and line rate: false for a mode not in the table
+// (the fixed stvDdFor placement and the lines counted from the sync stay). syncPermille: the measured sync pulse in
+// thousandths of the line, 0 = not known; it picks between modes of the same lines and rate (VESA 640x480 sync 12 %,
+// the Dreamcast's 7.5 %), the first one when not known
+bool stvVgaPassMode(uint16_t lines, uint32_t fhHz, uint16_t syncPermille, StvVgaMode& m);
+// Its window (w.valid false: not in the table)
+bool stvVgaPassWindow(uint16_t lines, uint32_t fhHz, uint16_t syncPermille, StvWindow& w);
+uint16_t stvVgaSyncPermille(const StvVgaMode& m);   // the mode's sync pulse in thousandths of the line
+uint8_t stvVgaPassModeCount();
+StvVgaMode stvVgaPassModeAt(uint8_t i);
+// Line rate from the TV5725's HPERIOD_IF (the line period in counts of the 27 MHz oscillator / 4): the VGA pass-through
+// has no field rate to time, this register still follows the source. 0 outside 15..100 kHz (511 = overflowed). One
+// count is 0.5 % at 31 kHz, 1.2 % at 80 kHz: inside the margin of the PLL limit (stvWithinPll)
+uint32_t stvLineHzFromIfPeriod(uint16_t hperiodIf);
 StvTiming stvTimingFor(StvOutStd s, uint32_t xtalHz);
 // fhHz 0 = the nominal rate. Bypass (the output is the source): activeLines, the visible lines of a field, give the
 // rows their height (18 lines at 480, as the scaled outputs); 0 = not known, 480p rows
@@ -46,6 +65,27 @@ struct StvRateRetry {
     }
 private:
     uint8_t left_ = 0;
+    uint32_t at_ = 0;
+};
+// A scaled output's picture, vertically, from the scaler's registers (VDS_VS_ST/SP, VDS_DIS_VB_ST/SP, VDS_VSYNC_RST):
+// first = lines from the end of the vertical sync (the shorter of the two spans between its edges) to the first
+// visible line, active = visible lines. false: not a usable frame (the menu keeps the output's nominal lines)
+bool stvVdsLines(uint16_t vsSt, uint16_t vsSp, uint16_t disVbSt, uint16_t disVbSp, uint16_t vTotal, uint16_t& first,
+                 uint16_t& active);
+// A bypass source may change format under the same preset (the VGA pass-through stays preset 0x22 from 640x480 to
+// 1024x768): read again every kEveryMs, a reading far from the placed one (lines by more than 3, line rate by more
+// than 2 %) that agrees with the reading before it asks for a new placement. A reading without a rate is skipped
+struct StvSourceWatch {
+    static const uint32_t kEveryMs = 1000;
+    bool due(uint32_t now) {
+        if (now - at_ < kEveryMs) return false;
+        at_ = now;
+        return true;
+    }
+    bool changed(uint16_t lines, uint32_t fh, uint16_t placedLines, uint32_t placedFh);
+private:
+    uint16_t lastLines_ = 0;
+    uint32_t lastFh_ = 0;
     uint32_t at_ = 0;
 };
 // PLL time constants (datasheet §VIII.2, Table 2): A/B valid for this line duration
