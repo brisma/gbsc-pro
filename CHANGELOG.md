@@ -5,12 +5,19 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
-## 3.0.0-beta3
+## 3.0.0-beta3 - 2026-11-18
 
-The shape of the picture becomes a choice (three new rows in Output, under Resolution), HDMI range becomes Full or
-Limited with black and white levels, and the settings files store fixed names. Three things change without being asked
-for: a 50 Hz source is now shown as a PAL TV showed it (see 50Hz style), HDMI range is Full by default (see HDMI
-range), and profiles saved by an earlier beta need one step each to auto-load again (see Settings files).
+This beta is mostly about the picture. You can now choose its shape: **Aspect**, **Integer scale** and **50Hz style**
+are in Output, right under Resolution, and they work with a scaled VGA source too. I also spent a lot of time in
+front of the TV measuring every output again, so the picture and the TV menu should now sit in the centre at every
+resolution, VGA included. **HDMI range** is now simply Full or Limited, and with Limited you can set the black and
+white levels for your TV. If your console loses sync on the VGA connector, give **Digital sync** and **Sync
+dejitter** a try.
+
+A few things change on their own, so don't be surprised: 50 Hz games now look like they did on a PAL TV, with black
+bands above and below (Full height brings back the old picture); HDMI range starts on Full; and profiles saved with
+an earlier beta need a quick re-save to auto-load again (see Settings files). You can update from 3.0.0-beta2 with
+System > Update > Check now or with the flasher; the ADV Controller stays the same.
 
 ### Output
 - **Aspect**: Auto keeps the picture's shape, as before. **Force 4:3** puts side bars on 480p, 576p, 960p and 1024p,
@@ -24,10 +31,6 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
   a 50 Hz source the way a PAL TV did: nothing is stretched, and a game that draws 224 or 240 lines has black bands
   above and below. **Full height** is the picture of earlier versions (taller, a little wide). **As 60Hz** fills the
   height and narrows the width to the shape of the game's 60 Hz version.
-- Coming from an earlier version with a 50 Hz console: the bands above and below are the new default, not a fault;
-  50Hz style = Full height brings the earlier picture back. A profile saved at 1080p from a 50 Hz source with PAL
-  full height on still holds that picture: run Screen > Reset screen on it (or delete and save it again) before
-  choosing its 50Hz style, otherwise Full height is applied on top of it. The active profile shows as changed once.
 - Aspect, Integer scale and 50Hz style also act on a VGA (RGBHV) source scaled by the GBSC at 50 or 60 Hz; not on
   70 Hz and faster PC modes, on HD sources passed through, or on the Downscale output. (#69)
 - The widths at the resolutions and rates not yet measured on a TV are computed; reports with a photo of a test
@@ -59,42 +62,46 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
   most choices.
 
 ### Fixed
+- **Picture position**:
+  - The 50 Hz tables (1080p, 720p, 960p, 1024p, 1200p, 576p) were centred on one console that draws its picture
+    off-centre; they are now centred on a second one, as the 60 Hz tables were, and 1080p, 1024p, 1200p and 480p at
+    60 Hz were measured again. At 1024p 50 Hz (PAL TV) the bands above and below are equal, and Resolution
+    960p/1024p no longer sits left of its frame with a 50 Hz source.
+  - With 1024p chosen and a 60 Hz source (the 960p table, shaped for a 5:4 screen) a column of fragments showed at
+    the left and the picture sat right: both fixed.
+  - A VGA source scaled by the GBSC (640x480 and other 31 kHz modes at 60 Hz) sat right of the centre and low, its
+    bottom edge cut, and at 1080p its right edge was cut too: it is now centred at 480p, 720p, 960p, 1024p, 1080p
+    and 1200p.
+  - PRO, 480p and 576p: the board's HDMI converter shows them as 640x480 and 800x600, and the picture sat left (576p
+    also high); it is now placed for what the converter shows (the standard board's analog output keeps the 480p
+    and 576p window).
+- **TV menu**:
+  - Over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
+    moves it left and right; it sat at the left. (#72)
+  - VGA upscaling off (the VGA source passed through): the menu ran off the left of the screen; it now sits in the
+    middle of the picture in the VESA modes from 720x400 to 1280x1024 (and in the Dreamcast's own 640x480), and
+    follows the source when it changes mode.
+  - On the scaled outputs it is centred on the picture's lines; at 480p it sat about 30 lines high.
+  - Advanced (also on the OLED): Screen > Reset screen is the last row again (Mask position was under it).
+- **Web app**:
+  - VGA upscaling off: it showed the Resolution choice and "0 Hz"; it now shows Bypass, with no rate.
+  - Profiles: a profile's signal read "523 lines" for a console of 261-line fields (the scaler's own count); it now
+    reads as the menus do.
+  - System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the OLED
+    were right.
+- A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
+  and the greyed Scanlines row no longer points to Bob for it. (#72)
 - After an update the active profile no longer shows unsaved changes when nothing was changed: a profile is compared
   with its own file when the settings of the new version differ from the old one's. (#72)
 - Standard board: the OLED home screen no longer shows a volume, which that board does not have. (#72)
 - Source = Auto with a composite sync cable on the VGA connector: after a short sync loss the VGA connector was
   looked at three times, 0.65 s each; once it has read the same three times, the later sync losses of that source
   get one look. (#69)
-- TV menu: over an HD source passed through (720p, 1080i, 1080p) the menu is centred in the picture, and Menu position
-  moves it left and right; it sat at the left. (#72)
-- VGA upscaling off (the VGA source passed through): the TV menu ran off the left of the screen; it now sits in the
-  middle of the picture in the VESA modes from 720x400 to 1280x1024 (and in the Dreamcast's own 640x480), and follows
-  the source when it changes mode. The web app showed the Resolution choice and "0 Hz" there; it now shows Bypass,
-  with no rate.
-- A VGA source scaled by the GBSC (640x480 and other 31 kHz modes at 60 Hz) sat right of the centre and low, its
-  bottom edge cut, and at 1080p its right edge was cut too: it is now centred at 480p, 720p, 960p, 1024p, 1080p and
-  1200p.
-- TV menu: on the scaled outputs it is centred on the picture's lines; at 480p it sat about 30 lines high.
-- Picture position: the 50 Hz tables (1080p, 720p, 960p, 1024p, 1200p, 576p) were centred on one console that draws
-  its picture off-centre; they are now centred on a second one, as the 60 Hz tables were, and 1080p, 1024p, 1200p
-  and 480p at 60 Hz were measured again. At 1024p 50 Hz (PAL TV) the bands above and below are equal, and Resolution
-  960p/1024p no longer sits left of its frame with a 50 Hz source. With 1024p chosen and a 60 Hz source (the 960p
-  table, shaped for a 5:4 screen) a column of fragments showed at the left and the picture sat right: both fixed.
-- PRO, 480p and 576p: the board's HDMI converter shows them as 640x480 and 800x600, and the picture sat left (576p
-  also high); it is now placed for what the converter shows (the standard board's analog output keeps the 480p and
-  576p window).
 - Smooth scrolling with the clock generator: after a 240p/480i switch the output rate no longer jumps by the whole
   difference at once (about 0.2 %), which some monitors could not follow; frame lock now follows it in its own steps.
   (#78)
 - WiFi optimization: when the memory clock of the picture silenced the radio entirely (a VGA source at 960p), it
   concluded that the router does not answer ping and kept that clock, with WiFi unusable; it now tries 144 MHz first.
-- A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
-  and the greyed Scanlines row no longer points to Bob for it. (#72)
-- TV menu and OLED, Advanced: Screen > Reset screen is the last row again (Mask position was under it).
-- Web app, Profiles: a profile's signal read "523 lines" for a console of 261-line fields (the scaler's own count); it
-  now reads as the menus do.
-- Web app: System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the
-  OLED were right.
 
 ## 3.0.0-beta2 - 2026-11-14
 
