@@ -3,6 +3,7 @@
 #include "profile-modes.h"
 #include "profile-names.h"
 #include "../input/input-types.h"
+#include "../ui/menu-signal.h"
 #include "../util/pgm.h"
 
 void profilesSnapshotTake(ProfilesSnapshot& s, const ProfileList& list, int active, bool modified, uint8_t autoload,
@@ -19,8 +20,10 @@ void profilesSnapshotTake(ProfilesSnapshot& s, const ProfileList& list, int acti
 static void fpSummary(const ProfileEntry& e, char* out, size_t n) {
     if (!e.hasFp || !inputTypeValid(e.fpInput)) { if (n) out[0] = '\0'; return; }
     bool pal = e.fpMode == 2 || e.fpMode == 4;
-    snprintf_P(out, n, PSTR("%s \xC2\xB7 %u lines \xC2\xB7 %s%s"), inputLongName(e.fpInput), e.fpLines, pal ? "PAL" : "NTSC",
-               e.fpInterlaced ? " \xC2\xB7 interlaced" : "");
+    // the fingerprint keeps the scaler's raw count (twice a 15 kHz field's): the text counts as the menus do
+    uint16_t lines = menuSourceLines(e.fpMode, e.fpLines);
+    snprintf_P(out, n, PSTR("%s \xC2\xB7 %u lines \xC2\xB7 %s%s"), inputLongName(e.fpInput), lines ? lines : e.fpLines,
+               pal ? "PAL" : "NTSC", e.fpInterlaced ? " \xC2\xB7 interlaced" : "");
 }
 
 static const uint8_t kOutputCustomized = 2;   // options.h OutputCustomized

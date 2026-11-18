@@ -87,6 +87,8 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
   and the greyed Scanlines row no longer points to Bob for it. (#72)
 - TV menu and OLED, Advanced: Screen > Reset screen is the last row again (Mask position was under it).
+- Web app, Profiles: a profile's signal read "523 lines" for a console of 261-line fields (the scaler's own count); it
+  now reads as the menus do.
 - Web app: System > Device > Knob steps set 1 step when 2 was chosen and 2 when 4 was chosen; the TV menu and the
   OLED were right.
 

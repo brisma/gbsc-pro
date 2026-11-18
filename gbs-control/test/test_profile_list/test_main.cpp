@@ -4,6 +4,7 @@
 #include "profile-list.h"
 #include "profile-names.h"
 #include "profile-json.h"
+#include "input-types.h"
 #include "profile-args.h"
 #include "api-json.h"
 
@@ -142,6 +143,23 @@ void test_profiles_json_from_a_snapshot_survives_list_changes(void) {
     TEST_ASSERT_EQUAL_STRING(whole.c_str(), got.c_str());
 }
 
+// The fingerprint keeps the scaler's raw line count (VPERIOD_IF: 523 for a 15 kHz source of 261-line fields) for the
+// matching; the list showed it as "523 lines" where the menus say 261. The text uses the menus' count
+void test_profiles_json_fingerprint_lines_as_the_menus(void) {
+    ProfileList l; l.clear();
+    add(l, "SNES"); add(l, "Dreamcast");
+    ProfileEntry& a = l.at(0);
+    a.hasFp = true; a.fpInput = InputTypeRGBs; a.fpMode = 1; a.fpLines = 523; a.fpInterlaced = 0;
+    ProfileEntry& b = l.at(1);
+    b.hasFp = true; b.fpInput = InputTypeRGBs; b.fpMode = 3; b.fpLines = 525; b.fpInterlaced = 0;   // 31 kHz: as read
+    ProfilesSnapshot s; profilesSnapshotTake(s, l, -1, false, 0);
+    std::string j;
+    profilesJson(sink, &j, &s);
+    TEST_ASSERT_TRUE(j.find(" 261 lines ") != std::string::npos);
+    TEST_ASSERT_TRUE(j.find(" 523 lines ") == std::string::npos);
+    TEST_ASSERT_TRUE(j.find(" 525 lines ") != std::string::npos);
+}
+
 // The web page marks the profiles whose fingerprint matches the signal now ("Match" pill)
 void test_profiles_json_match_flag(void) {
     ProfileList l; l.clear();
@@ -229,6 +247,7 @@ int main(int, char**) {
     RUN_TEST(test_unique_name_per_region);
     RUN_TEST(test_profiles_json_from_a_snapshot_survives_list_changes);
     RUN_TEST(test_profiles_json_match_flag);
+    RUN_TEST(test_profiles_json_fingerprint_lines_as_the_menus);
     RUN_TEST(test_profiles_json_base_is_zero_when_unknown);
     RUN_TEST(test_profiles_snapshot_skips_entry_being_written);
     RUN_TEST(test_saveas_region_param);
