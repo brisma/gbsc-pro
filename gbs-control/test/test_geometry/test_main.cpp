@@ -204,17 +204,17 @@ static GeoState st(uint8_t aspect, bool integer, uint8_t style50) {
 struct TableRegs { uint8_t id; const char* name; uint8_t rawStyle; GeoRegs regs; };
 static const TableRegs kTables[] = {
     {0x01, "960p 60", GEO_PAL_TV, {2704, 8, 160, 2512, 480, 2594, 612, 512, false, 1000, 512, 26, 1000, 38, 6, 8, 0xA5, 0, 0, 0}},
-    {0x02, "1024p 60", GEO_PAL_TV, {2535, 16, 144, 2408, 384, 2496, 516, 512, false, 1066, 485, 30, 1066, 40, 4, 6, 0xA5, 0, 0, 0}},
+    {0x02, "1024p 60", GEO_PAL_TV, {2535, 16, 144, 2408, 384, 2496, 516, 512, false, 1066, 485, 30, 1066, 40, 7, 9, 0xA5, 0, 0, 0}},
     {0x03, "720p 60", GEO_PAL_TV, {2402, 16, 144, 2035, 502, 2037, 601, 705, false, 750, 683, 16, 750, 26, 9, 11, 0x85, 0, 0, 0}},
     {0x04, "480p", GEO_PAL_TV, {2573, 180, 12, 2404, 396, 2490, 510, 512, false, 525, 1023, 24, 520, 32, 4, 6, 0x65, 0, 0, 0}},
-    {0x05, "1080p 60", GEO_PAL_TV, {1601, 20, 72, 1298, 264, 1356, 348, 1023, true, 1125, 455, 30, 1125, 40, 8, 10, 0x85, 0, 0, 0}},
-    {0x07, "1200p 60", GEO_PAL_TV, {2188, 16, 50, 1906, 179, 1985, 311, 602, false, 1235, 410, 23, 1233, 33, 10, 12, 0xA5, 0, 0, 0}},
+    {0x05, "1080p 60", GEO_PAL_TV, {1601, 20, 72, 1298, 264, 1356, 348, 1023, true, 1125, 455, 30, 1125, 40, 10, 12, 0x85, 0, 0, 0}},
+    {0x07, "1200p 60", GEO_PAL_TV, {2188, 16, 50, 1896, 169, 1975, 301, 602, false, 1235, 410, 23, 1233, 33, 10, 12, 0xA5, 0, 0, 0}},
     {0x11, "960p 50", GEO_FULL_HEIGHT, {2166, 24, 152, 2039, 391, 2074, 494, 607, false, 1000, 585, 16, 996, 19, 21, 23, 0x85, 0, 0, 0}},
-    {0x12, "1024p 50", GEO_FULL_HEIGHT, {2032, 0, 132, 1988, 266, 2004, 360, 585, false, 1066, 512, 20, 1064, 23, 40, 42, 0x85, 0, 0, 0}},
-    {0x13, "720p 50", GEO_FULL_HEIGHT, {2165, 24, 128, 1772, 464, 1772, 556, 835, false, 750, 819, 16, 748, 26, 14, 16, 0x65, 0, 0, 0}},
+    {0x12, "1024p 50", GEO_FULL_HEIGHT, {2032, 0, 132, 1988, 266, 2019, 375, 585, false, 1066, 512, 20, 1064, 23, 40, 42, 0x85, 0, 0, 0}},
+    {0x13, "720p 50", GEO_FULL_HEIGHT, {2165, 24, 128, 1804, 496, 1804, 588, 835, false, 750, 819, 16, 748, 26, 14, 16, 0x65, 0, 0, 0}},
     {0x14, "576p", GEO_PAL_TV, {2599, 196, 28, 2400, 400, 2492, 564, 512, false, 625, 1023, 4, 590, 12, 40, 42, 0x65, 0, 0, 0}},
-    {0x15, "1080p 50", GEO_PAL_TV, {1444, 8, 56, 1203, 169, 1262, 252, 1023, true, 1125, 512, 16, 1125, 28, 25, 27, 0x65, 0, 0, 0}},
-    {0x17, "1200p 50", GEO_FULL_HEIGHT, {1749, 0, 27, 1542, 118, 1574, 228, 714, false, 1235, 437, 30, 1233, 33, 52, 54, 0x85, 0, 0, 0}},
+    {0x15, "1080p 50", GEO_PAL_TV, {1444, 8, 56, 1203, 169, 1262, 252, 1023, true, 1125, 512, 16, 1125, 28, 27, 29, 0x65, 0, 0, 0}},
+    {0x17, "1200p 50", GEO_FULL_HEIGHT, {1749, 0, 27, 1533, 109, 1565, 219, 714, false, 1235, 437, 30, 1233, 33, 52, 54, 0x85, 0, 0, 0}},
 };
 static GeoRegs table(uint8_t id) {
     for (const TableRegs& t : kTables)
@@ -312,8 +312,8 @@ void test_full_height_at_1080p_50(void) {   // scale 455, the window from line 4
     TEST_ASSERT_EQUAL_UINT16(455, r.vScale);
     TEST_ASSERT_EQUAL_UINT16(42, r.disVbSp);
     TEST_ASSERT_EQUAL_UINT16(1125, r.disVbSt);
-    TEST_ASSERT_EQUAL_UINT16(58, r.ifVbSt);
-    TEST_ASSERT_EQUAL_UINT16(60, r.ifVbSp);
+    TEST_ASSERT_EQUAL_UINT16(27 + 33, r.ifVbSt);    // centred on a TV with the SNES at 50 Hz
+    TEST_ASSERT_EQUAL_UINT16(29 + 33, r.ifVbSp);
     TEST_ASSERT_EQUAL_UINT16(16, r.vbSp);
     TEST_ASSERT_EQUAL_UINT16(1023, r.hScale);   // the width is not touched
     TEST_ASSERT_TRUE(r.hScaleByps);
@@ -412,23 +412,29 @@ void test_taller_picture_stays_centred(void) {
 
 void test_shorter_picture_stays_centred(void) {
     // 1024p 50 Hz crops the PAL frame (window 23..1064 at x4: 260 source lines); the PAL TV picture shows 288 of them
-    // in 961 lines: the 28 that come back are shared above and below, the capture starts 28 half lines earlier
+    // in 961 lines: the 28 that come back are shared above and below, the capture starts 28 half lines earlier. Then
+    // the row's own move, measured on a TV with the SNES: the bars were 1 cm above, 2.3 cm below (the table's window
+    // starts above the lines the TV shows): window and bars 10 lines lower, the capture 7 later (the picture centred)
     GeoRegs r = table(0x12);
     geometryApply(r, 0x12, st(GEO_AUTO, false, GEO_PAL_TV));
     TEST_ASSERT_EQUAL_UINT16(614, r.vScale);
-    TEST_ASSERT_EQUAL_UINT16(63, r.disVbSp);
-    TEST_ASSERT_EQUAL_UINT16(1024, r.disVbSt);
-    TEST_ASSERT_EQUAL_UINT16(12, r.ifVbSt);         // 40 - 28
-    TEST_ASSERT_EQUAL_UINT16(14, r.ifVbSp);
+    TEST_ASSERT_EQUAL_UINT16(63 + 10, r.disVbSp);
+    TEST_ASSERT_EQUAL_UINT16(1024 + 10, r.disVbSt);
+    TEST_ASSERT_EQUAL_UINT16(20 + 40 + 10, r.vbSp);
+    TEST_ASSERT_EQUAL_UINT16(40 - 28 + 7, r.ifVbSt);
+    TEST_ASSERT_EQUAL_UINT16(42 - 28 + 7, r.ifVbSp);
     geometryApply(r, 0x12, st(GEO_AUTO, false, GEO_FULL_HEIGHT));   // back to the table's picture
     TEST_ASSERT_EQUAL_UINT16(40, r.ifVbSt);
     TEST_ASSERT_EQUAL_UINT16(42, r.ifVbSp);
+    TEST_ASSERT_EQUAL_UINT16(23, r.disVbSp);
+    TEST_ASSERT_EQUAL_UINT16(1064, r.disVbSt);
+    TEST_ASSERT_EQUAL_UINT16(20, r.vbSp);
 
     GeoRegs k = table(0x05);                        // a table that shows the whole frame: nothing comes back
     geometryApply(k, 0x05, st(GEO_AUTO, true, GEO_PAL_TV));
     TEST_ASSERT_EQUAL_UINT8(60, k.bar);
-    TEST_ASSERT_EQUAL_UINT16(8, k.ifVbSt);
-    TEST_ASSERT_EQUAL_UINT16(10, k.ifVbSp);
+    TEST_ASSERT_EQUAL_UINT16(10, k.ifVbSt);       // the table's own
+    TEST_ASSERT_EQUAL_UINT16(12, k.ifVbSp);
 }
 
 void test_full_height_with_integer_is_pal_tv(void) {
@@ -504,7 +510,7 @@ void test_stand_in_there_and_back(void) {
     TEST_ASSERT_UINT16_WITHIN(1, 938, g.widthPm);
     TEST_ASSERT_UINT16_WITHIN(2, (uint16_t)(plain * 15 / 16), (uint16_t)(r.disHbSt - r.disHbSp));
     TEST_ASSERT_EQUAL_HEX8(0x28, r.mark);
-    TEST_ASSERT_EQUAL_UINT16(12, r.ifVbSt);                  // the height did not move
+    TEST_ASSERT_EQUAL_UINT16(19, r.ifVbSt);                  // the height did not move
     GeoRegs k = r;
     TEST_ASSERT_FALSE(geometryApply(k, 0x12, s).changed);    // the mark says it is there
     s.standIn = false;
@@ -517,8 +523,37 @@ void test_stand_in_there_and_back(void) {
     s.standIn = true;
     g = geometryApply(n, 0x01, s);
     TEST_ASSERT_TRUE(g.changed && !g.failed);
-    TEST_ASSERT_UINT16_WITHIN(3, 2114, (uint16_t)(n.disHbSt - n.disHbSp));   // 1982 x 16/15
+    TEST_ASSERT_UINT16_WITHIN(3, 2114 - 2 * 93, (uint16_t)(n.disHbSt - n.disHbSp));   // 1982 x 16/15, edges closed
     TEST_ASSERT_TRUE(n.disHbSt < n.hTotal);
+}
+
+// 960p table standing in for 1024p (60 Hz source): widened x1.067 its window reached back past the capture's start
+// (fragments at the left) and its read past the capture's end (fragments at the right): the read ends 10 clocks sooner,
+// the window closes 93 on each side and ends with the read; Auto only, undone exactly when 960p is chosen again
+void test_stand_in_960p_closes_its_left_edge(void) {
+    GeoRegs r = table(0x01), k = r, w = r;
+    TEST_ASSERT_TRUE(geoWidth(w, 1.067f));          // the widening alone
+    GeoState s = st(GEO_AUTO, false, GEO_PAL_TV);
+    s.standIn = true;
+    geometryApply(r, 0x01, s);
+    TEST_ASSERT_UINT16_WITHIN(1, w.disHbSp + 93, r.disHbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, w.disHbSt - 93, r.disHbSt);
+    TEST_ASSERT_TRUE(r.hbSt <= r.disHbSt);           // the read still ends in the window
+    TEST_ASSERT_UINT16_WITHIN(1, w.hbSp, r.hbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, w.hbSt - 10, r.hbSt);
+    s.standIn = false;
+    geometryApply(r, 0x01, s);                       // 960p again: the table's own window and read
+    TEST_ASSERT_UINT16_WITHIN(1, k.disHbSp, r.disHbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, k.disHbSt, r.disHbSt);
+    TEST_ASSERT_UINT16_WITHIN(1, k.hbSp, r.hbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, k.hbSt, r.hbSt);
+    GeoRegs f = table(0x01), f2 = f;                 // Force 4:3 narrows the window: nothing to close, no move
+    GeoState s43 = st(GEO_FORCE43, false, GEO_PAL_TV);
+    s43.standIn = true;
+    GeoResult g = geometryApply(f, 0x01, s43);
+    TEST_ASSERT_TRUE(geoWidth(f2, g.widthPm / 1000.0f));
+    TEST_ASSERT_UINT16_WITHIN(1, f2.disHbSp, f.disHbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, f2.hbSp, f.hbSp);
 }
 
 void test_unknown_tables_untouched(void) {
@@ -629,6 +664,7 @@ int main(int, char**) {
     RUN_TEST(test_force43_multiplies);
     RUN_TEST(test_stand_in_table_takes_the_chosen_frame);
     RUN_TEST(test_stand_in_there_and_back);
+    RUN_TEST(test_stand_in_960p_closes_its_left_edge);
     RUN_TEST(test_unknown_tables_untouched);
     RUN_TEST(test_failed_step_keeps_mark);
     RUN_TEST(test_user_window_is_scaled_about_its_centre);

@@ -44,8 +44,10 @@ enum GeoStyle50 : uint8_t { GEO_PAL_TV, GEO_FULL_HEIGHT, GEO_AS_60HZ };    // ou
 // when 1024p was chosen; a screen shows either in the frame of the chosen one, so the width follows that frame.
 struct GeoState { uint8_t aspect; bool integer; uint8_t style50; bool standIn; };
 
-// The vertical part of a picture against its table: the scale (0: the table's own), and for a picture taller than
-// the window the lines its top moves down and the source lines the input skips so that it stays centred
+// The vertical part of a picture against its table: the scale (0: the table's own), and the row's own move: for a
+// picture taller than the window the lines its top moves down and the half source lines the input skips so that it
+// stays centred; for a shorter one (bars above and below) the lines the window and its bars move down and the half
+// source lines the capture moves, measured where a table's window is not centred on the lines a screen shows
 struct GeoVert { uint16_t vScale; int8_t top; int8_t ifVb; };
 struct GeoTarget { GeoVert vert; uint16_t widthPm; };   // the width against the table's, per mille
 

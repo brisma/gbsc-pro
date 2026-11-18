@@ -74,6 +74,11 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
   bottom edge cut, and at 1080p its right edge was cut too: it is now centred at 480p, 720p, 960p, 1024p, 1080p and
   1200p.
 - TV menu: on the scaled outputs it is centred on the picture's lines; at 480p it sat about 30 lines high.
+- Picture position: the 50 Hz tables (1080p, 720p, 960p, 1024p, 1200p, 576p) were centred on one console that draws
+  its picture off-centre; they are now centred on a second one, as the 60 Hz tables were, and 1080p, 1024p, 1200p
+  and 480p at 60 Hz were measured again. At 1024p 50 Hz (PAL TV) the bands above and below are equal, and Resolution
+  960p/1024p no longer sits left of its frame with a 50 Hz source. With 1024p chosen and a 60 Hz source (the 960p
+  table, shaped for a 5:4 screen) a column of fragments showed at the left and the picture sat right: both fixed.
 - WiFi optimization: when the memory clock of the picture silenced the radio entirely (a VGA source at 960p), it
   concluded that the router does not answer ping and kept that clock, with WiFi unusable; it now tries 144 MHz first.
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),
