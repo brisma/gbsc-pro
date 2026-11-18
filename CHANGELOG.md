@@ -83,6 +83,9 @@ range), and profiles saved by an earlier beta need one step each to auto-load ag
 - PRO, 480p and 576p: the board's HDMI converter shows them as 640x480 and 800x600, and the picture sat left (576p
   also high); it is now placed for what the converter shows (the standard board's analog output keeps the 480p and
   576p window).
+- Smooth scrolling with the clock generator: after a 240p/480i switch the output rate no longer jumps by the whole
+  difference at once (about 0.2 %), which some monitors could not follow; frame lock now follows it in its own steps.
+  (#78)
 - WiFi optimization: when the memory clock of the picture silenced the radio entirely (a VGA source at 960p), it
   concluded that the router does not answer ping and kept that clock, with WiFi unusable; it now tries 144 MHz first.
 - A 1080i source is shown as 1080i (it read 1080p on the TV menu, the OLED and the web app, "progressive" in the log),

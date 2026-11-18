@@ -6426,13 +6426,20 @@ void runSyncWatcher()
                         if ((VPERIOD_IF % 2) == oddEvenWhenArmed) {
                             timingAdjustDelay--;
                             if (timingAdjustDelay == 0) {
-                                if (uopt->enableFrameTimeLock) {
-                                    FrameSync::reset(uopt->frameTimeLockMethod);
-                                    GBS::GBS_RUNTIME_FTL_ADJUSTED::write(1);
-                                    delay(10);
-                                    lastVsyncLock = millis();
+                                // Frame lock on the external clock follows the source's new rate by itself (at most
+                                // 0.06 % per run), so no reset and no clock match here: the match moves the clock by
+                                // the whole rate difference at once (0.19 % for an N64 240p <-> 480i switch), and
+                                // displays that can't follow fast rate changes lose the picture after each switch
+                                bool lockFollows = uopt->enableFrameTimeLock && rto->extClockGenDetected && FrameSync::ready();
+                                if (!lockFollows) {
+                                    if (uopt->enableFrameTimeLock) {
+                                        FrameSync::reset(uopt->frameTimeLockMethod);
+                                        GBS::GBS_RUNTIME_FTL_ADJUSTED::write(1);
+                                        delay(10);
+                                        lastVsyncLock = millis();
+                                    }
+                                    externalClockGenSyncInOutRate();
                                 }
-                                externalClockGenSyncInOutRate();
                             }
                         }
                         /*else {
