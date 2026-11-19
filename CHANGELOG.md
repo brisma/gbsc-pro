@@ -5,6 +5,15 @@ its flasher. Releases 1.0 to 1.3 were published by [RetroScaler](https://github.
 1.2.3 ADV CLI on they come from [brisma/gbsc-pro](https://github.com/brisma/gbsc-pro). Issue numbers without a link
 refer to brisma/gbsc-pro.
 
+## Unreleased
+
+### Input
+- **Black from screen** and **White from screen** (Input > ADC, RGB SCART and RGB SoG): show a full black, then a
+  full white screen on the console and press OK. The scaler measures its own input and sets the black level (the ADC
+  offsets) and the ADC gain so that black and white land on the standard levels, for consoles whose RGB is hotter or
+  darker than the standard (an N64 read black at 2 and white clipped). Both are saved with the profile; White from
+  screen turns Auto gain off. **Reset black level** (Advanced) forgets the black level.
+
 ## 3.0.0-beta3 - 2026-11-18
 
 This beta is mostly about the picture. You can now choose its shape: **Aspect**, **Integer scale** and **50Hz style**

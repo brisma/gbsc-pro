@@ -22,6 +22,7 @@
     uint8_t digitalSync;            /* input.digital_sync: composite sync read from the HS input pin (sync-source.h) */ \
     uint8_t syncDejitter;           /* input.sync_dejitter: the HS/VS pins' pad filter, Auto / On / Off (sync-source.h) */ \
     uint8_t sync75Ohm;              /* input.sync_75ohm: 75 ohm load on SCART pin 20 while an RGB SCART picture is shown */ \
+    uint8_t rgbBlack;               /* input.rgb_black: RGB ADC offset steps from the boot calibration, 128 = none (rgb-levels.h) */ \
     uint8_t osdTheme;               /* osd.theme */ \
     uint8_t osdPosition;            /* osd.position: menu, info, keyboard and update placement (9 positions) */ \
     uint8_t osdPopupPosition;       /* osd.popup_position: mute/volume pill and status pop-up */ \

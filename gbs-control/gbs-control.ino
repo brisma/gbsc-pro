@@ -59,6 +59,7 @@ extern bool gSettingsPresetPending;   // pro/settings/settings-apply.cpp: preset
 #include "pro/input/sync-source.h"
 #include "pro/input/rgb-scart-judge.h"
 #include "pro/picture/picture-color.h"
+#include "pro/picture/rgb-levels.h"
 
 #include "OSDManager.h"
 OSDManager osdManager;   // the TV5725's own icon OSD (upstream gbs-control): standard boards
@@ -948,6 +949,7 @@ void toggleIfAutoOffset()
         // adco->r_off = 0: auto calibration on boot failed, leave at current values
         GBS::IF_AUTO_OFST_EN::write(0);
         GBS::IF_AUTO_OFST_PRD::write(0); // 0 = by line, 1 = by frame
+        rgbLevelsApplyAdc();             // RGB inputs: the black level on top again
     }
 }
 
@@ -3667,6 +3669,7 @@ void doPostPresetLoadSteps()
         GBS::ADC_GOFCTRL::write(adco->g_off);
         GBS::ADC_BOFCTRL::write(adco->b_off);
     }
+    rgbLevelsApplyAdc();   // RGB inputs: the RGB levels black (input.rgb_black)
 
     SerialM.print(F("ADC offset: R:"));
     SerialM.print(GBS::ADC_ROFCTRL::read(), HEX);
@@ -8174,6 +8177,7 @@ void loop()
     settingsLoop();
     logLoop();         // console log: pending upstream text, sync marks summary
     apiLoop();         // web changes and actions, applied outside the network context
+    rgbLevelsLoop();    // RGB levels: one look per pass while a level is being set
     // No signal: give the WiFi stack time at every pass. Measured (Mega Drive off, channel 8): without it
     // ping lost 16-60 % and HTTP took 0.5-15 s; with 1 ms both match the picture's (0 %, ~40 ms). The source checks
     // run on millis() (every 500 ms), so the pause does not slow the search.
@@ -8182,7 +8186,8 @@ void loop()
     safeModeHealthyTick();
     loopWatchMark(LW_API);
     bool uploading = updateInProgress();
-    if (!uploading) {  // during an upload: no profile work, no auto-load sampling (VPERIOD_IF every 20 ms)
+    if (!uploading && !rgbLevelsActive()) {  // upload: no profile work, no auto-load sampling (VPERIOD_IF every 20 ms);
+                                            // a level being set: no profile load moves the ADC under it
         profileOpsLoop();  // profile load/save requests from the web, OSD and OLED
         profileTick();
         profileAutoloadTick();
@@ -9190,7 +9195,7 @@ void loop()
         lastTimeSyncWatcher = millis();
 
         // auto adc gain
-        if (uopt->enableAutoGain == 1 && !rto->sourceDisconnected && rto->videoStandardInput > 0 && rto->clampPositionIsSet && rto->noSyncCounter == 0 && rto->continousStableCounter > 90 && rto->boardHasPower) {
+        if (uopt->enableAutoGain == 1 && !rgbLevelsActive() && !rto->sourceDisconnected && rto->videoStandardInput > 0 && rto->clampPositionIsSet && rto->noSyncCounter == 0 && rto->continousStableCounter > 90 && rto->boardHasPower) {
             uint16_t htotal = GBS::STATUS_SYNC_PROC_HTOTAL::read();
             uint16_t pllad = GBS::PLLAD_MD::read();
             if (((htotal > (pllad - 3)) && (htotal < (pllad + 3)))) {
@@ -9304,7 +9309,7 @@ void loop()
     }
 
     loopWatchMark(LW_PRESET);
-    inputAutoLoop();   // Source = Auto: scan the paths while there is no signal
+    if (!rgbLevelsActive()) inputAutoLoop();   // Source = Auto: scan the paths while there is no signal
     loopWatchMark(LW_INPUT);
     wifiTuneLoop();    // WiFi optimization: the quietest memory clock
     loopWatchMark(LW_WIFITUNE);

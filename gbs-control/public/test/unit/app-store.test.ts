@@ -114,6 +114,18 @@ test("profile status reloads the list", async () => {
   assert.equal(r.store.toasts.value.at(-1)!.text, "Loaded automatically: MD NTSC-U · unsaved changes of N64 PAL discarded");
 });
 
+test("RGB source levels: progress and results as toasts, failures as errors", async () => {
+  const r = await started();
+  r.ws.msg("s:status.rgb_levels=measuring the black screen");
+  assert.deepEqual([r.store.toasts.value.at(-1)!.text, r.store.toasts.value.at(-1)!.kind], ["RGB levels: measuring the black screen", "info"]);
+  r.ws.msg("s:status.rgb_levels=black set: Y 2 -> 16 (offset -14)");
+  assert.equal(r.store.toasts.value.at(-1)!.kind, "info");
+  r.ws.msg("s:status.rgb_levels=failed: not a full white screen; nothing saved");
+  assert.equal(r.store.toasts.value.at(-1)!.kind, "error");
+  r.ws.msg("s:status.rgb_levels=busy: a level is being set");
+  assert.equal(r.store.toasts.value.at(-1)!.kind, "error");
+});
+
 test("devmode change fetches nothing (schema and actions are embedded)", async () => {
   const r = await started();
   r.ws.msg("s:system.devmode=1");

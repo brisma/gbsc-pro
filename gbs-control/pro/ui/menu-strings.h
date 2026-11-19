@@ -34,6 +34,9 @@
     S(S_AUTO_GAIN, "Auto gain") \
     S(S_GAIN, "ADC gain") \
     S(S_CALIBRATION, "Boot calibration") \
+    S(S_RGB_BLACK, "Black from screen") \
+    S(S_RGB_WHITE, "White from screen") \
+    S(S_RGB_RESET, "Reset black level") \
     S(S_DECODER, "Decoder") \
     S(S_BRIGHTNESS, "Brightness") \
     S(S_CONTRAST, "Contrast") \
@@ -269,6 +272,11 @@
     S(S_T_ADV_CONTROLLER_DONE, "ADV Controller updated") \
     S(S_T_ADV_CONTROLLER_FAIL, "ADV Controller update failed") \
     S(S_T_2X_UNSUPPORTED, "2X off: not for this source") \
+    S(S_T_CAL_MEASURING, "Measuring the screen") \
+    S(S_T_CAL_SET, "Level set") \
+    S(S_T_CAL_NOT_BLACK, "Not a black screen") \
+    S(S_T_CAL_NOT_WHITE, "Not a white screen") \
+    S(S_T_CAL_FAILED, "Level not set") \
     S(S_T_KB_HELP, "OK type  EXIT cancel") \
     S(S_K_NAME, "Name") \
     S(S_YES, "Yes") \
@@ -323,6 +331,9 @@
     S(H_ADC, "How the scaler reads the input: gain/SOG level/black calibration.") \
     S(H_GAIN, "Input signal level. Too dark: raise it. Whites blown out or colors too strong: lower it.") \
     S(H_CALIBRATION, "Calibrates the input black level at every power-on. Keep it on.") \
+    S(H_RGB_BLACK, "Show a full black screen and press OK: sets the black level for this source.") \
+    S(H_RGB_WHITE, "Show a full white screen and press OK: sets the ADC gain for full white. Turns Auto gain off.") \
+    S(H_RGB_RESET, "Forgets the black level set from the screen.") \
     S(H_DECODER, "Fine tuning of the S-Video and Composite decoder: levels/comb/filters/enhance.") \
     S(H_BANDWIDTH, "Composite comb split filter. Wide: less dot crawl. Narrow: cleaner diagonal lines.") \
     S(H_FILTER_DEFAULTS, "Puts comb/filters/noise reduction/color transients back to their defaults.") \

@@ -324,6 +324,9 @@ export function createDeviceStore(d: StoreDeps) {
       case "status.update": update.value = { ...update.value, progress: raw }; return;
       case "status.restore": update.value = { ...update.value, restore: raw }; return;
       case "status.preset": preset.value = raw; return;
+      case "status.rgb_levels":   // RGB source levels (pro/picture/rgb-levels.cpp): progress, then the result
+        toast(`RGB levels: ${raw}`, raw.startsWith("failed") || raw.startsWith("busy") ? "error" : "info");
+        return;
       case "status.adv_store":
         advStore.value = { seq: advStore.value.seq + 1, result: raw };
         d.log(`adv store: ${raw}`);

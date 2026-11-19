@@ -48,6 +48,7 @@ input.adaptive_sync on=1 off=0
 input.digital_sync on=1 off=0
 input.sync_dejitter auto=0 on=1 off=2
 input.sync_75ohm on=1 off=0
+input.rgb_black
 picture.scanlines on=1 off=0
 picture.scanline_strength
 picture.deinterlace adaptive=0 bob=1

@@ -1,4 +1,5 @@
 #include "../log/log.h"
+#include "../picture/rgb-levels.h"
 #include "../util/pgm.h"
 #include <Arduino.h>
 #include "../../options.h"
@@ -313,6 +314,9 @@ static void runFunc(uint8_t id, const ActionRequest& r) {
         case AF_BORDER_MOVE_DOWN:  screenBorderMoveBy(0, 2); break;
         case AF_SOG_UP:   sogLevelStep(1); break;
         case AF_SOG_DOWN: sogLevelStep(-1); break;
+        case AF_RGB_BLACK: rgbLevelsStart(false); break;   // the job runs in rgbLevelsLoop()
+        case AF_RGB_WHITE: rgbLevelsStart(true); break;
+        case AF_RGB_RESET: rgbLevelsReset(); break;
         case AF_ADV_CONTROLLER_UPDATE:
             advLinkUpdateStart();      // refused (no reply, OTA, already running): /api/info shows why
             break;

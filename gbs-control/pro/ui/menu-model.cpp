@@ -39,6 +39,7 @@ static bool predVisible(uint8_t pred, MenuBackend& be) {
         case P_ADV_CONTROLLER_UPDATE: return be.signal().advControllerUpdateAvailable;
         case P_VGA: return in == InputTypeVGA;
         case P_SOG: return in == InputTypeRGsB || in == InputTypeYUV;
+        case P_RGB_IN: return in == InputTypeRGBs || in == InputTypeRGsB;
         case P_TV_OSD: return tvOsdAllowed((be.caps() & CAP_OSD) != 0, !be.signal().noSignal, be.signal().presetId);
         case P_I2P_ON: return svav;
         case P_WIFI_AP: { char m[8]; be.text(LT_WIFI_MODE, m, sizeof(m)); return strcmp(m, "AP") == 0; }
