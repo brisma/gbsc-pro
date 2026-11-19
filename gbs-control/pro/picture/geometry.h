@@ -30,6 +30,19 @@ struct GeoRegs {
 // position follows the clock, the scale makes up for it. False (nothing changed) when the code has no step up.
 bool geoClockStep(GeoRegs& r);
 
+// The line made total clocks long with the same picture and line rate, on a clock that follows (the clock
+// generator): every horizontal position and the scale follow, the clock code stays. False (nothing changed) when the
+// line is that long already or total is outside the register.
+bool geoRetime(GeoRegs& r, uint16_t total);
+
+// The line the PRO's HDMI converter samples for a table, where the table's own differs: it takes the 1200p tables for
+// CVT-RB 1920x1200 and samples 2080 clocks per line, so a line of another length is resampled (uneven columns on fine
+// patterns). hz: the clock generator's frequency for that line at the table's line rate; own: the table's line, the
+// one the scaler's own clocks (81, 108, 129.6, 162 MHz) give that rate with, kept without a clock generator. False for
+// the other tables.
+struct GeoLine { uint16_t total; uint32_t hz; uint16_t own; };
+bool geoConverterLine(uint8_t tableId, GeoLine& out);
+
 // The picture f times as wide about the centre of its shown window; the window and the memory blank follow. The
 // horizontal scale ends at 1:1, so a narrower picture may need the clock stepped up first. False (nothing changed)
 // when the width cannot be reached or the window is not a plain SP < ST one.

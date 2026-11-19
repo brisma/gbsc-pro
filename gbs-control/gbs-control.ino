@@ -300,6 +300,15 @@ static uint8_t si5351Reg(uint8_t reg);
 static void si5351RegWrite(uint8_t reg, uint8_t val);
 static uint32_t si5351WaitLock();
 
+// The line the PRO's HDMI converter samples, when the preset just loaded was made that long for it (converterLineStep):
+// the clock generator starts on its frequency instead of the preset's display clock. total 0: none
+static GeoLine gConverterLine = {0, 0};
+static bool converterLineActive()
+{
+    return gConverterLine.total && rto->extClockGenDetected && !rto->outModeHdBypass &&
+           GBS::VDS_HSYNC_RST::read() == gConverterLine.total;
+}
+
 void externalClockGenResetClock()
 {
     if (!rto->extClockGenDetected) {
@@ -330,6 +339,9 @@ void externalClockGenResetClock()
     else if (!rto->outModeHdBypass) {
         SerialM.print(F("preset display clock: 0x"));
         SerialM.println(activeDisplayClock, HEX);
+    }
+    if (converterLineActive()) {
+        rto->freqExtClockGen = gConverterLine.hz;   // the line the HDMI converter samples, at the preset's line rate
     }
 
     // problem: around 108MHz the library seems to double the clock
@@ -2648,6 +2660,12 @@ boolean applyBestHTotal(uint16_t bestHTotal)
     if (rto->outModeHdBypass) {
         return true; // false? doesn't matter atm
     }
+    // The line the HDMI converter samples stays as it is: the clock generator follows the source's rate instead
+    if (converterLineActive()) {
+        rto->forceRetime = false;
+        logPrintf(LC_PRESET, LL_DEBUG, PSTR("HTotal Adjust skipped: the HDMI converter's line"));
+        return true;
+    }
 
     uint16_t orig_htotal = GBS::VDS_HSYNC_RST::read();
     int diffHTotal = bestHTotal - orig_htotal;
@@ -3090,6 +3108,58 @@ static void proHdmiPlacement()
               p->preset == 0x14 ? "576p" : "480p", p->preset == 0x14 ? "800x600" : "640x480");
 }
 
+// The PRO's HDMI converter samples the 1920x1200 output as CVT-RB, 2080 clocks per line; the 1200p tables have lines
+// of 2188 (162 MHz) and 1749 (108 MHz) clocks, which the scaler's own clocks give at the right line rate, so the
+// converter resamples them and fine patterns (dithering, one-pixel stripes) show uneven columns. With a clock generator
+// the line is made 2080 clocks long, every horizontal position and the scale following (the same picture), and the
+// generator runs on the frequency that keeps the line rate. A profile holds the line it was saved with: one already
+// that long is left as it is. Before the geometry step, which then works on that line
+static void converterLineStep()
+{
+    gConverterLine = {0, 0, 0};
+    GeoLine line;
+    if (rto->outModeHdBypass || !geoConverterLine(rto->presetID, line)) return;
+    GeoRegs r = {};
+    r.hTotal = GBS::VDS_HSYNC_RST::read();
+    r.hsSt = GBS::VDS_HS_ST::read();
+    r.hsSp = GBS::VDS_HS_SP::read();
+    r.hbSt = GBS::VDS_HB_ST::read();
+    r.hbSp = GBS::VDS_HB_SP::read();
+    r.disHbSt = GBS::VDS_DIS_HB_ST::read();
+    r.disHbSp = GBS::VDS_DIS_HB_SP::read();
+    r.hScale = GBS::VDS_HSCALE::read();
+    r.hScaleByps = GBS::VDS_HSCALE_BYPS::read() != 0;
+    r.clock = GBS::PLL648_CONTROL_01::read();
+    uint16_t was = r.hTotal;
+    // Without a clock generator the scaler's own clock makes the line rate with the table's line: a profile saved
+    // with the converter's line (the generator switched off since, or not found) goes back to it
+    uint16_t target = rto->extClockGenDetected ? line.total : line.own;
+    if (!rto->extClockGenDetected && was != line.total) return;
+    if (geoRetime(r, target)) {
+        GBS::VDS_HSYNC_RST::write(r.hTotal);
+        GBS::VDS_HS_ST::write(r.hsSt);
+        GBS::VDS_HS_SP::write(r.hsSp);
+        GBS::VDS_HB_ST::write(r.hbSt);
+        GBS::VDS_HB_SP::write(r.hbSp);
+        GBS::VDS_DIS_HB_ST::write(r.disHbSt);
+        GBS::VDS_DIS_HB_SP::write(r.disHbSp);
+        GBS::VDS_HSCALE::write(r.hScale);
+        GBS::VDS_HSCALE_BYPS::write(r.hScaleByps ? 1 : 0);
+    } else if (r.hTotal != target) {
+        logPrintf(LC_PRESET, LL_INFO, PSTR("converter line: %u clocks kept (cannot reach %u)"), (unsigned)r.hTotal,
+                  (unsigned)target);
+        return;
+    }
+    if (!rto->extClockGenDetected) {
+        logPrintf(LC_PRESET, LL_INFO, PSTR("converter line: %u -> %u clocks, no clock generator"), (unsigned)was,
+                  (unsigned)target);
+        return;
+    }
+    gConverterLine = line;
+    logPrintf(LC_PRESET, LL_INFO, PSTR("converter line: %u -> %u clocks, clock generator %lu Hz"), (unsigned)was,
+              (unsigned)line.total, (unsigned long)line.hz);
+}
+
 static void geometryStep()
 {
     gGeoCaptureMove = 0;
@@ -3145,6 +3215,12 @@ static void geometryStep()
     }
     if (!g.changed) {
         logPrintf(LC_PRESET, LL_DEBUG, PSTR("geometry: nothing to do"));
+        return;
+    }
+    // On the HDMI converter's line the clock generator is set for that line: a clock step would change it (a hand-made
+    // Screen > Size with a narrower picture can ask for one)
+    if (gConverterLine.total && (now.clock != was.clock || now.hTotal != was.hTotal)) {
+        logPrintf(LC_PRESET, LL_INFO, PSTR("geometry: step refused on the HDMI converter's line, picture left as loaded"));
         return;
     }
     if (now.clock != was.clock) GBS::PLL648_CONTROL_01::write(now.clock);
@@ -3707,10 +3783,19 @@ void doPostPresetLoadSteps()
     }
 
     proHdmiPlacement();
+    converterLineStep();   // the line the HDMI converter samples, before the geometry step works on it
     geometryStep();   // before the clock generator takes the preset's display clock: the step may change it
 
     // transfer preset's display clock to ext. gen
     externalClockGenResetClock();
+    // The HDMI converter's line runs at the right rate only on the generator's clock (the scaler's own code gives
+    // 63 Hz at 60 Hz, 42 Hz at 50 Hz on that line): switch now rather than once the source is stable
+    if (converterLineActive() && GBS::PLL648_CONTROL_01::read() != 0x75) {
+        GBS::GBS_PRESET_DISPLAY_CLOCK::write(GBS::PLL648_CONTROL_01::read());
+        Si.enable(0);
+        delayMicroseconds(800);
+        GBS::PLL648_CONTROL_01::write(0x75);
+    }
 
     //unfreezeVideo();
     tv5725OsdOff();
@@ -5321,6 +5406,7 @@ void bypassModeSwitch_RGBHV()
     GBS::PAD_SYNC_OUT_ENZ::write(1); // disable sync out
 
     loadHdBypassSection();
+    gConverterLine = {0, 0, 0};   // pass-through: the scaler's line is not shown, the clock generator on the preset's clock
     externalClockGenResetClock();
     FrameSync::cleanup();
     GBS::ADC_UNUSED_62::write(0x00); // clear debug view

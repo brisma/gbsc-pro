@@ -11,6 +11,10 @@ refer to brisma/gbsc-pro.
 - PRO: Output > Analog out (RGB / YPbPr) is gone from the menus and the web app. It is the standard board's analog
   port; on the PRO that output feeds the HDMI converter, so YPbPr left the screen without a picture. A PRO that had
   it on YPbPr is back to RGB by itself. (#80)
+- 1200p with the clock generator (every PRO): fine patterns such as dithering or one-pixel stripes showed uneven
+  columns and diagonal bands. The PRO's HDMI converter samples 1920x1200 as 2080 pixels per line, and the 1200p lines
+  were 2188 (60 Hz) and 1749 (50 Hz) long; they are now 2080, with the same picture. Boards without a clock generator
+  keep the earlier lines. (#79)
 
 ## 3.0.0-beta3 - 2026-11-18
 

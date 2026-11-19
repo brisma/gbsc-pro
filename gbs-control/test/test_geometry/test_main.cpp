@@ -454,6 +454,98 @@ void test_integer_at_1080p_50_shows_the_whole_frame(void) {
     TEST_ASSERT_TRUE(r.disVbSp > 28 && r.disVbSt < 1125);
 }
 
+// The PRO's HDMI converter takes the 1200p tables for CVT-RB 1920x1200 and samples 2080 clocks per line: with a clock
+// generator the line is made that long, every horizontal position and the scale following, the line rate kept by the
+// generator's clock (the table's 162 MHz x 2080 / 2188, 108 MHz x 2080 / 1749)
+void test_converter_line_of_the_1200p_tables(void) {
+    GeoLine l;
+    TEST_ASSERT_TRUE(geoConverterLine(0x07, l));
+    TEST_ASSERT_EQUAL_UINT16(2080, l.total);
+    TEST_ASSERT_EQUAL_UINT16(table(0x07).hTotal, l.own);                      // the line without a clock generator
+    TEST_ASSERT_EQUAL_UINT32((uint32_t)(162000000ull * 2080 / table(0x07).hTotal), l.hz);   // the table's line rate
+    TEST_ASSERT_TRUE(geoConverterLine(0x17, l));
+    TEST_ASSERT_EQUAL_UINT16(2080, l.total);
+    TEST_ASSERT_EQUAL_UINT16(table(0x17).hTotal, l.own);
+    TEST_ASSERT_EQUAL_UINT32((uint32_t)(108000000ull * 2080 / table(0x17).hTotal), l.hz);
+    TEST_ASSERT_FALSE(geoConverterLine(0x05, l));   // the others keep their tables' lines
+    TEST_ASSERT_FALSE(geoConverterLine(0x15, l));
+}
+
+void test_retime_keeps_the_picture(void) {
+    GeoRegs r = table(0x07);                      // line 2188: x 2080 / 2188
+    TEST_ASSERT_TRUE(geoRetime(r, 2080));
+    TEST_ASSERT_EQUAL_UINT16(2080, r.hTotal);
+    TEST_ASSERT_EQUAL_HEX8(0xA5, r.clock);        // the code stays: the generator's frequency makes the line rate
+    TEST_ASSERT_UINT16_WITHIN(1, 15, r.hsSt);
+    TEST_ASSERT_UINT16_WITHIN(1, 48, r.hsSp);
+    TEST_ASSERT_UINT16_WITHIN(1, 286, r.disHbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, 1878, r.disHbSt);
+    TEST_ASSERT_UINT16_WITHIN(1, 158, r.hbSp);    // the memory blank where its pixels show (kGeoLat)
+    TEST_ASSERT_UINT16_WITHIN(1, 1800, r.hbSt);
+    TEST_ASSERT_UINT16_WITHIN(1, 633, r.hScale);
+    TEST_ASSERT_FALSE(r.hScaleByps);
+
+    GeoRegs p = table(0x17);                      // line 1749: x 2080 / 1749, a longer line
+    TEST_ASSERT_TRUE(geoRetime(p, 2080));
+    TEST_ASSERT_EQUAL_UINT16(2080, p.hTotal);
+    TEST_ASSERT_UINT16_WITHIN(1, 260, p.disHbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, 1861, p.disHbSt);
+    TEST_ASSERT_UINT16_WITHIN(1, 140, p.hbSp);
+    TEST_ASSERT_UINT16_WITHIN(1, 1834, p.hbSt);
+    TEST_ASSERT_UINT16_WITHIN(1, 600, p.hScale);
+}
+
+void test_retime_to_its_own_line_changes_nothing(void) {   // a profile saved with the converter's line
+    GeoRegs r = table(0x07);
+    geoRetime(r, 2080);
+    GeoRegs k = r;
+    TEST_ASSERT_FALSE(geoRetime(r, 2080));
+    TEST_ASSERT_TRUE(sameRegs(k, r));
+    TEST_ASSERT_FALSE(geoRetime(r, 0));
+    TEST_ASSERT_FALSE(geoRetime(r, 4096));        // VDS_HSYNC_RST holds 12 bits
+    TEST_ASSERT_TRUE(sameRegs(k, r));
+}
+
+void test_retime_refuses_a_scale_past_one_to_one(void) {   // a shorter line would need the scale past 1:1
+    GeoRegs r = table(0x07);                      // 2188 -> 2080: the scale / 0.95
+    r.hScale = 1000;
+    GeoRegs k = r;
+    TEST_ASSERT_FALSE(geoRetime(r, 2080));
+    TEST_ASSERT_TRUE(sameRegs(k, r));
+}
+
+void test_retime_wrapped_memory_blank(void) {   // Screen > Position wrapped the read past the line's end
+    GeoRegs r = table(0x07);
+    r.hbSp = 2100; r.hbSt = 1640;                 // read from 2100 over the turn of the line to 1640
+    TEST_ASSERT_TRUE(geoRetime(r, 2080));
+    TEST_ASSERT_UINT16_WITHIN(1, 1994, r.hbSp);   // (2100 + 56) x 2080 / 2188 - 56
+    TEST_ASSERT_UINT16_WITHIN(1, 1556, r.hbSt);   // (1640 + 2188 + 56) x 2080 / 2188 - 56 - 2080
+}
+
+// Every picture of the 1200p tables on the converter's line keeps that line and the clock code (a clock step would
+// leave the clock generator on a line it was not set for), and the table's own picture comes back the same
+void test_pictures_on_the_converter_line_keep_it(void) {
+    static const uint8_t kIds[] = {0x07, 0x17};
+    for (uint8_t id : kIds) {
+        GeoRegs base = table(id);
+        TEST_ASSERT_TRUE(geoRetime(base, 2080));
+        for (uint8_t a = 0; a < 3; a++)
+            for (uint8_t i = 0; i < 2; i++)
+                for (uint8_t sy = 0; sy < 3; sy++) {
+                    GeoRegs r = base;
+                    GeoResult g = geometryApply(r, id, st(a, i != 0, sy));
+                    TEST_ASSERT_FALSE(g.failed);
+                    TEST_ASSERT_EQUAL_UINT16(2080, r.hTotal);
+                    TEST_ASSERT_EQUAL_HEX8(base.clock, r.clock);
+                    geometryApply(r, id, st(GEO_AUTO, false, id & 0x10 ? GEO_FULL_HEIGHT : GEO_PAL_TV));
+                    TEST_ASSERT_EQUAL_UINT16(2080, r.hTotal);
+                    TEST_ASSERT_UINT16_WITHIN(2, base.disHbSp, r.disHbSp);
+                    TEST_ASSERT_UINT16_WITHIN(2, base.disHbSt, r.disHbSt);
+                    TEST_ASSERT_UINT16_WITHIN(2, base.hScale, r.hScale);
+                }
+    }
+}
+
 void test_full_height_with_integer_is_pal_tv(void) {
     GeoState n = geoNormalise(0x15, st(GEO_AUTO, true, GEO_FULL_HEIGHT));
     TEST_ASSERT_EQUAL_UINT8(GEO_PAL_TV, n.style50);
@@ -676,6 +768,12 @@ int main(int, char**) {
     RUN_TEST(test_taller_picture_stays_centred);
     RUN_TEST(test_shorter_picture_stays_centred);
     RUN_TEST(test_integer_at_1080p_50_shows_the_whole_frame);
+    RUN_TEST(test_converter_line_of_the_1200p_tables);
+    RUN_TEST(test_retime_keeps_the_picture);
+    RUN_TEST(test_retime_to_its_own_line_changes_nothing);
+    RUN_TEST(test_retime_refuses_a_scale_past_one_to_one);
+    RUN_TEST(test_retime_wrapped_memory_blank);
+    RUN_TEST(test_pictures_on_the_converter_line_keep_it);
     RUN_TEST(test_full_height_with_integer_is_pal_tv);
     RUN_TEST(test_style_only_on_50hz_tables);
     RUN_TEST(test_full_ignores_style_and_integer_width);

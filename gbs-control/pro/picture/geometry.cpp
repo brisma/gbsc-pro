@@ -29,17 +29,10 @@ static void readOf(const GeoRegs& r, long& sp, long& st) {
     if (st <= sp) st += r.hTotal;
 }
 
-bool geoClockStep(GeoRegs& r) {
-    float k;
-    uint8_t next;
-    if (r.clock == 0x65) { next = 0x85; k = 4.0f / 3.0f; }
-    else if (r.clock == 0x85) { next = 0xA5; k = 1.5f; }
-    else return false;
-    long total = roundL(r.hTotal * k);
-    if (total > kTotalMax) return false;
+// Every horizontal position k times further along a line now total clocks long; the scale makes up for it
+static void retimeBy(GeoRegs& r, float k, long total) {
     long sp, st;
     readOf(r, sp, st);
-    r.clock = next;
     r.hTotal = (uint16_t)total;
     r.hsSt = (uint16_t)roundL(r.hsSt * k);
     r.hsSp = (uint16_t)roundL(r.hsSp * k);
@@ -49,7 +42,35 @@ bool geoClockStep(GeoRegs& r) {
     r.hbSt = onLine(roundL(k * (st + kGeoLat) - kGeoLat), total);
     r.hScale = (uint16_t)roundL(r.hScale / k);
     r.hScaleByps = false;
+}
+
+bool geoClockStep(GeoRegs& r) {
+    float k;
+    uint8_t next;
+    if (r.clock == 0x65) { next = 0x85; k = 4.0f / 3.0f; }
+    else if (r.clock == 0x85) { next = 0xA5; k = 1.5f; }
+    else return false;
+    long total = roundL(r.hTotal * k);
+    if (total > kTotalMax) return false;
+    r.clock = next;
+    retimeBy(r, k, total);
     return true;
+}
+
+bool geoRetime(GeoRegs& r, uint16_t total) {
+    if (!total || total > kTotalMax || !r.hTotal || total == r.hTotal) return false;
+    float k = (float)total / r.hTotal;
+    if (r.hScale / k > kScaleMax + 0.49f) return false;   // a longer line needs a scale under 1:1
+    retimeBy(r, k, total);
+    return true;
+}
+
+bool geoConverterLine(uint8_t tableId, GeoLine& out) {
+    switch (tableId) {
+    case 0x07: out = {2080, 154003656, 2188}; return true;   // 162 MHz x 2080 / 2188: CVT-RB's 74.04 kHz, 59.95 Hz
+    case 0x17: out = {2080, 128439108, 1749}; return true;   // 108 MHz x 2080 / 1749: the 50 Hz table's 61.75 kHz
+    default: return false;
+    }
 }
 
 bool geoWidth(GeoRegs& r, float f) {
