@@ -126,9 +126,10 @@ void osdDriverLoop() {
     if (gWindowDue && (int32_t)(now - gWindowAt) >= 0) { gWindowDue = false; osdReadWindow(); }
     static StvRateRetry rateRetry;
     static StvSourceWatch sourceWatch;
+    bool changed = rto->presetID != lastPreset;
     bool again = rateRetry.due(now);
-    if (rto->presetID != lastPreset || again) {
-        if (rto->presetID != lastPreset) {
+    if (changed || again) {
+        if (changed) {
             lastPreset = rto->presetID;
             osdWindowSoon();               // the new preset's window, once its registers are written
             rateRetry.stop();
@@ -137,11 +138,12 @@ void osdDriverLoop() {
         // A rate that cannot be measured yet leaves the menu at its widest: asked again a few times
         uint16_t lines = s == OUT_BYPASS ? profileSourceLines() : 0;
         uint32_t fh = s == OUT_BYPASS ? osdSourceLineHz() : 0;
-        if (s == OUT_BYPASS && !fh && !again) rateRetry.start(now);
+        StvOutputPass pass = stvOutputPass(changed, again, s == OUT_BYPASS, fh != 0);
+        if (pass.startRetry) rateRetry.start(now);
         if (fh) rateRetry.stop();
-        if (!again || fh) {
+        if (pass.place) {
             placeBypass(lastPreset, s, lines, fh);
-            if (again) osdReadWindow();   // the rate came late: place the panel with it now
+            if (pass.windowNow) osdReadWindow();   // the rate came late: place the panel with it now
         }
     } else if (lastPreset == 0x22 && !updateInProgress() && sourceWatch.due(now)) {
         // the VGA pass-through, another source mode (640x480 to 800x600): three register reads a second (the HD

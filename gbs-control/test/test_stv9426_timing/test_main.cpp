@@ -342,6 +342,43 @@ void test_bypass_rate_is_asked_again(void) {
     TEST_ASSERT_FALSE(r.due(t + StvRateRetry::kEveryMs));
 }
 
+// A new output is always placed. Defaults on a scaled VGA source goes through the pass-through and back: when the
+// pass-through's line rate could not be read (the retry armed) and the scaling took 2 s to come back, the retry fell
+// due in the pass that saw the new output and its placement was skipped: the menu kept the pass-through's geometry
+// (twice as wide, rows half as high) until the next output change
+void test_a_new_output_is_placed_even_when_the_rate_retry_is_due(void) {
+    StvOutputPass p = stvOutputPass(true, true, false, false);    // scaled output, retry due in the same pass
+    TEST_ASSERT_TRUE(p.place);
+    TEST_ASSERT_FALSE(p.windowNow);                                // its window is read once the registers are written
+    TEST_ASSERT_FALSE(p.startRetry);
+    p = stvOutputPass(true, false, false, false);                  // the plain change
+    TEST_ASSERT_TRUE(p.place);
+    TEST_ASSERT_FALSE(p.startRetry);
+}
+
+void test_a_bypass_without_a_rate_asks_again(void) {
+    StvOutputPass p = stvOutputPass(true, false, true, false);     // new bypass, no rate yet
+    TEST_ASSERT_TRUE(p.place);                                     // at its widest meanwhile
+    TEST_ASSERT_TRUE(p.startRetry);
+    p = stvOutputPass(true, true, true, false);                    // the same with an older retry falling due
+    TEST_ASSERT_TRUE(p.place);
+    TEST_ASSERT_TRUE(p.startRetry);
+    p = stvOutputPass(true, false, true, true);                    // the rate at once
+    TEST_ASSERT_TRUE(p.place);
+    TEST_ASSERT_FALSE(p.startRetry);
+}
+
+void test_the_rate_retry_places_only_with_a_rate(void) {
+    StvOutputPass p = stvOutputPass(false, true, true, false);     // still unknown
+    TEST_ASSERT_FALSE(p.place);
+    TEST_ASSERT_FALSE(p.startRetry);                               // the tries are counted by the retry itself
+    p = stvOutputPass(false, true, true, true);                    // the rate came late
+    TEST_ASSERT_TRUE(p.place);
+    TEST_ASSERT_TRUE(p.windowNow);
+    p = stvOutputPass(false, false, true, true);                   // nothing new
+    TEST_ASSERT_FALSE(p.place);
+}
+
 void test_menu_fits_the_line_for_ld_35_to_63(void) {
     for (uint8_t ld = 35; ld <= 63; ld++) {
         unsigned start = (stvDdFor(ld) + 8u) * 3u, line = 12u * (ld + 1u);
@@ -423,6 +460,9 @@ int main() {
     RUN_TEST(test_bypass_window_of_hd_formats);
     RUN_TEST(test_bypass_panel_is_centred_in_the_picture);
     RUN_TEST(test_bypass_rate_is_asked_again);
+    RUN_TEST(test_a_new_output_is_placed_even_when_the_rate_retry_is_due);
+    RUN_TEST(test_a_bypass_without_a_rate_asks_again);
+    RUN_TEST(test_the_rate_retry_places_only_with_a_rate);
     RUN_TEST(test_line_rate_from_if_period);
     RUN_TEST(test_vga_pass_window_of_640x480);
     RUN_TEST(test_vga_pass_dreamcast_640x480_by_its_sync);

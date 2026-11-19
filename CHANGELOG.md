@@ -22,6 +22,8 @@ refer to brisma/gbsc-pro.
   is built from the normal values unless the profile was saved on that source. (#69)
 - Optimize WiFi: the memory clock of the resolution is now always compared with 144 MHz at power-on. Before, a
   measurement just under the limit could leave the session on a much slower link (seen with a Dreamcast on VGA). (#69)
+- TV menu: after Profiles > Defaults on a VGA source the menu could stay squashed (wide, with half-height rows) until
+  the next resolution change. (#69)
 
 ## 3.0.0-beta3 - 2026-11-18
 

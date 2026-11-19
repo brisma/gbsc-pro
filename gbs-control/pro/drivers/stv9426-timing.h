@@ -67,6 +67,19 @@ private:
     uint8_t left_ = 0;
     uint32_t at_ = 0;
 };
+// One pass of the watch that keeps the menu on the scaler's output. presetChanged: another output since the last
+// pass; retryDue: the bypass's line rate is asked again now (StvRateRetry); bypass / haveRate: the output is a bypass
+// and its line rate could be read. place: set the timing for this output now; windowNow: read its window at once (a
+// rate that came late; a new output's window is read once its registers are written); startRetry: ask for the rate
+// again later.
+struct StvOutputPass { bool place, windowNow, startRetry; };
+inline StvOutputPass stvOutputPass(bool presetChanged, bool retryDue, bool bypass, bool haveRate) {
+    StvOutputPass p;
+    p.place = presetChanged || (retryDue && haveRate);     // a new output always; a retry only with its rate
+    p.windowNow = !presetChanged && p.place;
+    p.startRetry = presetChanged && bypass && !haveRate;
+    return p;
+}
 // A scaled output's picture, vertically, from the scaler's registers (VDS_VS_ST/SP, VDS_DIS_VB_ST/SP, VDS_VSYNC_RST):
 // first = lines from the end of the vertical sync (the shorter of the two spans between its edges) to the first
 // visible line, active = visible lines. false: not a usable frame (the menu keeps the output's nominal lines)
