@@ -6600,12 +6600,22 @@ void runSyncWatcher()
 
                     // todo: this hack is hard to understand when looking at applypreset and mode is suddenly 1,2 or 3
                     // A profile saved on scaled RGBHV holds the finished picture: it loads as mode 14 here, early.
-                    // One without those registers (saved on another source) is built like no profile: its 240p
-                    // table loaded as mode 14 scrambled the picture
-                    bool fromProfile = profileScaledVgaFromProfile(uopt->presetPreference == 2, profileHasRegs(14));
+                    // One without those registers (saved on another source), or whose registers cannot be read (a
+                    // damaged file, no memory for them), is built like no profile: a 15 kHz table loaded as mode 14
+                    // scrambled the picture. Read once here: mode 14 has no build to fall back on
+                    bool hasVga = uopt->presetPreference == 2 && profileHasRegs(14);
+                    bool vgaReadable = false;
+                    if (hasVga) {
+                        ProfileRegBuf trial;
+                        vgaReadable = trial.p && profileLoadRegs(14, trial.p);
+                    }
+                    bool fromProfile = profileScaledVgaFromProfile(uopt->presetPreference == 2, vgaReadable);
                     if (uopt->presetPreference == 2 && !fromProfile) {
-                        logPrintf(LC_PROFILE, LL_INFO, PSTR("profile %s has no registers for scaled RGBHV: built from "
-                                                            "its base preset"), uopt->profileActive);
+                        logPrintf(LC_PROFILE, LL_INFO, hasVga ? PSTR("profile %s: its scaled RGBHV registers cannot be "
+                                                                     "read: built from its base preset")
+                                                              : PSTR("profile %s has no registers for scaled RGBHV: "
+                                                                     "built from its base preset"),
+                                  uopt->profileActive);
                     }
                     if (fromProfile) {
                         rto->videoStandardInput = 14;
