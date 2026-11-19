@@ -8,7 +8,7 @@ static const uint8_t kWifiBurstCount = 20;      // echoes per burst
 static const uint16_t kWifiBurstGapMs = 50;
 static const uint16_t kWifiSettleMs = 500;      // after a clock change, before the burst
 static const uint16_t kWifiLostMs = 250;        // a lost (or later) echo counts as this
-static const uint16_t kWifiGoodP90Ms = 25;      // the preset clock is fine: stop there
+static const uint16_t kWifiGoodP90Ms = 25;      // the preset clock is fine: only 144 MHz is compared with it
 static const uint16_t kWifiSlowP90Ms = 40;      // even the kept clock is slow: suggest another router channel
 static const uint8_t kWifiClock144 = 4, kWifiClock162 = 3;   // the candidates, safe on every preset
 static const uint8_t kWifiMaxAborts = 3;        // bursts dropped in a row before the round ends on the preset clock

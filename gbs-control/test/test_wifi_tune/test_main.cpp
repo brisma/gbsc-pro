@@ -57,13 +57,37 @@ void test_measures_nothing_until_ready(void) {
     expect(t, WT_MEASURE, 2);
 }
 
-void test_boot_good_preset_clock_stops(void) {
+// A preset clock that measures fine is still compared with 144 MHz once: 129.6 MHz measures 24-28 ms where 144 MHz
+// gives 5-10, and a burst just under the "good" mark used to end the round on a link four times slower
+void test_good_preset_clock_is_still_compared_with_144(void) {
     WifiTune t; ready(t);
-    expect(t, WT_MEASURE, 2);
-    t.burstDone(burst(12));
+    expect(t, WT_MEASURE, 2);       t.burstDone(burst(12));
+    TEST_ASSERT_FALSE(t.roundComplete());
+    expect(t, WT_SET_MEASURE, 4);   t.burstDone(burst(9));        // not twice as good
+    expect(t, WT_APPLY, 2);                                       // back on the preset clock, 162 not tried
     expect(t, WT_NONE, 0);
     TEST_ASSERT_EQUAL_UINT8(2, t.clockFor(2));
+    TEST_ASSERT_EQUAL_UINT16(0xFFFF, t.p90x10(3));
     TEST_ASSERT_FALSE(t.slow());
+    TEST_ASSERT_TRUE(t.roundComplete());
+}
+
+void test_borderline_preset_clock_loses_to_a_clear_144(void) {
+    WifiTune t; ready(t, 7);                                      // 129.6 MHz
+    expect(t, WT_MEASURE, 7);       t.burstDone(burst(24));       // under the 25 ms mark
+    expect(t, WT_SET_MEASURE, 4);   t.burstDone(burst(9));        // less than half
+    expect(t, WT_NONE, 0);                                        // the burst left the hardware on 144
+    TEST_ASSERT_EQUAL_UINT8(4, t.clockFor(7));
+    TEST_ASSERT_EQUAL_UINT16(0xFFFF, t.p90x10(3));
+    TEST_ASSERT_TRUE(t.roundComplete());
+}
+
+void test_good_preset_clock_at_144_stops(void) {                  // nothing to compare with
+    WifiTune t; ready(t, 4);
+    expect(t, WT_MEASURE, 4);       t.burstDone(burst(12));
+    expect(t, WT_NONE, 0);
+    TEST_ASSERT_EQUAL_UINT8(4, t.clockFor(4));
+    TEST_ASSERT_TRUE(t.roundComplete());
 }
 
 void test_good_144_skips_the_162_burst(void) {   // 162 disturbs most radios: no burst there when 144 is good
@@ -314,7 +338,9 @@ void test_round_complete_only_at_the_end(void) {
     TEST_ASSERT_TRUE(t.roundComplete());
     WifiTune g; ready(g);
     expect(g, WT_MEASURE, 2);       g.burstDone(burst(12));
-    TEST_ASSERT_TRUE(g.roundComplete());                          // the preset clock was fine
+    TEST_ASSERT_FALSE(g.roundComplete());                         // fine, 144 still to compare
+    expect(g, WT_SET_MEASURE, 4);   g.burstDone(burst(10));
+    TEST_ASSERT_TRUE(g.roundComplete());                          // the preset clock stays
 }
 
 // A preset load during a burst on 144/162 that brings the same preset clock: the load already wrote clockFor(),
@@ -334,7 +360,9 @@ int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_burst_stats_counts_lost_as_250ms);
     RUN_TEST(test_measures_nothing_until_ready);
-    RUN_TEST(test_boot_good_preset_clock_stops);
+    RUN_TEST(test_good_preset_clock_is_still_compared_with_144);
+    RUN_TEST(test_borderline_preset_clock_loses_to_a_clear_144);
+    RUN_TEST(test_good_preset_clock_at_144_stops);
     RUN_TEST(test_boot_slow_preset_clock_clear_winner);
     RUN_TEST(test_good_144_skips_the_162_burst);
     RUN_TEST(test_better_but_not_good_144_still_tries_162);

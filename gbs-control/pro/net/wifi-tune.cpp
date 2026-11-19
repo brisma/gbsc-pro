@@ -75,6 +75,7 @@ bool WifiTune::roundComplete() const {
     if (pending_) return false;
     if (winner_ < 8) return true;
     if (p90_[pc_] == 0xFFFF) return false;
+    if (pc_ != kWifiClock144 && p90_[kWifiClock144] == 0xFFFF) return false;   // always compared once
     if (p90_[pc_] <= kWifiGoodP90Ms * 10) return true;
     const uint8_t cands[2] = {kWifiClock144, kWifiClock162};
     for (uint8_t c : cands)
@@ -109,7 +110,18 @@ WifiTuneAction WifiTune::next() {
         return request(pc_);
     }
     if (winner_ < 8) return apply(winner_);
-    if (p90_[pc_] <= kWifiGoodP90Ms * 10) { slow_ = false; return apply(pc_); }
+    // A preset clock that measures fine is still compared with 144 MHz once: a burst just under the mark is no proof
+    // (129.6 MHz measures 24-28 ms where 144 MHz gives 5-10). 162 MHz is tried only for a slow preset clock
+    if (pc_ != kWifiClock144 && p90_[kWifiClock144] == 0xFFFF) return request(kWifiClock144);
+    if (p90_[pc_] <= kWifiGoodP90Ms * 10) {
+        if (pc_ != kWifiClock144 && p90_[kWifiClock144] <= p90_[pc_] / 2) {
+            winner_ = kWifiClock144;
+            slow_ = false;
+            return apply(winner_);
+        }
+        slow_ = false;
+        return apply(pc_);
+    }
     const uint8_t cands[2] = {kWifiClock144, kWifiClock162};
     uint8_t best = 0xFF;
     for (uint8_t c : cands) {
