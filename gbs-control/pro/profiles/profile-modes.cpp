@@ -44,6 +44,10 @@ uint8_t profileReloadModeOf(uint8_t mode, bool palForce60Active) {
     return mode == 14 ? 15 : profileRegModeOf(mode, palForce60Active);
 }
 
+bool profileScaledVgaFromProfile(bool profileLoaded, bool hasVgaRegs) { return profileLoaded && hasVgaRegs; }
+
+bool profileRegsUsable(uint8_t gbsMode, bool scaledVgaBuild) { return !scaledVgaBuild || gbsMode == 14; }
+
 bool profileForce60Reloads(uint8_t regMode) { return regMode == 2 || regMode == 4; }
 
 uint16_t profileForce60VbStop(uint16_t presetStop) {

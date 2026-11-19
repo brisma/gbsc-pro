@@ -18,6 +18,8 @@ refer to brisma/gbsc-pro.
 - Smooth scrolling with the clock generator: the log no longer shows "Error: trying to tune external clock frequency
   while clock frequency uninitialized!" after each resolution change. Nothing was wrong: frame lock tried to start a
   moment before the clock was set up for the new resolution; it now waits for it.
+- Profiles: a profile saved on another console no longer scrambles the picture of a VGA source (Dreamcast): scaling
+  is built from the normal values unless the profile was saved on that source. (#69)
 
 ## 3.0.0-beta3 - 2026-11-18
 

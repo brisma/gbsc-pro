@@ -44,6 +44,7 @@ void profileReloadList();                        // after restore or import
 
 // Custom preset path (applyPresets)
 bool profileLoadRegs(uint8_t gbsMode, uint8_t* out432);   // registers of the active profile for this mode
+bool profileHasRegs(uint8_t gbsMode);                     // the active profile holds registers for this mode
 // Base preset stored in profile id's file (PROFILE_BASE_NONE when unknown); readable before profileStoreInit
 uint8_t profileStoredBase(const char* id);
 uint16_t profileChoiceSeq();                       // bumps on every Load or Defaults done (by hand or by auto-load)

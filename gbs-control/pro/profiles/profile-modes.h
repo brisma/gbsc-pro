@@ -20,6 +20,13 @@ uint8_t profileRegModeOf(uint8_t videoStandardInput, bool palForce60Active);
 // is a base preset plus the adjustments of the switch from the bypass: it goes back to the bypass (15), from where
 // the sync watcher sets the scaling up again with the new settings
 uint8_t profileReloadModeOf(uint8_t mode, bool palForce60Active);
+// Scaled RGBHV is built from a base preset when the bypass switches to scaling; a profile saved there holds the
+// finished picture (its vga_upscale registers) and loads in its place. True when the loaded profile has them; a
+// profile without (saved on another source) goes through the build like no profile.
+bool profileScaledVgaFromProfile(bool profileLoaded, bool hasVgaRegs);
+// Whether the profile's registers for gbsMode may load: during the scaled RGBHV build the base table loads as mode
+// 1..4, whose registers in the profile belong to another source
+bool profileRegsUsable(uint8_t gbsMode, bool scaledVgaBuild);
 bool profileForce60Reloads(uint8_t regMode);
 // Force 60Hz: IF_VB_SP for a PAL source in a 60 Hz preset, the preset's own value + 56 (the middle 240 of 288 lines)
 uint16_t profileForce60VbStop(uint16_t presetStop);

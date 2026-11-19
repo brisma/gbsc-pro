@@ -4135,6 +4135,9 @@ void doPostPresetLoadSteps()
         eventAdd(EV_RESOLUTION, rto->presetID, uopt->activeInputType);   // Status history: a preset id, b input
 }
 
+// The sync watcher is building scaled RGBHV from a base preset (applyPresets as mode 1..4, then its own adjustments)
+static bool gScaledVgaBuild = false;
+
 // TODO replace result with VideoStandardInput enum
 void applyPresets(uint8_t result)
 {
@@ -4152,7 +4155,8 @@ void applyPresets(uint8_t result)
         ~PreferenceRestore() { uopt->presetPreference = (PresetPreference)saved; }
     } preferenceRestore{(uint8_t)uopt->presetPreference};
     if (uopt->presetPreference == OutputCustomized) {
-        bool haveRegs = customRegs && profileLoadRegs(result, customRegs);   // no memory: the base preset
+        // no memory, or the scaled RGBHV build (its base table is not the profile's 240p / 480p picture): the base preset
+        bool haveRegs = customRegs && profileRegsUsable(result, gScaledVgaBuild) && profileLoadRegs(result, customRegs);
         // PAL registers captured at the other rate than Always 60Hz now asks: the base preset, then the remap below
         if (haveRegs && !profileRegsFitForce60(customRegs, result, uopt->PalForce60 == 1)) {
             logPrintf(LC_PROFILE, LL_INFO, PSTR("PAL registers of the profile captured at the other rate: base preset "
@@ -6595,8 +6599,15 @@ void runSyncWatcher()
                     //Serial.println(sourceRate);
 
                     // todo: this hack is hard to understand when looking at applypreset and mode is suddenly 1,2 or 3
-                    if (uopt->presetPreference == 2) {
-                        // custom preset defined, try to load (set mode = 14 here early)
+                    // A profile saved on scaled RGBHV holds the finished picture: it loads as mode 14 here, early.
+                    // One without those registers (saved on another source) is built like no profile: its 240p
+                    // table loaded as mode 14 scrambled the picture
+                    bool fromProfile = profileScaledVgaFromProfile(uopt->presetPreference == 2, profileHasRegs(14));
+                    if (uopt->presetPreference == 2 && !fromProfile) {
+                        logPrintf(LC_PROFILE, LL_INFO, PSTR("profile %s has no registers for scaled RGBHV: built from "
+                                                            "its base preset"), uopt->profileActive);
+                    }
+                    if (fromProfile) {
                         rto->videoStandardInput = 14;
                     } else {
                         if (sourceLines < 280) {
@@ -6621,7 +6632,9 @@ void runSyncWatcher()
                     }
 
                     activePresetLineCount = sourceLines;
+                    gScaledVgaBuild = true;
                     applyPresets(rto->videoStandardInput);
+                    gScaledVgaBuild = false;
 
                     GBS::GBS_OPTION_SCALING_RGBHV::write(1);
                     GBS::IF_INI_ST::write(16);   // fixes pal(at least) interlace
@@ -6727,7 +6740,9 @@ void runSyncWatcher()
 
                         activePresetLineCount = sourceLines;
                         gRgbhvHz = getSourceFieldRate(1);   // the geometry step acts at 50 / 60 Hz only
+                        gScaledVgaBuild = true;
                         applyPresets(rto->videoStandardInput);
+                        gScaledVgaBuild = false;
 
                         GBS::GBS_OPTION_SCALING_RGBHV::write(1);
                         GBS::IF_INI_ST::write(16);   // fixes pal(at least) interlace

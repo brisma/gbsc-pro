@@ -498,6 +498,12 @@ void profileDeleteAll() {
     changed();
 }
 
+bool profileHasRegs(uint8_t gbsMode) {
+    if (gActive < 0) return false;
+    int8_t mi = profileModeIndex(gbsMode);
+    return mi >= 0 && (gList.at((uint8_t)gActive).modes & (1 << mi));
+}
+
 bool profileLoadRegs(uint8_t gbsMode, uint8_t* out432) {
     if (gActive < 0) return false;
     int8_t mi = profileModeIndex(gbsMode);

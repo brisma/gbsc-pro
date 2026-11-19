@@ -240,6 +240,29 @@ void test_reload_of_scaled_rgbhv_goes_through_the_bypass(void) {
     TEST_ASSERT_EQUAL_UINT8(0, profileReloadModeOf(0, false));
 }
 
+// Scaled RGBHV (a Dreamcast on VGA) is built from a base preset by the switch from the bypass, and a profile saved
+// there holds the finished picture as its vga_upscale registers. A profile without them (saved on another console)
+// used to be loaded as that mode all the same: a 15 kHz table on a 31 kHz source, a scrambled picture. Only a profile
+// with those registers skips the build
+void test_scaled_rgbhv_takes_a_profile_only_with_its_registers(void) {
+    TEST_ASSERT_TRUE(profileScaledVgaFromProfile(true, true));
+    TEST_ASSERT_FALSE(profileScaledVgaFromProfile(true, false));    // profile of another console: the build
+    TEST_ASSERT_FALSE(profileScaledVgaFromProfile(false, true));    // no profile loaded
+    TEST_ASSERT_FALSE(profileScaledVgaFromProfile(false, false));
+}
+
+// The build loads its base table as mode 1..4: the profile's registers for those modes belong to another source
+// (240p or 480p on SCART) and stay out of it; elsewhere every mode's registers load
+void test_scaled_rgbhv_build_keeps_other_modes_registers_out(void) {
+    TEST_ASSERT_TRUE(profileRegsUsable(14, true));
+    TEST_ASSERT_FALSE(profileRegsUsable(1, true));
+    TEST_ASSERT_FALSE(profileRegsUsable(3, true));
+    TEST_ASSERT_FALSE(profileRegsUsable(4, true));
+    TEST_ASSERT_TRUE(profileRegsUsable(1, false));
+    TEST_ASSERT_TRUE(profileRegsUsable(3, false));
+    TEST_ASSERT_TRUE(profileRegsUsable(14, false));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_reload_of_scaled_rgbhv_goes_through_the_bypass);
@@ -261,5 +284,7 @@ int main(int, char**) {
     RUN_TEST(test_rate_is_not_judged_where_it_cannot_be);
     RUN_TEST(test_rate_out_of_range_is_no_rate);
     RUN_TEST(test_rate_pick);
+    RUN_TEST(test_scaled_rgbhv_takes_a_profile_only_with_its_registers);
+    RUN_TEST(test_scaled_rgbhv_build_keeps_other_modes_registers_out);
     return UNITY_END();
 }
