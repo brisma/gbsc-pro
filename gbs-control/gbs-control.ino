@@ -9213,9 +9213,12 @@ void loop()
 }
     loopWatchMark(LW_COMMANDS);
 
-    // run FrameTimeLock if enabled
+    // run FrameTimeLock if enabled. With the clock generator it steers the clock from the clock/frame-rate mapping the
+    // first clock match sets up (externalClockGenSyncInOutRate, once the source is stable); a preset load clears it,
+    // and the lock could start sooner than that match: it waits for the mapping instead of reporting it missing
+    bool frameLockReady = rto->extClockGenDetected ? FrameSync::frequencyReady() : FrameSync::ready();
     if (uopt->enableFrameTimeLock && rto->sourceDisconnected == false && rto->autoBestHtotalEnabled &&
-        rto->syncWatcherEnabled && FrameSync::ready() && millis() - lastVsyncLock > FrameSyncAttrs::lockInterval && rto->continousStableCounter > 20 && rto->noSyncCounter == 0)
+        rto->syncWatcherEnabled && frameLockReady && millis() - lastVsyncLock > FrameSyncAttrs::lockInterval && rto->continousStableCounter > 20 && rto->noSyncCounter == 0)
     {
         uint16_t htotal = GBS::STATUS_SYNC_PROC_HTOTAL::read();
         uint16_t pllad = GBS::PLLAD_MD::read();

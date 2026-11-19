@@ -15,6 +15,9 @@ refer to brisma/gbsc-pro.
   columns and diagonal bands. The PRO's HDMI converter samples 1920x1200 as 2080 pixels per line, and the 1200p lines
   were 2188 (60 Hz) and 1749 (50 Hz) long; they are now 2080, with the same picture. Boards without a clock generator
   keep the earlier lines. (#79)
+- Smooth scrolling with the clock generator: the log no longer shows "Error: trying to tune external clock frequency
+  while clock frequency uninitialized!" after each resolution change. Nothing was wrong: frame lock tried to start a
+  moment before the clock was set up for the new resolution; it now waits for it.
 
 ## 3.0.0-beta3 - 2026-11-18
 
