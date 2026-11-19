@@ -8247,7 +8247,12 @@ static void syncPulseTrackLoop()
     if (!syncModeChangeGrace() && gSyncPulseTrack.otherMode(hsLow)) {
         gModeChangeAt = ms;
         gModeChangeSeen = true;
-        logPrintf(LC_SYNC, LL_DEBUG, PSTR("video mode change (sync pulse %u, was %u)"), hsLow, gSyncPulseTrack.dark());
+        // a picture of fine stripes can read so several times a second: one line every few seconds
+        static LogRepeat gate;
+        uint16_t held;
+        if (gate.allow(ms, held))
+            logPrintf(LC_SYNC, LL_DEBUG, PSTR("video mode change (sync pulse %u, was %u; %u more since the last line)"),
+                      hsLow, gSyncPulseTrack.dark(), held);
     }
     uint16_t limit = gSyncPulseTrack.update(hsLow);
     if (!limit) return;

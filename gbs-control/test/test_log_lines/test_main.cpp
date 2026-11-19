@@ -175,6 +175,30 @@ void test_cr_edge_cases(void) {
     assertTag(gGot[1], LC_SYNC, LL_INFO, true);
 }
 
+// A debug line that can come several times a second (the sync pulse tracker on a picture of fine stripes) goes out
+// once every kEveryMs at most, with the number of the ones held back since the last
+void test_repeat_gate_one_line_per_interval(void) {
+    LogRepeat g;
+    uint16_t held = 99;
+    TEST_ASSERT_TRUE(g.allow(1000, held));
+    TEST_ASSERT_EQUAL_UINT16(0, held);
+    TEST_ASSERT_FALSE(g.allow(1200, held));
+    TEST_ASSERT_FALSE(g.allow(1000 + LogRepeat::kEveryMs - 1, held));
+    TEST_ASSERT_TRUE(g.allow(1000 + LogRepeat::kEveryMs, held));
+    TEST_ASSERT_EQUAL_UINT16(2, held);                          // the two held back
+    TEST_ASSERT_TRUE(g.allow(1000 + 5 * LogRepeat::kEveryMs, held));   // a quiet stretch: at once
+    TEST_ASSERT_EQUAL_UINT16(0, held);
+}
+
+void test_repeat_gate_counts_without_overflow(void) {
+    LogRepeat g;
+    uint16_t held;
+    g.allow(0, held);
+    for (uint32_t i = 0; i < 70000; i++) g.allow(1, held);
+    TEST_ASSERT_TRUE(g.allow(LogRepeat::kEveryMs + 1, held));
+    TEST_ASSERT_EQUAL_UINT16(65535, held);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_newline_ends_line_default_tag_gbs_info);
@@ -189,5 +213,7 @@ int main(int, char**) {
     RUN_TEST(test_ring_false_tag_kept);
     RUN_TEST(test_marks_summary_and_quiet_time);
     RUN_TEST(test_activity_lost_repeats_become_a_count);
+    RUN_TEST(test_repeat_gate_one_line_per_interval);
+    RUN_TEST(test_repeat_gate_counts_without_overflow);
     return UNITY_END();
 }

@@ -39,6 +39,28 @@ inline bool logActivityRepeat(bool lostBefore, uint32_t now, uint32_t lostAt) {
     return lostBefore && now - lostAt < LOG_ACTIVITY_REPEAT_MS;
 }
 
+// A line that can repeat several times a second goes out once every kEveryMs at most: allow() true = write it now,
+// held = how many were held back since the last one written (to add to the line)
+class LogRepeat {
+public:
+    static const uint32_t kEveryMs = 10000;
+    bool allow(uint32_t now, uint16_t& held) {
+        if (any_ && now - lastAt_ < kEveryMs) {
+            if (held_ < 0xFFFF) held_++;
+            return false;
+        }
+        held = held_;
+        held_ = 0;
+        lastAt_ = now;
+        any_ = true;
+        return true;
+    }
+private:
+    uint32_t lastAt_ = 0;
+    uint16_t held_ = 0;
+    bool any_ = false;
+};
+
 class LogMarks {
 public:
     static const uint32_t kQuietMs = 1000;
