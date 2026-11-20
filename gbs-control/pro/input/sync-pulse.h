@@ -22,6 +22,11 @@ static const uint8_t kSyncTrackRun = 4;        // agreeing samples that make a n
 uint16_t syncPulseLimit(uint16_t dark, uint16_t now, uint16_t keep = 0);
 uint16_t syncPulseLimitTop(uint16_t dark);   // 64 % of the dark pulse: under the window's upper edge
 
+// The measured width is two register bytes, read one after the other while the chip keeps measuring: a read that
+// falls across the vertical interval mixes a broad pulse with a normal one and gives a width no pulse has. Two
+// reads in a row that agree (2 %) are one real pulse width.
+bool syncPulseReadsAgree(uint16_t first, uint16_t second);
+
 // Follows the normal pulse from single samples of the measured width (the vertical interval's half and broad
 // pulses and stray readings are left out). update() returns the limit to write, 0 when it stays.
 class SyncPulseTrack {

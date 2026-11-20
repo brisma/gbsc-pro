@@ -8254,7 +8254,9 @@ static void syncPulseTrackLoop()
         return;
     }
     uint16_t hsLow = GBS::STATUS_SYNC_PROC_HLOW_LEN::read();
-    if (!syncModeChangeGrace() && gSyncPulseTrack.otherMode(hsLow)) {
+    // another mode's width counts when a second read agrees: a read across the vertical interval gives a mixed value
+    if (!syncModeChangeGrace() && gSyncPulseTrack.otherMode(hsLow) &&
+        syncPulseReadsAgree(hsLow, GBS::STATUS_SYNC_PROC_HLOW_LEN::read())) {
         gModeChangeAt = ms;
         gModeChangeSeen = true;
         // a picture of fine stripes can read so several times a second: one line every few seconds

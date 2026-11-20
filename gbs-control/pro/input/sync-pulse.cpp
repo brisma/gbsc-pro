@@ -18,6 +18,10 @@ static bool within(uint16_t a, uint16_t b, uint8_t percent) {
     return d * 100u <= (uint32_t)b * percent;
 }
 
+bool syncPulseReadsAgree(uint16_t first, uint16_t second) {
+    return first && second && within(first, second, 2);
+}
+
 uint16_t SyncPulseTrack::update(uint16_t hsLow) {
     if (!hsLow) return 0;
     uint16_t before = prev_;

@@ -167,6 +167,18 @@ void test_other_mode_is_seen_on_the_first_sample(void) {
     TEST_ASSERT_TRUE(n.otherMode(241));
 }
 
+// The width is two register bytes read one after the other: a read across the vertical interval mixes a broad
+// pulse with a normal one (SNES, recorded: 173 normal, 2164 broad, 116 and 2222 mixed). Only a second read that
+// agrees makes a mode change.
+void test_a_mixed_read_is_not_confirmed_by_the_next_one(void) {
+    TEST_ASSERT_FALSE(syncPulseReadsAgree(116, 173));
+    TEST_ASSERT_FALSE(syncPulseReadsAgree(116, 2164));
+    TEST_ASSERT_FALSE(syncPulseReadsAgree(116, 0));
+    TEST_ASSERT_TRUE(syncPulseReadsAgree(193, 193));     // the other mode's pulse, twice
+    TEST_ASSERT_TRUE(syncPulseReadsAgree(193, 195));
+    TEST_ASSERT_TRUE(syncPulseReadsAgree(229, 226));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_limit_sits_inside_the_window_on_dark_and_bright_pictures);
@@ -183,5 +195,6 @@ int main(int, char**) {
     RUN_TEST(test_tracker_is_not_fooled_by_the_mess_of_a_switch);
     RUN_TEST(test_tracker_forgets_when_reset);
     RUN_TEST(test_other_mode_is_seen_on_the_first_sample);
+    RUN_TEST(test_a_mixed_read_is_not_confirmed_by_the_next_one);
     return UNITY_END();
 }
