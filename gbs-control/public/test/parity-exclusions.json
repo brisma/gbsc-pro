@@ -69,7 +69,7 @@
   },
   {
     "ref": "setting:input.rgb_black",
-    "reason": "written by Input › ADC › Black from screen (input.rgb_set_black) and Reset black level (input.rgb_reset); the raw offset steps are no control of their own"
+    "reason": "written by Input › ADC calibration › Black from screen (input.rgb_set_black) and Reset black level (input.rgb_reset), on the web page too; the raw offset steps are no control of their own"
   },
   {
     "ref": "setting:profile.hash",
