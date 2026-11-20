@@ -12,6 +12,9 @@
     ACTION(in_gain_down,       "input.gain_down",          CAP_NONE, ACTION_REGS, ACT_USER,   'o') \
     ACTION(in_sog_up,          "input.sog_up",             CAP_NONE, 0, ACT_FUNC,   AF_SOG_UP) \
     ACTION(in_sog_down,        "input.sog_down",           CAP_NONE, 0, ACT_FUNC,   AF_SOG_DOWN) \
+    ACTION(in_rgb_black,       "input.rgb_set_black",      CAP_NONE, 0, ACT_FUNC,   AF_RGB_BLACK) \
+    ACTION(in_rgb_white,       "input.rgb_set_white",      CAP_NONE, 0, ACT_FUNC,   AF_RGB_WHITE) \
+    ACTION(in_rgb_reset,       "input.rgb_reset",          CAP_NONE, 0, ACT_FUNC,   AF_RGB_RESET) \
     ACTION(scr_move_left,      "screen.move_left",         CAP_NONE, ACTION_REGS, ACT_SERIAL, '7') \
     ACTION(scr_move_right,     "screen.move_right",        CAP_NONE, ACTION_REGS, ACT_SERIAL, '6') \
     ACTION(scr_move_up,        "screen.move_up",           CAP_NONE, ACTION_REGS, ACT_SERIAL, '*') \

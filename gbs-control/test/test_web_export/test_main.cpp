@@ -37,7 +37,7 @@ void tearDown(void) { platformSetCaps(CAPS_DEFAULT); }
 // ---- enum names (a new enum value without a name fails the build) ----
 static const char* const kPredNames[] = {"none", "devmode", "svav", "sv", "av", "sv_wy", "av_ntsc", "av_pal", "rgb_sync",
     "rgbs", "ace_on", "scanlines_ok", "profile_active", "update_available", "adv_controller_update", "vga", "i2p_on",
-    "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd", "rgb_hs", "sync_pins", "hdmi_limited"};
+    "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd", "rgb_hs", "sync_pins", "hdmi_limited", "rgb_in"};
 static_assert(sizeof(kPredNames) / sizeof(kPredNames[0]) == P_COUNT, "a MenuPred has no name");
 static const char* const kFnNames[] = {"none", "open_info", "decoder_reset", "geometry_reset", "wifi_reset", "check_update",
     "profile_save_active", "profile_load_list", "profile_manage_list", "edit_ota", "edit_hosts",

@@ -85,6 +85,9 @@ static const MenuNode kAdc[] SET_PROGMEM = {
     STEP(S_GAIN, H_GAIN, in_gain_down, in_gain_up, LV_ADC_GAIN, P_NONE),
     STEP(S_SOG_LEVEL, H_SOG_LEVEL, in_sog_down, in_sog_up, LV_SOG, P_SOG),
     SET(S_CALIBRATION, H_CALIBRATION, sys_adc_cal, P_NONE, 0, 0),
+    ACT(S_RGB_BLACK, H_RGB_BLACK, in_rgb_black, LV_NONE, P_RGB_IN, 0),
+    ACT(S_RGB_WHITE, H_RGB_WHITE, in_rgb_white, LV_NONE, P_RGB_IN, 0),
+    ACT(S_RGB_RESET, H_RGB_RESET, in_rgb_reset, LV_NONE, P_RGB_IN, NF_ADVANCED),
 };
 static const MenuNode kAce[] SET_PROGMEM = {
     SET(S_ENABLED, H_ACE_ENABLE, adv_ace, P_NONE, 0, 0),

@@ -165,6 +165,21 @@ void test_sog_actions_not_dev(void) {
     TEST_ASSERT_TRUE(actionsFind("dev.sog_down") < 0);
 }
 
+// RGB source levels: user actions run as jobs from loop(); the white job marks the profile Unsaved itself, only when
+// it saves (rgb-levels.cpp), so none of them is ACTION_REGS
+void test_rgb_levels_actions(void) {
+    const char* names[3] = {"input.rgb_set_black", "input.rgb_set_white", "input.rgb_reset"};
+    for (const char* n : names) {
+        int idx = actionsFind(n);
+        TEST_ASSERT_TRUE_MESSAGE(idx >= 0, n);
+        ActionDef d; actionsDefAt((uint8_t)idx, d);
+        TEST_ASSERT_FALSE(d.flags & ACTION_DEV);
+        TEST_ASSERT_FALSE(d.flags & ACTION_REGS);
+        TEST_ASSERT_EQUAL_UINT8(ACT_FUNC, d.kind);
+        TEST_ASSERT_TRUE(actionsAvailable(d, false));
+    }
+}
+
 // Actions that change captured scaler registers mark the active profile Unsaved
 void test_regs_actions_flagged(void) {
     const char* regs[] = {"screen.move_left", "screen.move_right", "screen.move_up", "screen.move_down",
@@ -283,6 +298,7 @@ int main(int, char**) {
     RUN_TEST(test_install_action_takes_an_optional_word);
     RUN_TEST(test_action_list_describes_text_params);
     RUN_TEST(test_sog_actions_not_dev);
+    RUN_TEST(test_rgb_levels_actions);
     RUN_TEST(test_regs_actions_flagged);
     RUN_TEST(test_action_names_for_menu_functions);
     RUN_TEST(test_exact_length_param_validation);

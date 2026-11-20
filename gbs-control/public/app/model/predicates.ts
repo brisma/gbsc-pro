@@ -52,6 +52,7 @@ function predVisible(pred: string, s: PredState): boolean {
     case "adv_controller_update": return s.signal.advControllerUpdate;
     case "vga": return i === IN.VGA;
     case "sog": return i === IN.RGSB || i === IN.YUV;
+    case "rgb_in": return i === IN.RGBS || i === IN.RGSB;
     case "tv_osd": return (s.caps & CAP.OSD) === 0 && !s.signal.noSignal && (s.signal.presetId & 0x0f) !== 6 && s.signal.presetId < 0x21;
     case "wifi_ap": return s.wifiAp;
     default: return true;

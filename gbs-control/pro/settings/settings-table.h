@@ -101,6 +101,7 @@
     SETTING(input_digital_sync, "input.digital_sync",   Bool, digitalSync,                   0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
     SETTING(input_sync_dejitter, "input.sync_dejitter", Enum, syncDejitter,                  0,      0, 2,      Profile, APPLY_NONE,        OPT_DEJITTER, 0, CAP_NONE) \
     SETTING(input_sync_75,     "input.sync_75ohm",      Bool, sync75Ohm,                     0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
+    SETTING(input_rgb_black,   "input.rgb_black",       U8,   rgbBlack,                      128,    68, 188,   Profile, APPLY_COLOR,       nullptr,     0, CAP_NONE) \
     /* ---- Profile: picture ---- */ \
     SETTING(pic_scanlines,     "picture.scanlines",     Bool, wantScanlines,                 0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_scan_strength, "picture.scanline_strength", U8, scanlineStrength,            0x30,   0, 0x60,   Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \

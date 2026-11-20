@@ -135,7 +135,8 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:input/sync-dejitter"), "input");
   assert.equal(where.get("menu:output/hdmi-black"), "output");
   assert.equal(where.get("menu:output/hdmi-white"), "output");
-  assert.equal(where.size, 70);   // the rows of the former Input, Output, Picture and Screen sections, none lost
+  assert.equal(where.get("menu:input/adc-calibration/black-from-screen"), "input");
+  assert.equal(where.size, 73);   // the rows of the former Input, Output, Picture and Screen sections, none lost, + RGB levels (3)
 });
 
 test("old section bookmarks land on the new pages", async () => {

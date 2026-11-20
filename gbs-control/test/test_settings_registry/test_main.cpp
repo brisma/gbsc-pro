@@ -151,6 +151,16 @@ void test_hdmi_levels_per_profile(void) {
     TEST_ASSERT_EQUAL_UINT8(235, u.hdmiWhiteLevel);
 }
 
+void test_rgb_black_per_profile(void) {
+    const SettingDef d = defOf("input.rgb_black");
+    TEST_ASSERT_EQUAL_UINT16(128, d.def);   // 128: no offset, the boot calibration as it is
+    TEST_ASSERT_EQUAL_UINT16(68, d.min);    // +-60 steps: RL_MAX_OFFSET
+    TEST_ASSERT_EQUAL_UINT16(188, d.max);
+    TEST_ASSERT_TRUE(d.scope == SettingScope::Profile);   // a console and its cable
+    TEST_ASSERT_EQUAL_UINT16(APPLY_COLOR, d.apply);
+    TEST_ASSERT_EQUAL_UINT8(128, u.rgbBlack);
+}
+
 void test_caps_from_key_prefix(void) {
     TEST_ASSERT_EQUAL_UINT8(CAP_ADV, settingsCaps(defOf("adv.brightness")));
     TEST_ASSERT_EQUAL_UINT8(CAP_ADV, settingsCaps(defOf("input.sync_stripper")));
@@ -523,6 +533,7 @@ int main(int, char**) {
     RUN_TEST(test_picture_light_apply_group);
     RUN_TEST(test_profiles_startup_setting);
     RUN_TEST(test_no_setup_done_setting);
+    RUN_TEST(test_rgb_black_per_profile);
     RUN_TEST(test_caps_from_key_prefix);
     RUN_TEST(test_update_channel_defaults_to_the_build_channel);
     RUN_TEST(test_keys_are_unique_and_defaults_valid);

@@ -12,6 +12,7 @@
 #include "link/adv-link-device.h"
 #include "log/log.h"
 #include "picture/picture-color.h"
+#include "picture/rgb-levels.h"
 #include "platform/platform-caps.h"
 #include "settings/settings-registry.h"
 #include "settings/settings-request.h"
@@ -139,6 +140,7 @@ void applyPictureColor(void)
     GBS::VDS_Y_OFST::write((uint8_t)r.yOff);
     GBS::VDS_U_OFST::write((uint8_t)r.uOff);
     GBS::VDS_V_OFST::write((uint8_t)r.vOff);
+    rgbLevelsApplyAdc();   // RGB inputs: input.rgb_black (APPLY_COLOR)
 }
 
 void applyPictureSharpness(void)

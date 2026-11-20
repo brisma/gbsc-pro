@@ -43,6 +43,9 @@ const INPUT: Section = { id: "input", title: "Input", icon: "cable", hint: "The 
     { kind: "stepper", ref: m("input/adc-calibration/adc-gain"), icon: "exposure" },
     { kind: "stepper", ref: m("input/adc-calibration/sog-level"), icon: "vertical_align_center" },
     { kind: "toggle", ref: m("input/adc-calibration/boot-calibration"), icon: "rule" },
+    { kind: "action", ref: m("input/adc-calibration/black-from-screen"), icon: "contrast" },
+    { kind: "action", ref: m("input/adc-calibration/white-from-screen"), icon: "light_mode" },
+    { kind: "action", ref: m("input/adc-calibration/reset-black-level"), icon: "settings_backup_restore" },
   ] },
   { title: "Decoder", rows: [
     { kind: "stepper", ref: m("input/decoder/brightness"), icon: "brightness_6" },

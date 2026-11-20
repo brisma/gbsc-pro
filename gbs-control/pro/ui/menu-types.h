@@ -28,6 +28,7 @@ enum MenuPred : uint8_t {
     P_RGB_HS,                 // boards with the sync separator, RGB inputs: the sync reaches the HS input
     P_SYNC_PINS,              // the HS/VS pins carry the sync: VGA, or Digital sync on P_RGB_HS
     P_HDMI_LIMITED,           // HDMI range = Limited (the black and white levels apply)
+    P_RGB_IN,                 // RGB SCART or RGB SoG input: the RGB source levels (rgb-levels.h)
     P_COUNT };
 
 enum MenuFn : uint8_t {
