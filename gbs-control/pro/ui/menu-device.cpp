@@ -102,14 +102,14 @@ void menuToggleIrLog() {
 }
 
 static const char* keyName(uint8_t k) {
-    static const char* const kNames[] = {"up", "down", "left", "right", "OK", "back", "menu", "info", "save", "mute",
-                                         "vol+", "vol-", "knob left", "knob right", "click", "long press"};
-    return k < sizeof(kNames) / sizeof(kNames[0]) ? kNames[k] : "?";
+    static const char kNames[] PROGMEM = "up\0down\0left\0right\0OK\0back\0menu\0info\0save\0mute\0"
+                                         "vol+\0vol-\0knob left\0knob right\0click\0long press\0?";
+    return pgmListAt(kNames, k, 17);   // in flash: %S
 }
 
 // Every key (IR, encoder, buttons) passes here: upload lock, test screen, screensaver activity
 static void menuKey(uint8_t k, bool repeat, uint32_t now, const char* src) {
-    if (!repeat && src) logPrintf(LC_MENU, LL_DEBUG, PSTR("key %s (%s)"), keyName(k), src);   // held keys: the first only
+    if (!repeat && src) logPrintf(LC_MENU, LL_DEBUG, PSTR("key %S (%s)"), keyName(k), src);   // held keys: the first only
     if (updateInProgress()) return;                        // locked while an upload runs
     if (hwHas(CAP_OLED)) oled().activity(now);
     if (osdDriver().exclusive()) {                         // Developer test screen: any key closes it
@@ -162,8 +162,8 @@ static void irInput(uint32_t now) {
 
 // Console log: the page or overlay on screen (debug), and the shown signal when it changed and stayed a second
 static void logView(const MenuView& v) {
-    static const char* const kOv[] = {"none", "mute", "volume", "info", "confirm", "revert", "adjust", "toast",
-                                      "update", "keyboard", "slider", "same signal", "status", "TV OSD"};
+    static const char kOv[] PROGMEM = "none\0mute\0volume\0info\0confirm\0revert\0adjust\0toast\0"
+                                      "update\0keyboard\0slider\0same signal\0status\0TV OSD\0?";
     static uint8_t mode = 0xFF, ov = 0xFF;
     static char title[sizeof(v.title)] = "";
     if (v.mode == mode && (v.mode != VIEW_OVERLAY || v.overlay == ov) &&
@@ -175,7 +175,7 @@ static void logView(const MenuView& v) {
     title[sizeof(title) - 1] = '\0';
     if (v.mode == VIEW_CLOSED) logPrintf(LC_MENU, LL_DEBUG, PSTR("closed"));
     else if (v.mode == VIEW_LIST) logPrintf(LC_MENU, LL_DEBUG, PSTR("page %s"), v.title[0] ? v.title : "(top)");
-    else logPrintf(LC_MENU, LL_DEBUG, PSTR("overlay %s"), v.overlay < sizeof(kOv) / sizeof(kOv[0]) ? kOv[v.overlay] : "?");
+    else logPrintf(LC_MENU, LL_DEBUG, PSTR("overlay %S"), pgmListAt(kOv, v.overlay, 15));
 }
 
 static void logSignal(const MenuSignal& g, uint32_t now) {

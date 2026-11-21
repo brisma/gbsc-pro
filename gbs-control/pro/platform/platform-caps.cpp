@@ -1,3 +1,4 @@
+#include "../util/pgm.h"
 #include <string.h>
 #include "platform-caps.h"
 
@@ -22,11 +23,11 @@ uint8_t platformCapsFrom(const PlatformProbes& p, uint8_t board) {
 }
 
 uint8_t platformCapFromName(const char* name, size_t len) {
-    static const struct { const char* n; uint8_t cap; } kNames[] = {
-        {"adv", CAP_ADV}, {"osd", CAP_OSD}, {"audio", CAP_AUDIO}, {"ir", CAP_IR},
-        {"oled", CAP_OLED}, {"encoder", CAP_ENCODER}, {"led", CAP_LED}, {"original", CAP_ORIGINAL},
-    };
-    for (size_t i = 0; i < sizeof(kNames) / sizeof(kNames[0]); i++)
-        if (strlen(kNames[i].n) == len && !strncmp(kNames[i].n, name, len)) return kNames[i].cap;
+    static const uint8_t kCaps[] = {CAP_ADV, CAP_OSD, CAP_AUDIO, CAP_IR, CAP_OLED, CAP_ENCODER, CAP_LED, CAP_ORIGINAL};
+    static const char kNames[] PROGMEM = "adv\0osd\0audio\0ir\0oled\0encoder\0led\0original";
+    for (uint8_t i = 0; i < sizeof(kCaps); i++) {
+        PGM_P n = pgmListAt(kNames, i, sizeof(kCaps));
+        if (strlen_P(n) == len && !strncmp_P(name, n, len)) return kCaps[i];
+    }
     return 0;
 }

@@ -12,7 +12,7 @@ static EventRing gEvents;
 
 void eventAdd(uint8_t type, uint8_t a, uint8_t b) {
     uint16_t seq = gEvents.add(millis(), type, a, b);
-    logPrintf(LC_SYS, LL_DEBUG, PSTR("event %u: %s %u %u"), (unsigned)seq, eventTypeName(type), (unsigned)a, (unsigned)b);
+    logPrintf(LC_SYS, LL_DEBUG, PSTR("event %u: %S %u %u"), (unsigned)seq, eventTypeName(type), (unsigned)a, (unsigned)b);
     char msg[12];
     snprintf_P(msg, sizeof(msg), PSTR("e:%u"), (unsigned)seq);
     webSocket.broadcastTXT(msg);

@@ -3,10 +3,11 @@
 #include <string.h>
 #include "../util/pgm.h"
 
-static const char* const kCatNames[LC_COUNT] = {"gbs", "sys", "input", "scan", "sync", "preset", "profile", "adv",
-                                                "link", "api", "wifi", "update", "menu"};
+#define LOG_CAT_NAMES "gbs\0sys\0input\0scan\0sync\0preset\0profile\0adv\0link\0api\0wifi\0update\0menu\0?"
+static const char kCatNames[] PROGMEM = LOG_CAT_NAMES;
+static_assert(PGM_LIST_COUNT(LOG_CAT_NAMES) == LC_COUNT + 1, "kCatNames follows the categories, then '?'");
 
-const char* logCatName(uint8_t cat) { return cat < LC_COUNT ? kCatNames[cat] : "?"; }
+const char* logCatName(uint8_t cat) { return pgmListAt(kCatNames, cat < LC_COUNT ? cat : LC_COUNT, LC_COUNT + 1); }
 
 bool logSeqAfter(uint16_t a, uint16_t b) { return (int16_t)(uint16_t)(a - b) > 0; }
 
@@ -75,8 +76,10 @@ bool LogRing::readAfter(int32_t since, LogRecord& out, uint16_t* dropped) const 
 }
 
 size_t logFormatLine(const LogRecord& r, char* out, size_t n) {
-    char tag[16];
-    snprintf_P(tag, sizeof(tag), PSTR("[%s]"), logCatName(r.cat));
+    char tag[16], cat[8];
+    strncpy_P(cat, logCatName(r.cat), sizeof(cat) - 1);
+    cat[sizeof(cat) - 1] = '\0';
+    snprintf_P(tag, sizeof(tag), PSTR("[%s]"), cat);
     int w = snprintf_P(out, n, PSTR("[%6lu.%03lu] %-10s %s\n"), (unsigned long)(r.ms / 1000), (unsigned long)(r.ms % 1000), tag,
                      r.text);
     if (w < 0) return 0;
@@ -84,8 +87,11 @@ size_t logFormatLine(const LogRecord& r, char* out, size_t n) {
 }
 
 size_t logRecordJson(const LogRecord& r, char* out, size_t n) {
+    char cat[8];
+    strncpy_P(cat, logCatName(r.cat), sizeof(cat) - 1);
+    cat[sizeof(cat) - 1] = '\0';
     int w = snprintf_P(out, n, PSTR("{\"s\":%u,\"t\":%lu,\"c\":\"%s\",\"l\":\"%s\",\"m\":\""), (unsigned)r.seq,
-                     (unsigned long)r.ms, logCatName(r.cat), r.level == LL_DEBUG ? "debug" : "info");
+                     (unsigned long)r.ms, cat, r.level == LL_DEBUG ? "debug" : "info");
     if (w < 0 || (size_t)w >= n) return 0;
     size_t k = (size_t)w;
     for (uint8_t i = 0; i < r.len; i++) {

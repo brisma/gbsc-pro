@@ -9,7 +9,7 @@ enum LogCat : uint8_t { LC_GBS, LC_SYS, LC_INPUT, LC_SCAN, LC_SYNC, LC_PRESET, L
 enum LogLevel : uint8_t { LL_INFO, LL_DEBUG };   // debug: only with system.devmode on
 static const uint8_t LOG_TEXT_MAX = 128;         // longer text is cut (upstream lines are split before, log-lines.h)
 
-const char* logCatName(uint8_t cat);             // "gbs", ...; "?" out of range
+const char* logCatName(uint8_t cat);             // "gbs", ...; "?" out of range. In flash (PSTR)
 
 struct LogRecord {
     uint16_t seq;
