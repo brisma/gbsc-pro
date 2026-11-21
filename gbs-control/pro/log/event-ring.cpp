@@ -25,9 +25,9 @@ bool EventRing::readAfter(uint16_t since, Event& out) const {
 }
 
 const char* eventTypeName(uint8_t type) {
-    static const char* const kNames[] = {"input_found", "input_lost", "input_changed", "profile_loaded",
-                                         "profile_saved", "resolution", "update_offered", "update_done"};
-    return type >= EV_INPUT_FOUND && type <= EV_UPDATE_DONE ? kNames[type - 1] : "unknown";
+    static const char kNames[] PROGMEM = "unknown\0input_found\0input_lost\0input_changed\0profile_loaded\0"
+                                         "profile_saved\0resolution\0update_offered\0update_done";
+    return pgmListAt(kNames, type >= EV_INPUT_FOUND && type <= EV_UPDATE_DONE ? type : 0, EV_UPDATE_DONE + 1);
 }
 
 size_t eventJson(const Event& e, char* out, size_t cap) {

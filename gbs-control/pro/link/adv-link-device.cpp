@@ -75,10 +75,10 @@ static bool i2pInhibited(uint32_t now) {
 // ---- Console log: ADV Controller status, signal report and link events (once per change) ----
 static const char* statusName(uint8_t st) {
     switch (st) {
-        case ADV_CONTROLLER_CHECKING: return "checking";
-        case ADV_CONTROLLER_OK: return "ok";
-        case ADV_CONTROLLER_NO_REPLY: return "no reply";
-        default: return "incompatible";
+        case ADV_CONTROLLER_CHECKING: return PSTR("checking");
+        case ADV_CONTROLLER_OK: return PSTR("ok");
+        case ADV_CONTROLLER_NO_REPLY: return PSTR("no reply");
+        default: return PSTR("incompatible");
     }
 }
 
@@ -87,8 +87,8 @@ static void logController() {
     static bool lastInfo = false, lastNotApplied = false;
     const AdvControllerInfo& h = gClient.advController();
     if (h.status != lastStatus || h.haveInfo != lastInfo) {
-        if (h.haveInfo) logPrintf(LC_ADV, LL_INFO, PSTR("status %s (fw %s)"), statusName(h.status), h.info.fw);
-        else logPrintf(LC_ADV, LL_INFO, PSTR("status %s"), statusName(h.status));
+        if (h.haveInfo) logPrintf(LC_ADV, LL_INFO, PSTR("status %S (fw %s)"), statusName(h.status), h.info.fw);
+        else logPrintf(LC_ADV, LL_INFO, PSTR("status %S"), statusName(h.status));
         lastStatus = h.status;
         lastInfo = h.haveInfo;
     }
@@ -103,20 +103,22 @@ static void logSignal() {
     if (!g || (have && g->flags == last.flags && g->hz == last.hz && g->standard == last.standard &&
                g->encoder == last.encoder && g->input == last.input))
         return;
-    static const struct { uint8_t bit; const char* name; } kFlags[] = {
-        {ADV_SIG_POWERED, "powered"}, {ADV_SIG_PRESENT, "present"}, {ADV_SIG_LOCK, "lock"},
-        {ADV_SIG_FREERUN, "free-run"}, {ADV_SIG_FSC, "burst"}, {ADV_SIG_COLORKILL, "colour kill"},
-        {ADV_SIG_INTERLACED, "interlaced"}, {ADV_SIG_NONSTD, "non-standard"}};
+    static const uint8_t kFlagBits[] = {ADV_SIG_POWERED, ADV_SIG_PRESENT, ADV_SIG_LOCK, ADV_SIG_FREERUN, ADV_SIG_FSC,
+                                        ADV_SIG_COLORKILL, ADV_SIG_INTERLACED, ADV_SIG_NONSTD};
+    static const char kFlagNames[] PROGMEM = "powered\0present\0lock\0free-run\0burst\0colour kill\0interlaced\0non-standard";
     char t[LOG_TEXT_MAX + 1];
     size_t k = (size_t)snprintf_P(t, sizeof(t), PSTR("signal:"));
-    for (const auto& f : kFlags) {
-        bool on = g->flags & f.bit;
-        if (have ? on == (bool)(last.flags & f.bit) : !on) continue;   // the first report: what is on
-        if (k < sizeof(t)) k += (size_t)snprintf_P(t + k, sizeof(t) - k, PSTR(" %s %s,"), f.name, on ? "on" : "off");
+    for (uint8_t i = 0; i < sizeof(kFlagBits); i++) {
+        const uint8_t bit = kFlagBits[i];
+        bool on = g->flags & bit;
+        if (have ? on == (bool)(last.flags & bit) : !on) continue;   // the first report: what is on
+        if (k < sizeof(t))
+            k += (size_t)snprintf_P(t + k, sizeof(t) - k, PSTR(" %S %S,"), pgmListAt(kFlagNames, i, sizeof(kFlagBits)),
+                                    on ? PSTR("on") : PSTR("off"));
     }
     if (k < sizeof(t))
-        snprintf_P(t + k, sizeof(t) - k, PSTR(" %u Hz, std %u, encoder %s, input %s"), (unsigned)g->hz, (unsigned)g->standard,
-                 g->encoder == 1 ? "525p" : g->encoder == 2 ? "625p" : "off", inputLongName(g->input));
+        snprintf_P(t + k, sizeof(t) - k, PSTR(" %u Hz, std %u, encoder %S, input %s"), (unsigned)g->hz, (unsigned)g->standard,
+                 g->encoder == 1 ? PSTR("525p") : g->encoder == 2 ? PSTR("625p") : PSTR("off"), inputLongName(g->input));
     last = *g;
     have = true;
     if (!inputAutoQuietRound()) logText(LC_ADV, LL_DEBUG, t);   // a scan's later rounds repeat the same changes
@@ -129,20 +131,20 @@ static void logRegRead() {
     if (r.state == ADV_REG_PENDING || r.state == ADV_REG_IDLE || (r.gen == loggedGen && r.state == loggedState)) return;
     loggedGen = r.gen;
     loggedState = r.state;
-    static const char* const kSt[] = {"idle", "pending", "ok", "error", "unsupported"};
-    static const char* const kWhy[] = {"", ": the reply says status ", ": fewer values than asked", ": no usable reply", ": ADV Controller not ready"};
+    static const char kSt[] PROGMEM = "idle\0pending\0ok\0error\0unsupported";
+    static const char kWhy[] PROGMEM = "\0: the reply says status \0: fewer values than asked\0: no usable reply\0: ADV Controller not ready";
     char why[72] = "";
     if (r.state == ADV_REG_ERROR && r.why <= ADV_REG_WHY_CONTROLLER) {
-        snprintf_P(why, sizeof(why), PSTR("%s"), kWhy[r.why]);
-        static const char* const kStep[] = {"", " at start", " at the address", " at the register", " at restart", " at the read address", " in the data"};
+        strncpy_P(why, pgmListAt(kWhy, r.why, 5), sizeof(why) - 1);
+        static const char kStep[] PROGMEM = "\0 at start\0 at the address\0 at the register\0 at restart\0 at the read address\0 in the data";
         uint8_t code = r.replyStatus & 0x0F, step = r.replyStatus >> 4;   // the ADV Controller adds the failed I2C step
-        if (r.why == ADV_REG_WHY_STATUS) snprintf_P(why + strlen(why), sizeof(why) - strlen(why), PSTR("%u (%s%s)"), (unsigned)code,
-                                                    code == ADV_REG_READ_I2C_ERROR ? "I2C" : code == ADV_REG_READ_BAD_REQUEST ? "bad request" : "?",
-                                                    step < 7 ? kStep[step] : "");
+        if (r.why == ADV_REG_WHY_STATUS) snprintf_P(why + strlen(why), sizeof(why) - strlen(why), PSTR("%u (%S%S)"), (unsigned)code,
+                                                    code == ADV_REG_READ_I2C_ERROR ? PSTR("I2C") : code == ADV_REG_READ_BAD_REQUEST ? PSTR("bad request") : PSTR("?"),
+                                                    pgmListAt(kStep, step < 7 ? step : 0, 7));
         if (r.badReplies) snprintf_P(why + strlen(why), sizeof(why) - strlen(why), PSTR(", %u bad replies"), (unsigned)r.badReplies);
     }
-    logPrintf(LC_ADV, LL_INFO, PSTR("reg read %02X map %02X from %02X x%u: %s%s (gen %u)"), (unsigned)r.dev, (unsigned)r.map,
-              (unsigned)r.reg, (unsigned)r.count, kSt[r.state <= ADV_REG_UNSUPPORTED ? r.state : 0], why, (unsigned)r.gen);
+    logPrintf(LC_ADV, LL_INFO, PSTR("reg read %02X map %02X from %02X x%u: %S%s (gen %u)"), (unsigned)r.dev, (unsigned)r.map,
+              (unsigned)r.reg, (unsigned)r.count, pgmListAt(kSt, r.state <= ADV_REG_UNSUPPORTED ? r.state : 0, 5), why, (unsigned)r.gen);
 }
 
 static uint8_t gRegReadGen = 0;

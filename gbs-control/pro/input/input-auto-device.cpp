@@ -142,20 +142,20 @@ static bool gLogVga = false;            // the 15 kHz VGA line, once per scan
 
 static const char* whyName(uint8_t why) {
     switch (why) {
-        case IA_WHY_BOOT: return "boot";
-        case IA_WHY_LOST: return "source lost";
-        case IA_WHY_CHOSEN: return "Auto chosen";
-        case IA_WHY_BOARD: return "Auto search changed";
-        case IA_WHY_RETURN: return "source back after a gap";
-        case IA_WHY_FORMAT: return "the source changed 50/60 Hz";
-        default: return "back to Auto";
+        case IA_WHY_BOOT: return PSTR("boot");
+        case IA_WHY_LOST: return PSTR("source lost");
+        case IA_WHY_CHOSEN: return PSTR("Auto chosen");
+        case IA_WHY_BOARD: return PSTR("Auto search changed");
+        case IA_WHY_RETURN: return PSTR("source back after a gap");
+        case IA_WHY_FORMAT: return PSTR("the source changed 50/60 Hz");
+        default: return PSTR("back to Auto");
     }
 }
 
 static void logScanStart(bool link) {
     if (gAuto.scanReason() == IA_WHY_BACK_TO_AUTO && gLogManual)
         logPrintf(LC_INPUT, LL_INFO, PSTR("back to Auto (no signal on %s)"), inputLongName(gLogManual));
-    if (!link) { logPrintf(LC_SCAN, LL_INFO, PSTR("start (%s)"), whyName(gAuto.scanReason())); return; }
+    if (!link) { logPrintf(LC_SCAN, LL_INFO, PSTR("start (%S)"), whyName(gAuto.scanReason())); return; }
     uint8_t order[6];
     uint8_t n = gAuto.scanPaths(order, 6);
     char list[72];
@@ -163,7 +163,7 @@ static void logScanStart(bool link) {
     list[0] = '\0';
     for (uint8_t i = 0; i < n && k < sizeof(list); i++)
         k += (size_t)snprintf_P(list + k, sizeof(list) - k, PSTR("%s%s"), i ? " > " : "", inputLongName(order[i]));
-    logPrintf(LC_SCAN, LL_INFO, PSTR("start (%s): %s"), whyName(gAuto.scanReason()), list);
+    logPrintf(LC_SCAN, LL_INFO, PSTR("start (%S): %s"), whyName(gAuto.scanReason()), list);
 }
 
 static void logVgaLook(bool waits) {
@@ -451,24 +451,24 @@ static void identifyNewAcquisition() {
 
 static const char* idWhyName(uint8_t w) {
     switch (w) {
-        case IW_PICTURE: return "picture";
-        case IW_PICTURE_LISTENING: return "picture came back";
-        case IW_RGB_WIRED: return "RGB wired";
-        case IW_LEVEL_AMBIGUOUS: return "G level ambiguous";
-        case IW_NO_LOCK: return "no lock on pin 20";
-        case IW_DECODER_SILENT: return "decoder silent";
-        case IW_TIMEOUT: return "no verdict in time";
-        case IW_COMPOSITE: return "composite only";
-        case IW_NO_BURST: return "a sync without colour on pin 20";
-        case IW_BLACK: return "black on R/G/B and on pin 20";
-        case IW_WIRES: return "content on the R/G/B wires";
-        case IW_COMPOSITE_LAST: return "black on both, Composite as the last source";
-        case IW_COMPOSITE_OFF: return "Composite is not in Auto search";
-        case IW_SYNC_LOST: return "sync lost";
-        case IW_CHOICE: return "choice";
-        case IW_RESCAN: return "new scan";
-        case IW_PAUSED: return "paused";
-        default: return "?";
+        case IW_PICTURE: return PSTR("picture");
+        case IW_PICTURE_LISTENING: return PSTR("picture came back");
+        case IW_RGB_WIRED: return PSTR("RGB wired");
+        case IW_LEVEL_AMBIGUOUS: return PSTR("G level ambiguous");
+        case IW_NO_LOCK: return PSTR("no lock on pin 20");
+        case IW_DECODER_SILENT: return PSTR("decoder silent");
+        case IW_TIMEOUT: return PSTR("no verdict in time");
+        case IW_COMPOSITE: return PSTR("composite only");
+        case IW_NO_BURST: return PSTR("a sync without colour on pin 20");
+        case IW_BLACK: return PSTR("black on R/G/B and on pin 20");
+        case IW_WIRES: return PSTR("content on the R/G/B wires");
+        case IW_COMPOSITE_LAST: return PSTR("black on both, Composite as the last source");
+        case IW_COMPOSITE_OFF: return PSTR("Composite is not in Auto search");
+        case IW_SYNC_LOST: return PSTR("sync lost");
+        case IW_CHOICE: return PSTR("choice");
+        case IW_RESCAN: return PSTR("new scan");
+        case IW_PAUSED: return PSTR("paused");
+        default: return PSTR("?");
     }
 }
 
@@ -542,7 +542,7 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
             listenSet(false);
             gIdListenOff = true;
             gListenOffAt = now;
-            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (%s, G %u) after %lu ms, listen off"),
+            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (%S, G %u) after %lu ms, listen off"),
                       idWhyName(gId.why()), gLastLevel, (unsigned long)elapsed);
             break;
         case IA_RELEASE_RGB: {
@@ -555,7 +555,7 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
                 passesRestart();
             }
             if (w == IW_PICTURE || w == IW_COMPOSITE_OFF)
-                logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (%s) after %lu ms"), idWhyName(w), (unsigned long)elapsed);
+                logPrintf(LC_INPUT, LL_INFO, PSTR("identify: RGB SCART (%S) after %lu ms"), idWhyName(w), (unsigned long)elapsed);
             else if (!gId.releaseForced() && gIdListenOff)     // not the cap before listen ever came on
                 logPrintf(LC_INPUT, LL_INFO, PSTR("identify: termination off (%s, G %u), RGB SCART preset after %lu ms"),
                           gIdOffReport ? "decoder off report" : "G low", gLastLevel, (unsigned long)elapsed);
@@ -565,7 +565,7 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
             break;
         }
         case IA_MOVE_COMPOSITE:
-            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: Composite (%s, G %u) after %lu ms"), idWhyName(gId.why()),
+            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: Composite (%S, G %u) after %lu ms"), idWhyName(gId.why()),
                       gLastLevel, (unsigned long)elapsed);
             gAuto.redirect(InputTypeAV, now);
             gJudgeMoved = true;
@@ -575,7 +575,7 @@ static void identifyAct(uint8_t a, uint32_t now, uint32_t elapsed) {
             break;
         case IA_ABANDON:
             listenSet(false);
-            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: abandoned (%s)"), idWhyName(gId.why()));
+            logPrintf(LC_INPUT, LL_INFO, PSTR("identify: abandoned (%S)"), idWhyName(gId.why()));
             tvRedetect(true);                                      // the scan's RGB SCART window starts again
             gSwitchAt = now;
             passesRestart();

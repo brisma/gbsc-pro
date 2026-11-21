@@ -16,7 +16,7 @@ struct LogSignalInfo {
 };
 bool operator==(const LogSignalInfo& a, const LogSignalInfo& b);
 
-const char* logPresetName(uint8_t presetId);   // upstream's "preset applied" names
+const char* logPresetName(uint8_t presetId);   // upstream's "preset applied" names (in flash: PSTR)
 // "signal: 312 lines progressive 50.0 Hz, CSync, frame lock on, preset 1280x1024, out 50.0 Hz (RGB SCART)"
 size_t logSignalText(const LogSignalInfo& s, char* out, size_t n);
 

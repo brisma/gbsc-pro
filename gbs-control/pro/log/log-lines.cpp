@@ -52,12 +52,16 @@ bool LogMarks::pending() const {
 }
 
 size_t LogMarks::take(char* out, size_t n) {
-    static const char* const kNames[LM_COUNT] = {"no sync", "SP refresh", "SOG bad", "mode watch", "activity lost"};
+#define LM_NAMES "no sync\0SP refresh\0SOG bad\0mode watch\0activity lost"
+    static const char kNames[] PROGMEM = LM_NAMES;
+    static_assert(PGM_LIST_COUNT(LM_NAMES) == LM_COUNT, "kNames follows the marks");
     size_t k = 0;
     if (n) out[0] = '\0';
     for (uint8_t i = 0; i < LM_COUNT; i++) {
         if (!counts_[i]) continue;
-        int w = snprintf_P(out + k, n > k ? n - k : 0, PSTR("%s%s x%u"), k ? ", " : "", kNames[i], (unsigned)counts_[i]);
+        char name[16];
+        pgmListCopy(name, sizeof(name), kNames, i, LM_COUNT);
+        int w = snprintf_P(out + k, n > k ? n - k : 0, PSTR("%s%s x%u"), k ? ", " : "", name, (unsigned)counts_[i]);
         if (w > 0) k = k + (size_t)w < n ? k + (size_t)w : (n ? n - 1 : 0);
         counts_[i] = 0;
     }
