@@ -29,6 +29,7 @@ struct userOptions
     uint8_t wantScanlines;
     uint8_t wantOutputComponent;
     uint8_t deintMode;
+    uint8_t fieldFlip;            // picture.field_flip: VDS_FIELD_FLIP (S3_00 bit 3) after every preset load
     uint8_t wantVdsLineFilter;
     uint8_t preferScalingRgbhv;
     uint8_t PalForce60;

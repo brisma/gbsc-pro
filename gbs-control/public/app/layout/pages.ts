@@ -74,6 +74,7 @@ const SCALER: Section = { id: "scaler", title: "Scaler", icon: "memory", hint: "
     { kind: "toggle", ref: m("output/smooth-scrolling"), icon: "sync_lock" },
     { kind: "inline", ref: m("output/lock-method"), icon: "swap_horiz" },
     { kind: "cards", ref: m("picture/deinterlace"), icon: "layers", look: "deint" },
+    { kind: "toggle", ref: m("picture/swap-fields"), icon: "swap_vert" },
   ] },
   { title: "Fit to the screen", rows: [
     { kind: "pad", ref: m("screen/position"), icon: "open_with" },

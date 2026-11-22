@@ -105,6 +105,7 @@
     SETTING(pic_scanlines,     "picture.scanlines",     Bool, wantScanlines,                 0,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_scan_strength, "picture.scanline_strength", U8, scanlineStrength,            0x30,   0, 0x60,   Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \
     SETTING(pic_deint,         "picture.deinterlace",   Enum, deintMode,                     0,      0, 1,      Profile, APPLY_PRESET,      OPT_DEINT,   0, CAP_NONE) \
+    SETTING(pic_field_flip,    "picture.field_flip",    Bool, fieldFlip,                     0,      0, 1,      Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \
     SETTING(pic_line_filter,   "picture.line_filter",   Bool, wantVdsLineFilter,             1,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \
     SETTING(pic_sharpness,     "picture.sharpness",     U8,   picSharpness,                  22,     0, 31,     Profile, APPLY_PICTURE,     nullptr,     0, CAP_NONE) \
     SETTING(pic_rgbhv_scale,   "picture.rgbhv_scaling", Bool, preferScalingRgbhv,            1,      0, 1,      Profile, APPLY_PRESET,      nullptr,     0, CAP_NONE) \

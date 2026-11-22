@@ -51,6 +51,7 @@ input.sync_75ohm on=1 off=0
 picture.scanlines on=1 off=0
 picture.scanline_strength
 picture.deinterlace adaptive=0 bob=1
+picture.field_flip on=1 off=0
 picture.line_filter on=1 off=0
 picture.sharpness
 picture.rgbhv_scaling on=1 off=0

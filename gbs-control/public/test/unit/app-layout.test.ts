@@ -124,6 +124,7 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:input/source"), "input");
   assert.equal(where.get("menu:output/smooth-scrolling"), "scaler");
   assert.equal(where.get("menu:picture/deinterlace"), "scaler");
+  assert.equal(where.get("menu:picture/swap-fields"), "scaler");
   assert.equal(where.get("menu:screen/position"), "scaler");
   assert.equal(where.get("menu:output/aspect"), "output");
   assert.equal(where.get("menu:output/integer-scale"), "output");
@@ -135,7 +136,7 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:input/sync-dejitter"), "input");
   assert.equal(where.get("menu:output/hdmi-black"), "output");
   assert.equal(where.get("menu:output/hdmi-white"), "output");
-  assert.equal(where.size, 70);   // the rows of the former Input, Output, Picture and Screen sections, none lost
+  assert.equal(where.size, 71);   // the rows of the former Input, Output, Picture and Screen sections, none lost
 });
 
 test("old section bookmarks land on the new pages", async () => {

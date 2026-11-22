@@ -55,6 +55,7 @@ void inputAdoptDetected(uint8_t type);           // standard board in Auto: reco
 
 void applyPictureColor(void);                    // every VDS colour register from the settings (picture-color.cpp)
 void applyPictureSharpness(void);                // picture.sharpness -> VDS peaking
+void applyFieldFlip(void);                       // picture.field_flip -> VDS_FIELD_FLIP (interlaced sources)
 void applyScanlineStrength(void);                // picture.scanline_strength -> MADPT offsets while scanlines are on
 void pictureStep(uint8_t sid, int delta);        // clamped, persisted step of a picture setting
 void pictureResetColors(void);                   // Red/Green/Blue back to neutral 128

@@ -24,7 +24,7 @@ void settingsApply(uint16_t mask) {
         if (!uopt->advI2P) uopt->advSmooth = 0;   // smooth requires I2P
     }
     if (mask & APPLY_COLOR) applyPictureColor();
-    if (mask & APPLY_PICTURE) { applyPictureSharpness(); applyScanlineStrength(); }
+    if (mask & APPLY_PICTURE) { applyPictureSharpness(); applyScanlineStrength(); applyFieldFlip(); }
     // APPLY_OSD: nothing to do, the menu renderer reads uopt->osdTheme on every draw
     if (mask & APPLY_AUDIO) { PT2257_setVolume(uopt->volume); PT2257_mute(uopt->audioMuted || pt2257Silent(uopt->volume)); }
     if (mask & APPLY_PRESET) gSettingsPresetPending = true;   // heavy: run from loop, not from web handlers
