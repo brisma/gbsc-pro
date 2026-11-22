@@ -393,14 +393,39 @@ void externalClockGenSyncInOutRate()
         return;
     }
 
+    // Each reading is one period on the debug pin. At a 240p <-> 480i switch the sync processor's vsync point moves
+    // (serration), so the field spanning the switch measures a few lines short or long (258..268 lines: 59.26 or
+    // 60.52 Hz read from a 59.83 / 59.94 Hz N64). A retune to that moved the clock by ~1 % (one step, too big for the
+    // glide), the HDMI converter re-locked (black) and sampled darker until the next switch retuned back. A second
+    // reading > 3 fields later has to agree.
     float sfr = getSourceFieldRate(0);
     if (sfr < 47.0f || sfr > 86.0f) {
         SerialM.print(F("sync skipped sfr wrong: "));
         SerialM.println(sfr);
         return;
     }
+    delay(60);
+    const float sfr2 = getSourceFieldRate(0);
+    if (fabsf(sfr2 - sfr) > sfr * 0.0002f) {   // 200 ppm
+        SerialM.print(F("sync skipped sfr unsteady: "));
+        SerialM.print(sfr, 3);
+        SerialM.print(F(" / "));
+        SerialM.println(sfr2, 3);
+        return;
+    }
 
     float ofr = getOutputFrameRate();
+    if (ofr > 47.0f && ofr < 86.0f) {
+        delay(60);
+        const float ofr2 = getOutputFrameRate();
+        if (fabsf(ofr2 - ofr) > ofr * 0.0002f) {
+            SerialM.print(F("sync skipped ofr unsteady: "));
+            SerialM.print(ofr, 3);
+            SerialM.print(F(" / "));
+            SerialM.println(ofr2, 3);
+            return;
+        }
+    }
     if (ofr < 47.0f || ofr > 86.0f) {
         SerialM.print(F("sync skipped ofr wrong: "));
         SerialM.println(ofr);
