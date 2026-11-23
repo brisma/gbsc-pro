@@ -4805,7 +4805,7 @@ void updateSpDynamic(boolean withCurrentVideoModeCheck)
             GBS::SP_H_PULSE_IGNOR::write(0x0E);    // ps3: up to 0x3e, ps2: < 0x14
         } else if (rto->videoStandardInput == 5) { // 720p
             GBS::SP_PRE_COAST::write(7);           // down to 4 ok with ps2
-            GBS::SP_POST_COAST::write(7);          // down to 6 ok with ps2 // ps3: 8 too much
+            GBS::SP_POST_COAST::write(6);          // ps2 ok down to 6, ps3: 8 too much; Xbox 360 YPbPr loses vsync at 7 (#89)
             GBS::SP_DLT_REG::write(0x30);
             GBS::SP_H_PULSE_IGNOR::write(0x08);    // ps3: 0xd too much
         } else if (rto->videoStandardInput <= 7) { // 1080i,p
