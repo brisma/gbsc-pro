@@ -11,11 +11,28 @@ export interface ChainSignal { none?: number | boolean; lines?: number; interlac
 // output is the source whatever the Resolution choice says
 export function isBypass(sig: ChainSignal | null | undefined): boolean { return Number(sig?.preset ?? 0) >= 0x21; }
 
-// "240p 60 Hz"; the rate left out while it is not measured (the VGA pass-through never measures it); "" without a signal
+// The source's resolution as the TV menu and the OLED name it (sourceRes in pro/ui/menu-engine.cpp): the lines the
+// scaler counts (a field of a 15 kHz source, the whole frame of the rest, 1125 for 1080i) within 10 of a standard
+// mode; "--" while the count is not stable (0); any other count as it is
+export function sourceRes(lines: number, interlaced: boolean): string {
+  const near = (t: number) => lines + 10 >= t && lines <= t + 10;
+  if (near(262)) return interlaced ? "480i" : "240p";
+  if (near(312)) return interlaced ? "576i" : "288p";
+  if (near(525)) return "480p";
+  if (near(625)) return "576p";
+  if (near(750)) return "720p";
+  if (near(562)) return "1080i";   // the lines of one field
+  if (near(1125)) return interlaced ? "1080i" : "1080p";
+  if (!lines) return "--";
+  return `${lines}${interlaced ? "i" : "p"}`;
+}
+
+// "240p 60 Hz", "1080i 60 Hz"; the rate left out while it is not measured (the VGA pass-through never measures it);
+// "" without a signal
 export function signalText(sig: ChainSignal | null | undefined): string {
   if (!sig || sig.none) return "";
   const hz = Number(sig.src_hz10 ?? 0);
-  return `${sig.lines}${sig.interlaced ? "i" : "p"}${hz ? ` ${Math.round(hz / 10)} Hz` : ""}`;
+  return `${sourceRes(Number(sig.lines ?? 0), !!Number(sig.interlaced ?? 0))}${hz ? ` ${Math.round(hz / 10)} Hz` : ""}`;
 }
 
 // A measured rate under 55 Hz: PAL. No rate is not PAL
