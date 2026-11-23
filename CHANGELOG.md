@@ -24,6 +24,8 @@ refer to brisma/gbsc-pro.
   measurement just under the limit could leave the session on a much slower link (seen with a Dreamcast on VGA). (#69)
 - TV menu: after Profiles > Defaults on a VGA source the menu could stay squashed (wide, with half-height rows) until
   the next resolution change. (#69)
+- Web app: the source is named as on the TV menu and the OLED (1080i, 720p, 480p, 240p...) instead of the
+  scaler's line count, so a 1080i source no longer reads "1124i" and a 640x480 VGA source reads 480p. (#89)
 
 ## 3.0.0-beta3 - 2026-11-18
 

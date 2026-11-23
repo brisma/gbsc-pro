@@ -1,7 +1,7 @@
 // The signal chain model: stages, texts and cable states
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chain, outputLines, upscaleText, scanlinesText, signalText, palRate, type ChainIn } from "../../app/model/chain.ts";
+import { chain, outputLines, upscaleText, scanlinesText, signalText, sourceRes, palRate, type ChainIn } from "../../app/model/chain.ts";
 
 const base: ChainIn = { offline: false, searching: false, signal: { none: 0, lines: 240, interlaced: 0, src_hz10: 600, out_hz10: 600 },
   cable: "RGB SCART", resolution: "960p/1024p", filter: "Normal", scanlines: "Off", frameLock: false, ypbpr: false };
@@ -30,7 +30,7 @@ test("interlaced input, non-integer factor, frame lock, YPbPr, scanlines", () =>
 
 test("VGA pass-through (VGA upscaling off): bypass whatever the Resolution says, no 0 Hz", () => {
   const c = chain({ ...base, cable: "VGA", signal: { none: 0, lines: 525, interlaced: 0, src_hz10: 0, out_hz10: 0, preset: 0x22 } });
-  assert.deepEqual(c.stages.map((s) => [s.value, s.detail]), [["VGA", "525p"], ["Bypass", "no scaling"], ["Normal filter", "Scanlines off"], ["Same as input", "RGB"]]);
+  assert.deepEqual(c.stages.map((s) => [s.value, s.detail]), [["VGA", "480p"], ["Bypass", "no scaling"], ["Normal filter", "Scanlines off"], ["Same as input", "RGB"]]);
 });
 
 test("HD bypass: the rate of the source on the output", () => {
@@ -78,9 +78,24 @@ test("helpers", () => {
 test("signal text: lines and rate, no rate while it is not measured", () => {
   assert.equal(signalText({ none: 0, lines: 240, interlaced: 0, src_hz10: 601 }), "240p 60 Hz");
   assert.equal(signalText({ none: 0, lines: 480, interlaced: 1, src_hz10: 500 }), "480i 50 Hz");
-  assert.equal(signalText({ none: 0, lines: 525, interlaced: 0, src_hz10: 0, preset: 0x22 }), "525p");
+  assert.equal(signalText({ none: 0, lines: 525, interlaced: 0, src_hz10: 0, preset: 0x22 }), "480p");
   assert.equal(signalText({ none: 1 }), "");
   assert.equal(signalText(undefined), "");
+});
+
+test("the source named as the TV menu names it, from the lines the scaler counts", () => {
+  assert.equal(signalText({ none: 0, lines: 1124, interlaced: 1, src_hz10: 600 }), "1080i 60 Hz");   // was "1124i"
+  assert.equal(signalText({ none: 0, lines: 749, interlaced: 0, src_hz10: 599 }), "720p 60 Hz");
+  assert.equal(signalText({ none: 0, lines: 0, interlaced: 0, src_hz10: 599 }), "-- 60 Hz");      // not stable yet
+  assert.equal(sourceRes(262, false), "240p");
+  assert.equal(sourceRes(263, true), "480i");
+  assert.equal(sourceRes(312, false), "288p");
+  assert.equal(sourceRes(313, true), "576i");
+  assert.equal(sourceRes(625, false), "576p");
+  assert.equal(sourceRes(562, true), "1080i");     // one field of 1080i
+  assert.equal(sourceRes(1125, false), "1080p");
+  assert.equal(sourceRes(806, false), "806p");     // no standard mode near: the count as it is
+  assert.equal(sourceRes(240, false), "240p");
 });
 
 test("a PAL rate only when one was measured", () => {
