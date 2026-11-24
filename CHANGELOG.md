@@ -24,6 +24,9 @@ refer to brisma/gbsc-pro.
   measurement just under the limit could leave the session on a much slower link (seen with a Dreamcast on VGA). (#69)
 - TV menu: after Profiles > Defaults on a VGA source the menu could stay squashed (wide, with half-height rows) until
   the next resolution change. (#69)
+- Adaptive Sync: a console's video mode change is taken only when two readings of the sync pulse agree. A reading that
+  fell across the vertical interval could look like another mode several times a minute (seen on the SNES and the
+  Mega Drive), and each one paused the sync watcher for a moment.
 - Web app: the source is named as on the TV menu and the OLED (1080i, 720p, 480p, 240p...) instead of the
   scaler's line count, so a 1080i source no longer reads "1124i" and a 640x480 VGA source reads 480p. (#89)
 
