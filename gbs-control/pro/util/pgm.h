@@ -61,3 +61,9 @@ static inline const char* pgmListCopy(char* out, size_t n, PGM_P list, uint8_t i
 // The number of strings in a list literal (its separators and its end): static_assert a table against its enum
 constexpr unsigned pgmListCount(const char* s, unsigned n) { return n == 0 ? 0 : (s[n - 1] == '\0' ? 1u : 0u) + pgmListCount(s, n - 1); }
 #define PGM_LIST_COUNT(lit) pgmListCount(lit, sizeof(lit))
+// The length of the longest string in a list literal: static_assert the buffer a name is copied to
+constexpr unsigned pgmListMaxLen(const char* s, unsigned n, unsigned i, unsigned cur, unsigned best) {
+    return i >= n ? best
+                  : (s[i] == '\0' ? pgmListMaxLen(s, n, i + 1, 0, cur > best ? cur : best) : pgmListMaxLen(s, n, i + 1, cur + 1, best));
+}
+#define PGM_LIST_MAXLEN(lit) pgmListMaxLen(lit, sizeof(lit), 0, 0, 0)

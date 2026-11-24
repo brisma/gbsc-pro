@@ -102,8 +102,9 @@ void menuToggleIrLog() {
 }
 
 static const char* keyName(uint8_t k) {
-    static const char kNames[] PROGMEM = "up\0down\0left\0right\0OK\0back\0menu\0info\0save\0mute\0"
+    static constexpr char kNames[] PROGMEM = "up\0down\0left\0right\0OK\0back\0menu\0info\0save\0mute\0"
                                          "vol+\0vol-\0knob left\0knob right\0click\0long press\0?";
+    static_assert(PGM_LIST_COUNT(kNames) == 17, "kNames: the count follows the list");
     return pgmListAt(kNames, k, 17);   // in flash: %S
 }
 
@@ -162,8 +163,9 @@ static void irInput(uint32_t now) {
 
 // Console log: the page or overlay on screen (debug), and the shown signal when it changed and stayed a second
 static void logView(const MenuView& v) {
-    static const char kOv[] PROGMEM = "none\0mute\0volume\0info\0confirm\0revert\0adjust\0toast\0"
+    static constexpr char kOv[] PROGMEM = "none\0mute\0volume\0info\0confirm\0revert\0adjust\0toast\0"
                                       "update\0keyboard\0slider\0same signal\0status\0TV OSD\0?";
+    static_assert(PGM_LIST_COUNT(kOv) == 15, "kOv: the count follows the list");
     static uint8_t mode = 0xFF, ov = 0xFF;
     static char title[sizeof(v.title)] = "";
     if (v.mode == mode && (v.mode != VIEW_OVERLAY || v.overlay == ov) &&

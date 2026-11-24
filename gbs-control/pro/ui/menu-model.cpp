@@ -132,7 +132,8 @@ bool menuOptAt(const char* list, uint8_t i, char* name, size_t n, uint16_t& valu
 static const char* onOff(bool on) { return on ? "On" : "Off"; }
 
 static void formatLive(uint8_t lv, int32_t v, char* out, size_t n) {
-    static const char kSdram[] PROGMEM = "108MHz\0" "81MHz\0" "FB\0" "162MHz\0" "144MHz\0" "185MHz\0" "216MHz\0" "129MHz\0-";
+    static constexpr char kSdram[] PROGMEM = "108MHz\0" "81MHz\0" "FB\0" "162MHz\0" "144MHz\0" "185MHz\0" "216MHz\0" "129MHz\0-";
+    static_assert(PGM_LIST_COUNT(kSdram) == 9, "kSdram: the count follows the list");
     switch (lv) {
         case LV_ADC_GAIN: case LV_HTOTAL: case LV_PLL_DIV:
             snprintf_P(out, n, PSTR("%ld"), (long)v); break;

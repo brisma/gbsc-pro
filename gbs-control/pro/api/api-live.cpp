@@ -25,6 +25,7 @@ size_t liveJson(const int32_t* v, uint32_t validMask, uint32_t ms, char* out, si
         const char* sep = first ? "" : ",";
         first = false;
         char name[16];
+        static_assert(PGM_LIST_MAXLEN(LIVE_NAMES) < sizeof(name), "name holds the longest name");
         pgmListCopy(name, sizeof(name), kLiveNames, i, LV_COUNT);
         if (isPair(i)) put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":[%ld,%ld]"), sep, name, (long)((uint32_t)v[i] >> 16),
                                     (long)(v[i] & 0xffff)));

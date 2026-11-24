@@ -24,7 +24,8 @@ uint8_t platformCapsFrom(const PlatformProbes& p, uint8_t board) {
 
 uint8_t platformCapFromName(const char* name, size_t len) {
     static const uint8_t kCaps[] = {CAP_ADV, CAP_OSD, CAP_AUDIO, CAP_IR, CAP_OLED, CAP_ENCODER, CAP_LED, CAP_ORIGINAL};
-    static const char kNames[] PROGMEM = "adv\0osd\0audio\0ir\0oled\0encoder\0led\0original";
+    static constexpr char kNames[] PROGMEM = "adv\0osd\0audio\0ir\0oled\0encoder\0led\0original";
+    static_assert(PGM_LIST_COUNT(kNames) == sizeof(kCaps), "kNames: the count follows the list");
     for (uint8_t i = 0; i < sizeof(kCaps); i++) {
         PGM_P n = pgmListAt(kNames, i, sizeof(kCaps));
         if (strlen_P(n) == len && !strncmp_P(name, n, len)) return kCaps[i];

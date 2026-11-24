@@ -24,15 +24,21 @@ bool EventRing::readAfter(uint16_t since, Event& out) const {
     return false;
 }
 
+static constexpr char kEventNames[] PROGMEM = "unknown\0input_found\0input_lost\0input_changed\0profile_loaded\0"
+                                              "profile_saved\0resolution\0update_offered\0update_done";
+static_assert(PGM_LIST_COUNT(kEventNames) == EV_UPDATE_DONE + 1, "kEventNames: the count follows the list");
+
 const char* eventTypeName(uint8_t type) {
-    static const char kNames[] PROGMEM = "unknown\0input_found\0input_lost\0input_changed\0profile_loaded\0"
-                                         "profile_saved\0resolution\0update_offered\0update_done";
-    return pgmListAt(kNames, type >= EV_INPUT_FOUND && type <= EV_UPDATE_DONE ? type : 0, EV_UPDATE_DONE + 1);
+    return pgmListAt(kEventNames, type >= EV_INPUT_FOUND && type <= EV_UPDATE_DONE ? type : 0, EV_UPDATE_DONE + 1);
 }
 
 size_t eventJson(const Event& e, char* out, size_t cap) {
+    char type[16];   // the name is in flash
+    static_assert(PGM_LIST_MAXLEN(kEventNames) < sizeof(type), "type holds the longest name");
+    strncpy_P(type, eventTypeName(e.type), sizeof(type) - 1);
+    type[sizeof(type) - 1] = '\0';
     int n = snprintf_P(out, cap, PSTR("{\"seq\":%u,\"ms\":%lu,\"type\":\"%s\",\"a\":%u,\"b\":%u}"), (unsigned)e.seq,
-                     (unsigned long)e.ms, eventTypeName(e.type), (unsigned)e.a, (unsigned)e.b);
+                     (unsigned long)e.ms, type, (unsigned)e.a, (unsigned)e.b);
     if (n < 0 || (size_t)n >= cap) { if (cap) out[0] = '\0'; return 0; }
     return (size_t)n;
 }

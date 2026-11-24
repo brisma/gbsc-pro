@@ -105,7 +105,8 @@ static void logSignal() {
         return;
     static const uint8_t kFlagBits[] = {ADV_SIG_POWERED, ADV_SIG_PRESENT, ADV_SIG_LOCK, ADV_SIG_FREERUN, ADV_SIG_FSC,
                                         ADV_SIG_COLORKILL, ADV_SIG_INTERLACED, ADV_SIG_NONSTD};
-    static const char kFlagNames[] PROGMEM = "powered\0present\0lock\0free-run\0burst\0colour kill\0interlaced\0non-standard";
+    static constexpr char kFlagNames[] PROGMEM = "powered\0present\0lock\0free-run\0burst\0colour kill\0interlaced\0non-standard";
+    static_assert(PGM_LIST_COUNT(kFlagNames) == sizeof(kFlagBits), "kFlagNames: the count follows the list");
     char t[LOG_TEXT_MAX + 1];
     size_t k = (size_t)snprintf_P(t, sizeof(t), PSTR("signal:"));
     for (uint8_t i = 0; i < sizeof(kFlagBits); i++) {
@@ -131,12 +132,15 @@ static void logRegRead() {
     if (r.state == ADV_REG_PENDING || r.state == ADV_REG_IDLE || (r.gen == loggedGen && r.state == loggedState)) return;
     loggedGen = r.gen;
     loggedState = r.state;
-    static const char kSt[] PROGMEM = "idle\0pending\0ok\0error\0unsupported";
-    static const char kWhy[] PROGMEM = "\0: the reply says status \0: fewer values than asked\0: no usable reply\0: ADV Controller not ready";
+    static constexpr char kSt[] PROGMEM = "idle\0pending\0ok\0error\0unsupported";
+    static_assert(PGM_LIST_COUNT(kSt) == ADV_REG_UNSUPPORTED + 1, "kSt: the count follows the list");
+    static constexpr char kWhy[] PROGMEM = "\0: the reply says status \0: fewer values than asked\0: no usable reply\0: ADV Controller not ready";
+    static_assert(PGM_LIST_COUNT(kWhy) == ADV_REG_WHY_CONTROLLER + 1, "kWhy: the count follows the list");
     char why[72] = "";
     if (r.state == ADV_REG_ERROR && r.why <= ADV_REG_WHY_CONTROLLER) {
         strncpy_P(why, pgmListAt(kWhy, r.why, 5), sizeof(why) - 1);
-        static const char kStep[] PROGMEM = "\0 at start\0 at the address\0 at the register\0 at restart\0 at the read address\0 in the data";
+        static constexpr char kStep[] PROGMEM = "\0 at start\0 at the address\0 at the register\0 at restart\0 at the read address\0 in the data";
+        static_assert(PGM_LIST_COUNT(kStep) == 7, "kStep: the count follows the list");
         uint8_t code = r.replyStatus & 0x0F, step = r.replyStatus >> 4;   // the ADV Controller adds the failed I2C step
         if (r.why == ADV_REG_WHY_STATUS) snprintf_P(why + strlen(why), sizeof(why) - strlen(why), PSTR("%u (%S%S)"), (unsigned)code,
                                                     code == ADV_REG_READ_I2C_ERROR ? PSTR("I2C") : code == ADV_REG_READ_BAD_REQUEST ? PSTR("bad request") : PSTR("?"),

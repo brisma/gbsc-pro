@@ -77,6 +77,7 @@ bool LogRing::readAfter(int32_t since, LogRecord& out, uint16_t* dropped) const 
 
 size_t logFormatLine(const LogRecord& r, char* out, size_t n) {
     char tag[16], cat[8];
+    static_assert(PGM_LIST_MAXLEN(LOG_CAT_NAMES) < sizeof(cat), "cat holds the longest name");
     strncpy_P(cat, logCatName(r.cat), sizeof(cat) - 1);
     cat[sizeof(cat) - 1] = '\0';
     snprintf_P(tag, sizeof(tag), PSTR("[%s]"), cat);
@@ -88,6 +89,7 @@ size_t logFormatLine(const LogRecord& r, char* out, size_t n) {
 
 size_t logRecordJson(const LogRecord& r, char* out, size_t n) {
     char cat[8];
+    static_assert(PGM_LIST_MAXLEN(LOG_CAT_NAMES) < sizeof(cat), "cat holds the longest name");
     strncpy_P(cat, logCatName(r.cat), sizeof(cat) - 1);
     cat[sizeof(cat) - 1] = '\0';
     int w = snprintf_P(out, n, PSTR("{\"s\":%u,\"t\":%lu,\"c\":\"%s\",\"l\":\"%s\",\"m\":\""), (unsigned)r.seq,
