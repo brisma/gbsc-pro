@@ -141,6 +141,7 @@ export class Sim {
     this.route("GET", "/api/system/backup", sys.backupGet, { safe: true });
     this.route("POST", "/api/system/restore", sys.restorePost);
     this.route("POST", "/api/system/update", sys.updatePost, { safe: true });
+    this.route("POST", "/api/system/adv-image", sys.advImagePost);
     this.route("GET", "/api/wifi", wifi.wifiGet);
     this.route("GET", "/api/wifi/scan", wifi.wifiScanGet);
     this.route("POST", "/api/wifi/connect", wifi.wifiConnectPost);
@@ -201,6 +202,11 @@ export class Sim {
         if (!this.faults.has("advUpdateHold")) this.later(this.advUpdateMs, () => {
           // as the device: "done", then the link restarts and /api/info has no version until the new INFO arrives
           st.advUpdateState = "done"; st.advUpdate = false; st.advStatus = "checking"; st.log("adv", "info", "update: done");
+          st.advVersion = st.advImage.version; st.advBuild = st.advImage.build;
+          if (st.advImage.source === "file") {   // installed: the device removes the file, the built-in image is offered again
+            st.advImage = { source: "embedded", version: "3.0.0", build: "446FC362" };
+            st.log("update", "info", `ADV Controller runs build ${st.advBuild}: image file removed`);
+          }
           this.later(this.advRestartMs, () => { st.advStatus = "ok"; });
         });
         return null;

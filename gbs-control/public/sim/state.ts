@@ -52,6 +52,10 @@ export class DeviceState {
   advCaps = ["signal", "reg_read"];
   advStatus = "ok";
   advUpdate = false;
+  advVersion = "3.0.0";
+  advBuild = "446FC362";
+  // the image offered to the HC32 (adv-controller-image.cpp): an uploaded file wins over the built-in one
+  advImage: { source: string; version: string; build: string } = { source: "embedded", version: "3.0.0", build: "446FC362" };
   updateOffer: { version: string; channel: string; older?: boolean } | null = null;   // the offer (RAM on the device)
   updateFor = "beta";                                                      // the channel the offer and last result are for
   serverBuilds: Record<string, string> = {};                               // the update server: channel -> published version
@@ -223,7 +227,7 @@ export class DeviceState {
       heap: this.heap, max_block: this.maxBlock,
       wifi: { mode: "sta", ip: "192.168.1.50", ssid: "Home", sleep: 0, rssi: -55, channel: 6 },
       adv_controller: pro && this.advStatus !== "ok" ? { status: this.advStatus, ...(this.advUpdateState !== "idle" ? { update: this.advUpdateState } : {}) } : pro
-        ? { status: "ok", version: "3.0.0", build: "446FC362", lock: rt.noSignal ? 0 : 1, standard: rt.std, uptime: Math.floor(this.uptimeMs() / 1000),
+        ? { status: "ok", version: this.advVersion, build: this.advBuild, lock: rt.noSignal ? 0 : 1, standard: rt.std, uptime: Math.floor(this.uptimeMs() / 1000),
             bad_frames: 0, not_applied: false, update_available: this.advUpdate, update: this.advUpdateState, caps: [...this.advCaps],
             signal: this.advSignal() }
         : { status: "absent" },
@@ -236,6 +240,7 @@ export class DeviceState {
                 interlaced: rt.interlaced ? 1 : 0, scanlines_ok: rt.scanlinesOk ? 1 : 0, adv_ntsc: rt.advNtsc ? 1 : 0, preset: rt.presetId },
       crash: null,
       upload: { ...this.upload },
+      adv_image: { ...this.advImage },
       update: (() => {
         const mine = this.updateFor === this.updateChannel(), o = mine ? this.updateOffer : null;
         return { channel: "beta", follows: this.updateChannel(), last: mine ? this.updateLast : "",

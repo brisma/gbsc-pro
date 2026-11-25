@@ -28,6 +28,8 @@ void restorePost(AsyncWebServerRequest*, uint8_t);
 void restoreUpload(AsyncWebServerRequest*, size_t, uint8_t*, size_t, bool);
 void updatePost(AsyncWebServerRequest*, uint8_t);
 void updateUpload(AsyncWebServerRequest*, size_t, uint8_t*, size_t, bool);
+void advImagePost(AsyncWebServerRequest*, uint8_t);
+void advImageUpload(AsyncWebServerRequest*, size_t, uint8_t*, size_t, bool);
 void wifiGet(AsyncWebServerRequest*, uint8_t);
 void devRegsGet(AsyncWebServerRequest*, uint8_t);
 void advReadGet(AsyncWebServerRequest*, uint8_t);

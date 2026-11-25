@@ -269,6 +269,7 @@ static void updaterPass(uint32_t now) {
         if (gUpd.state() == AU_DONE) snprintf_P(gUpdStatus, sizeof(gUpdStatus), PSTR("done"));
         else snprintf_P(gUpdStatus, sizeof(gUpdStatus), PSTR("failed:%s"), gUpd.error());
         gUpd.finish();
+        advControllerImageClose();                       // a file image: the handle goes (removed once INFO shows the build)
         gClient.restart();                               // PING -> INFO with the new firmware
         gSched.kick();                                   // and the whole state again
     }
@@ -320,6 +321,10 @@ void advLinkLoop() {
     if (!platformLinkHardware()) return;                 // standard board: no ADV Controller
     gSentThisPass = false;
     uint32_t now = millis();
+    {
+        const AdvControllerInfo& h = gClient.advController();
+        advControllerImageLoop(h.status == ADV_CONTROLLER_OK && h.haveInfo, h.info.buildId, gUpd.active());
+    }
     if (gUpd.active()) { if (gSwReady) updaterPass(now); return; }
     if (!gClient.stateBlocked()) {                       // incompatible ADV Controller: no STATE, the update is offered
         if (gClient.wantStateResend()) gSched.kickResend();
@@ -412,7 +417,8 @@ bool advLinkControllerUpdateAvailable() {
 
 bool advLinkUpdateCanStart() {
     const AdvControllerInfo& h = gClient.advController();
-    if (!platformLinkHardware() || !gSwReady || gUpd.active() || updateInProgress() || advControllerImageSize() == 0) return false;
+    if (!platformLinkHardware() || !gSwReady || gUpd.active() || updateInProgress() || advImageUploadActive() ||
+        advControllerImageSize() == 0) return false;
     return h.status == ADV_CONTROLLER_OK || h.status == ADV_CONTROLLER_INCOMPATIBLE;
 }
 

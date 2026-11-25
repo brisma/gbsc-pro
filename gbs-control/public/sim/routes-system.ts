@@ -4,6 +4,7 @@ import { sendJson, parseMultipart } from "./http.ts";
 import type { Sim } from "./server.ts";
 import { advBackupText, advRestore } from "./routes-adv-store.ts";
 import { parseSetting, storedValue } from "./validate.ts";
+import { crc32 } from "node:zlib";
 
 export function backupText(sim: Sim): string {
   const st = sim.state;
@@ -89,4 +90,24 @@ export async function updatePost(sim: Sim, ctx: Ctx): Promise<void> {
   st.send("s:status.update=done");
   st.log("update", "info", "upload ok, restarting");
   sim.restart(sim.faults.has("updateNotApplied") ? undefined : sim.nextFw);   // fault: the device keeps its old image
+}
+
+// POST /api/system/adv-image (adv-controller-image.cpp): header at 0x400, length and CRC checked, then offered
+export function advImagePost(sim: Sim, ctx: Ctx): void {
+  const st = sim.state;
+  const part = parseMultipart(ctx.req, ctx.body).find((p) => p.filename !== null);
+  if (st.board !== "pro") return sendJson(ctx, 400, { error: "no_adv" });
+  const d = part?.data;
+  if (!d || d.length < 0x41c || d.toString("latin1", 0x400, 0x404) !== "ADVC") return sendJson(ctx, 400, { error: "format" });
+  const version = d.toString("latin1", 0x408, 0x414).replace(/\0.*$/s, "");
+  if (!/^[0-9A-Za-z.+-]+$/.test(version)) return sendJson(ctx, 400, { error: "format" });
+  if (d.readUInt32LE(0x414) !== d.length) return sendJson(ctx, 400, { error: "size" });
+  const body = Buffer.from(d); body.writeUInt32LE(0, 0x418);
+  const crc = d.readUInt32LE(0x418);
+  if ((crc32(body) >>> 0) !== crc) return sendJson(ctx, 400, { error: "crc" });
+  const build = crc.toString(16).toUpperCase().padStart(8, "0");
+  st.advImage = { source: "file", version, build };
+  st.advUpdate = build !== st.advBuild;
+  st.log("update", "info", `ADV Controller image uploaded: ${version} build ${build} (${Math.round(d.length / 1024)} KB)`);
+  sendJson(ctx, 200, { ok: 1, version, build });
 }

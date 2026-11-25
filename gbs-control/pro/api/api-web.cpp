@@ -12,6 +12,7 @@
 #include "../adv/adv-store-web.h"
 #include "../link/adv-link-device.h"
 #include "../link/adv-controller-format.h"
+#include "../link/adv-controller-image.h"
 #include "../gbs-control-pro.h"
 #include "../platform/platform-device.h"
 #include "api-json.h"
@@ -438,7 +439,7 @@ void apiInfoGet(AsyncWebServerRequest* req, uint8_t) {
     bool ap = WiFi.getMode() == WIFI_AP;
     String ip = ap ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
     // heap, only while the reply is built (no static buffer); the format string lives in flash
-    const size_t kJson = 2150;   // worst case ~1950: advController + signal 511 (ADV_CONTROLLER_JSON_MAX), ssid 71, crash ~250, update ~220
+    const size_t kJson = 2230;   // worst case ~2030: advController + signal 511 (ADV_CONTROLLER_JSON_MAX), ssid 71, crash ~250, update ~220, adv_image ~75
     char* json = (char*)malloc(kJson + ADV_CONTROLLER_JSON_MAX);
     if (!json) { sendJson(req, 503, F("{\"error\":\"memory\"}")); return; }
     char* advController = json + kJson;   // one allocation; the network context stack stays small
@@ -482,6 +483,9 @@ void apiInfoGet(AsyncWebServerRequest* req, uint8_t) {
     if (w > 0 && (size_t)w < kJson) w += updateUploadJson(json + w, kJson - w);   // the last web upload
     if (w > 0 && (size_t)w < kJson) w += snprintf_P(json + w, kJson - w, PSTR(",\"update\":"));
     if (w > 0 && (size_t)w < kJson) w += otaInfoJson(json + w, kJson - w);        // OTA: channel, last check, offers
+    if (w > 0 && (size_t)w < kJson)                                                   // the image offered to the HC32
+        w += snprintf_P(json + w, kJson - w, PSTR(",\"adv_image\":{\"source\":\"%s\",\"version\":\"%s\",\"build\":\"%08lX\"}"),
+                        advControllerImageSource(), advControllerImageVersion(), (unsigned long)advControllerImageCrc());
     if (w > 0 && (size_t)w < kJson) w += snprintf_P(json + w, kJson - w, PSTR("}"));
     if (w < 0 || (size_t)w >= kJson) { free(json); sendJson(req, 500, F("{\"error\":\"info_too_long\"}")); return; }
     sendJson(req, 200, json);
@@ -588,4 +592,16 @@ void updatePost(AsyncWebServerRequest* req, uint8_t) {
 
 void updateUpload(AsyncWebServerRequest* req, size_t index, uint8_t* data, size_t len, bool final) {
     updateUploadChunk(req, index, data, len, final);
+}
+
+// The ADV Controller image into LittleFS (adv-controller-image.cpp): checked while it arrives, offered like the
+// embedded one, removed once the HC32 runs it
+void advImagePost(AsyncWebServerRequest* req, uint8_t) {
+    char json[80];
+    int code = advImageUploadFinish(req, json, sizeof(json));
+    sendJson(req, code, json);
+}
+
+void advImageUpload(AsyncWebServerRequest* req, size_t index, uint8_t* data, size_t len, bool final) {
+    advImageUploadChunk(req, index, data, len, final);
 }

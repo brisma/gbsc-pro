@@ -7,6 +7,13 @@ refer to brisma/gbsc-pro.
 
 ## 3.0.0-beta4
 
+### Added
+- PRO: System > Update takes an ADV Controller image (`adv-controller.bin`) in the web app's Upload firmware, next to
+  GBS-Control images. The file is checked (header, length, CRC), stored in the filesystem, offered as the ADV
+  Controller update in place of the built-in image, and removed once the ADV Controller runs it. A build with
+  `-DADV_IMAGE_EMBED=0` leaves the built-in image out (about 42 KB of program space); the default build still has it.
+  (#93)
+
 ### Fixed
 - PRO: Output > Analog out (RGB / YPbPr) is gone from the menus and the web app. It is the standard board's analog
   port; on the PRO that output feeds the HDMI converter, so YPbPr left the screen without a picture. A PRO that had

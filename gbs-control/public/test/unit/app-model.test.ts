@@ -6,7 +6,7 @@ import { menu, nodeById, labelFor, optionsFor } from "../../app/model/menu.ts";
 import { choiceValue, choiceWrites, choiceOptions, choiceSegments } from "../../app/model/choices.ts";
 import { scanlineDarkness, scanlineOptions, scanlineValue, scanlineWrites } from "../../app/model/scanlines.ts";
 import { balance } from "../../app/model/columns.ts";
-import { compareVersions, readImageVersion } from "../../app/model/version.ts";
+import { compareVersions, readImageVersion, readAdvImageVersion } from "../../app/model/version.ts";
 import { BOARD_CAPS } from "../../app/model/predicates.ts";
 
 const pro = BOARD_CAPS.pro, std = BOARD_CAPS.standard;
@@ -162,4 +162,16 @@ test("scanline thumbnails: lower strength is darker", () => {
   assert.ok(scanlineDarkness(0x30) > scanlineDarkness(0x50));
   assert.equal(scanlineDarkness(0x50), 10);   // the Light card's level
   assert.equal(scanlineDarkness(0x10), 50);   // the Strong card's level
+});
+
+test("an ADV Controller image is told apart by its ADVC header", async () => {
+  const img = new Uint8Array(4096);
+  img.set([0x41, 0x44, 0x56, 0x43, 1, 0, 0, 0], 0x400);
+  img.set(new TextEncoder().encode("3.1.0-beta2"), 0x408);
+  assert.equal(await readAdvImageVersion(new Blob([img])), "3.1.0-beta2");
+  assert.equal(await readAdvImageVersion(new Blob([img.slice(0, 0x410)])), null);   // too short
+  const esp = img.slice(); esp[0x400] = 0x58;                                           // no ADVC: a GBS-Control image
+  assert.equal(await readAdvImageVersion(new Blob([esp])), null);
+  const bad = img.slice(); bad[0x409] = 0x22;                                           // a quote in the version
+  assert.equal(await readAdvImageVersion(new Blob([bad])), null);
 });

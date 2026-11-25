@@ -3,7 +3,7 @@
 #include "settings-types.h"
 
 // Holds that keep the debounced save from running (independent reasons, flush only when none is set)
-enum : uint8_t { SAVER_HOLD_UPDATE = 1, SAVER_HOLD_RESTORE = 2, SAVER_HOLD_MENU = 4 };
+enum : uint8_t { SAVER_HOLD_UPDATE = 1, SAVER_HOLD_RESTORE = 2, SAVER_HOLD_MENU = 4, SAVER_HOLD_ADV_IMAGE = 8 };
 
 // Debounced save scheduler: due 2000 ms after the last change
 class SettingsSaver {
