@@ -8,7 +8,7 @@ import { BINDINGS, bindingFor } from "../../app/layout/bindings.ts";
 import { refExists, rowState } from "../../app/rows/resolve.ts";
 import { allNodes, nodeById, optionsFor } from "../../app/model/menu.ts";
 import { BOARD_CAPS, type PredState } from "../../app/model/predicates.ts";
-import { formatLive, formatSetting } from "../../app/model/format.ts";
+import { formatLive, formatSetting, stepLiveValue } from "../../app/model/format.ts";
 import { publicDir } from "./sim-helpers.ts";
 
 const registry = JSON.parse(readFileSync(join(publicDir, "gen", "registry.json"), "utf8"));
@@ -135,7 +135,7 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:input/sync-dejitter"), "input");
   assert.equal(where.get("menu:output/hdmi-black"), "output");
   assert.equal(where.get("menu:output/hdmi-white"), "output");
-  assert.equal(where.size, 70);   // the rows of the former Input, Output, Picture and Screen sections, none lost
+  assert.equal(where.size, 71);   // the rows of the former Input, Output, Picture and Screen sections, none lost
 });
 
 test("old section bookmarks land on the new pages", async () => {
@@ -144,4 +144,21 @@ test("old section bookmarks land on the new pages", async () => {
   assert.deepEqual(parseHash("#/settings/output"), { page: "settings", section: "output", id: null });
   assert.deepEqual(parseHash("#/status/signal"), { page: "status", section: null, id: null });
   assert.deepEqual(parseHash("#/settings"), { page: "settings", section: "input", id: null });
+});
+
+test("Sync limit shows the value in use until Manual sets one, and steps from it", () => {
+  const n = nodeById("input/sync-limit")!;
+  assert.ok(n.flags.includes("live_value"));
+  assert.equal(n.live, "sync_limit");
+  assert.equal(n.pred, "sync_manual");
+  assert.equal(formatSetting(n, 0), "-");
+  assert.equal(formatSetting(n, 0, 100), "100");        // never set by hand: the value in use
+  assert.equal(formatSetting(n, 90, 100, true), "100"); // greyed (Auto): the value in use, not the stored one
+  assert.equal(formatSetting(n, 90, 93), "90");
+  assert.equal(stepLiveValue(0, -1, 100, 143), 99);     // the first step starts from the value in use
+  assert.equal(stepLiveValue(0, 1, undefined, 143), 101);
+  assert.equal(stepLiveValue(90, -1, 93, 143), 89);
+  assert.equal(stepLiveValue(40, -1, 0, 143), 40);      // both ends stay
+  assert.equal(stepLiveValue(143, 1, 0, 143), 143);
+  assert.deepEqual(nodeById("input/adaptive-sync")!.setting, "input.adaptive_sync");
 });

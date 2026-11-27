@@ -8230,6 +8230,7 @@ static const uint16_t kModeChangeGraceMs = 120;
 static uint32_t gModeChangeAt = 0;
 static bool gModeChangeSeen = false;
 bool syncModeChangeGrace() { return uopt->adaptiveSync && gModeChangeSeen && millis() - gModeChangeAt < kModeChangeGraceMs; }
+static_assert(kSyncIgnoreMax == 143, "the maximum of input.sync_limit in settings-table.h");
 static void syncPulseTrackLoop()
 {
     uint32_t ms = millis();
@@ -8240,7 +8241,7 @@ static void syncPulseTrackLoop()
     bool on = uopt->adaptiveSync != 0;
     if (on != wasOn) {
         wasOn = on;
-        logPrintf(LC_SYNC, LL_INFO, PSTR("adaptive sync %s"), on ? "on" : "off");
+        logPrintf(LC_SYNC, LL_INFO, PSTR("adaptive sync %s"), on ? "on" : "off");   // Auto or Manual: on
         gSyncPulseTrack.reset();
         if (!on && sd) {
             GBS::SP_H_PULSE_IGNOR::write(0x02);   // as upstream starts a source, then its own formula
@@ -8248,6 +8249,16 @@ static void syncPulseTrackLoop()
         }
     }
     if (!on) return;
+    // Manual: input.sync_limit replaces the automatic limit (0: not set yet, the automatic one goes on)
+    uint8_t byHand = uopt->adaptiveSync == 2 ? uopt->syncLimit : 0;
+    if (byHand != gSyncPulseTrack.manual()) {
+        gSyncPulseTrack.setManual(byHand);
+        uint16_t l = sd ? gSyncPulseTrack.limit() : 0;
+        if (l) GBS::SP_H_PULSE_IGNOR::write(l);
+        if (byHand) logPrintf(LC_SYNC, LL_INFO, PSTR("sync limit: %u by hand (sync pulse %u, limit now %u)"),
+                              byHand, gSyncPulseTrack.dark(), l);
+        else logPrintf(LC_SYNC, LL_INFO, PSTR("sync limit: automatic (sync pulse %u, limit now %u)"), gSyncPulseTrack.dark(), l);
+    }
     if (!sd) {   // a short sync loss keeps the limit the console's modes share, a lost source forgets all
         if (rto->sourceDisconnected || !rto->boardHasPower || rto->isInLowPowerMode) gSyncPulseTrack.reset();
         else gSyncPulseTrack.lost();
@@ -8267,6 +8278,21 @@ static void syncPulseTrackLoop()
                       hsLow, gSyncPulseTrack.dark(), held);
     }
     uint16_t limit = gSyncPulseTrack.update(hsLow);
+    if (gSyncPulseTrack.takeEqChange() && !gSyncPulseTrack.manual()) {   // the source's kind decides the limit (sync-pulse.h)
+        uint8_t kind = gSyncPulseTrack.equalizing();
+        if (gSyncPulseTrack.limit()) limit = gSyncPulseTrack.limit();
+        if (kind != SyncPulseTrack::EQ_UNKNOWN)
+            logPrintf(LC_SYNC, LL_INFO, PSTR("sync: %s equalizing pulses, short-pulse limit %u (sync pulse %u)"),
+                      kind == SyncPulseTrack::EQ_NONE ? "no" : "with", limit, gSyncPulseTrack.dark());
+    }
+    // a source without equalizing pulses: the line count of a field now and then corrects the limit
+    static uint32_t lineReadAt = 0;
+    if (!limit && gSyncPulseTrack.wantsLineCount() && ms - lineReadAt >= kSyncLineGapMs) {
+        lineReadAt = ms;
+        limit = gSyncPulseTrack.lineCount(GBS::STATUS_SYNC_PROC_VTOTAL::read());
+        if (limit) logPrintf(LC_SYNC, LL_DEBUG, PSTR("sync limit %u (half of the pulse %+d, by the line count)"),
+                             limit, (int)gSyncPulseTrack.trim());
+    }
     if (!limit) return;
     GBS::SP_H_PULSE_IGNOR::write(limit);
     if (gSyncPulseTrack.takeModeChange()) {

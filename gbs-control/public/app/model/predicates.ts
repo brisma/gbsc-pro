@@ -102,6 +102,7 @@ export function disabledReason(n: MenuNode, s: PredState): string | null {
       if (s.signal.scanlinesOk) return null;
       return s.signal.interlaced && s.signal.lines < 400 && num(s, "picture.deinterlace") === 0 ? r.needs_bob : r.scanlines;
     case "i2p_on": return num(s, "adv.i2p") !== 1 ? r["2x_first"] : null;
+    case "sync_manual": return num(s, "input.adaptive_sync") !== 2 ? r.sync_manual : null;
     case "deint_ok": return decoder(s.input) && num(s, "adv.i2p") === 1 ? r["2x_on"] : null;
     case "ftl_ok":
       return num(s, "output.force_60hz") === 1 && !s.signal.noSignal && s.signal.srcHz10 > 0 && s.signal.srcHz10 < 550 ? r.force60 : null;

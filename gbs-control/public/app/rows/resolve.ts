@@ -9,7 +9,7 @@ interface ActionInfo { name: string; caps: number; flags: string[] }
 const ACTIONS = new Map((actionsJson as unknown as ActionInfo[]).map((a) => [a.name, a]));
 export const LIVE_NAMES = ["adc_gain", "position", "size", "borders", "htotal", "pll_div", "sdram", "osr", "adc_filter", "debug_view",
   "freeze", "if_offset", "sog", "out_rate", "syncwatcher", "osd_always_on", "wifi_rssi", "osd_test", "print_info", "ir_log",
-  "sync_polarity", "ota", "border_pos"];
+  "sync_polarity", "ota", "border_pos", "sync_limit"];
 // text:<source> rows: fields of /api/info and /api/wifi the pages print
 export const TEXT_SOURCES = ["wifi.mode", "wifi.ssid", "wifi.ip", "wifi.hostname", "wifi.ap_password", "wifi.extra_hosts", "info.fw",
   "info.adv_controller", "info.update.channel", "info.update.last", "info.update.offer", "info.signal",

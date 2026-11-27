@@ -3,9 +3,21 @@ import { registry, type MenuNode } from "./menu.ts";
 
 export const onOff = (on: boolean) => (on ? "On" : "Off");
 
-export function formatSetting(n: MenuNode, v: number | string | undefined): string {
+// A "live_value" quantity (Sync limit): the device also picks it by itself. While the row is n/a (Adaptive Sync not
+// Manual) or the setting was never set by hand (0) the row shows the value in use; the first step starts from it
+export const LIVE_VALUE_MIN = 40, LIVE_VALUE_START = 100;
+export const isLiveValue = (n: MenuNode | undefined) => !!n?.flags.includes("live_value");
+export function stepLiveValue(cur: number, dir: number, live: unknown, max: number): number {
+  const now = Number(live);
+  const base = cur || (now >= LIVE_VALUE_MIN && now <= max ? now : LIVE_VALUE_START);
+  return Math.max(LIVE_VALUE_MIN, Math.min(max, base + dir));
+}
+
+// live: the /api/live value of a live_value node; na: the row is greyed
+export function formatSetting(n: MenuNode, v: number | string | undefined, live?: unknown, na?: boolean): string {
   if (v === undefined) return "";
   const num = Number(v);
+  if (isLiveValue(n) && (num === 0 || na)) return Number(live) > 0 ? String(Number(live)) : "-";
   let out: string;
   const list = n.options?.length ? n.options : undefined;
   const e = n.setting ? registry.entry(n.setting) : undefined;

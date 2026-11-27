@@ -90,6 +90,7 @@ bool menuEnabled(const MenuNode& n, MenuBackend& be, uint16_t* reason) {
                         ? S_R_NEEDS_BOB : S_R_SCANLINES;
             break;
         case P_I2P_ON: if (be.value(SID_adv_i2p) != 1) r = S_R_2X_FIRST; break;
+        case P_SYNC_MANUAL: if (be.value(SID_input_adaptive) != 2) r = S_R_SYNC_MANUAL; break;
         case P_DEINT_OK: if (inputIsDecoder(in) && be.value(SID_adv_i2p) == 1) r = S_R_2X_ON; break;
         case P_FTL_OK:   // a 50 Hz source forced to 60 Hz cannot lock its frames to the output
             if (be.value(SID_output_force60) == 1 && !be.signal().noSignal && be.signal().srcHzX10 && be.signal().srcHzX10 < 550)
@@ -143,7 +144,7 @@ static void formatLive(uint8_t lv, int32_t v, char* out, size_t n) {
         case LV_SDRAM: copyStr(out, n, (v >= 0 && v < 8) ? kSdram[v] : "-"); break;
         case LV_OSR: snprintf_P(out, n, PSTR("%ldx"), (long)v); break;
         case LV_ADC_FILTER: copyStr(out, n, onOff(v > 0)); break;
-        case LV_SOG: snprintf_P(out, n, PSTR("%ld"), (long)v); break;
+        case LV_SOG: case LV_SYNC_LIMIT: snprintf_P(out, n, PSTR("%ld"), (long)v); break;
         case LV_SYNC_POLARITY: copyStr(out, n, v ? "Inverted" : "Normal"); break;
         case LV_OUT_RATE: copyStr(out, n, (v >= 565 && v <= 645) ? "60Hz" : (v >= 465 && v <= 545) ? "50Hz" : "-"); break;
         default: copyStr(out, n, ""); break;
@@ -200,6 +201,11 @@ void menuFormatValue(const MenuNode& n, MenuBackend& be, char* out, size_t len) 
                 snprintf(out, len, in[0] ? "Auto: %s" : "Auto", in);
                 break;
             }
+            if ((n.flags & NF_LIVE_VALUE) && (be.value(n.ref) == 0 || !menuEnabled(n, be, nullptr))) {
+                int32_t now = be.live(n.ref2);                // the value the device uses by itself
+                if (now > 0) snprintf_P(out, len, PSTR("%ld"), (long)now); else copyStr(out, len, "-");
+                break;
+            }
             menuFormatSettingValue(n, be.value(n.ref), out, len);
             break;
         case N_CHOICE: menuFormatChoice(n.ref, menuChoiceCurrent(n.ref, be), out, len); break;
@@ -227,6 +233,7 @@ bool menuIsChanged(const MenuNode& n, MenuBackend& be) {
 
 int menuSliderHalves(const MenuNode& n, MenuBackend& be) {
     if (n.type != N_SETTING || (n.opts && n.opts < 100)) return -1;
+    if (n.flags & NF_LIVE_VALUE) return -1;   // a count of a few useful values: a bar from 0 would say nothing
     SettingDef d; settingsDefAt(n.ref, d);
     if (d.type == SettingType::Bool || d.type == SettingType::Enum || d.max <= d.min) return -1;
     uint16_t v = be.value(n.ref);
@@ -247,6 +254,9 @@ static bool stepList(uint8_t count, uint16_t cur, int dir, At at, Skip skip, uin
     }
     return false;
 }
+
+// NF_LIVE_VALUE (Sync limit): the values the menu steps through; under kLiveValueMin no source's sync works
+static const int kLiveValueMin = 40, kLiveValueStart = 100;
 
 bool menuStepValue(const MenuNode& n, MenuBackend& be, int dir, uint16_t& out) {
     return n.type == N_SETTING && menuStepFrom(n, be, be.value(n.ref), dir, out);
@@ -274,6 +284,16 @@ bool menuStepFrom(const MenuNode& n, MenuBackend& be, uint16_t cur, int dir, uin
                         [&](uint16_t v) { return !settingsOptionAvailable(d, v) || (preset && v == OutputCustomized && !profile) ||
                                                  (easy && v != cur && settingsOptionAdvanced(d, v)); },
                         out);
+    }
+    if (n.flags & NF_LIVE_VALUE) {   // never set by hand: the first step starts from the value in use
+        int32_t now = be.live(n.ref2);
+        int base = cur ? (int)cur : (now >= kLiveValueMin && now <= d.max ? (int)now : kLiveValueStart);
+        int v = base + dir;
+        if (v < kLiveValueMin) v = kLiveValueMin;
+        if (v > d.max) v = d.max;
+        if (cur && v == (int)cur) return false;
+        out = (uint16_t)v;
+        return true;
     }
     int step = n.opts >= 100 ? n.opts - 100 : 1;
     int v = (int)cur + dir * step;

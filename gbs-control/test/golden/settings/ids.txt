@@ -44,7 +44,8 @@ output.hdmi_black
 output.hdmi_white
 input.auto_gain on=1 off=0
 input.sync_stripper on=1 off=0
-input.adaptive_sync on=1 off=0
+input.adaptive_sync off=0 on=1 manual=2
+input.sync_limit
 input.digital_sync on=1 off=0
 input.sync_dejitter auto=0 on=1 off=2
 input.sync_75ohm on=1 off=0

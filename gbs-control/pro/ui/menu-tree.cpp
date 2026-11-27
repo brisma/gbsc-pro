@@ -69,6 +69,7 @@ void menuNodeRead(const MenuNode* pgm, MenuNode& out) { memcpy_P(&out, pgm, size
 #define SUBF(label, help, pred, kids, flags) {N_SUB, flags, label, help, FN_NONE, 0, pred, 0, (uint8_t)(sizeof(kids) / sizeof(kids[0])), kids}
 #define DYN(label, help, fnId) {N_SUB, NF_FN, label, help, fnId, 0, P_NONE, 0, 0, nullptr}
 #define SET(label, help, sid, pred, opts, flags) NODE(N_SETTING, flags, label, help, SID_##sid, 0, pred, opts)
+#define SETL(label, help, sid, live, pred, flags) NODE(N_SETTING, (flags) | NF_LIVE_VALUE, label, help, SID_##sid, live, pred, 0)
 #define ACT(label, help, aid, live, pred, flags) NODE(N_ACTION, flags, label, help, AID_##aid, live, pred, 0)
 #define ACTV(label, help, aid, pred, text) NODE(N_ACTION, 0, label, help, AID_##aid, LV_NONE, pred, text)
 #define FNA(label, help, fnId, pred, flags) NODE(N_ACTION, (flags) | NF_FN, label, help, fnId, LV_NONE, pred, 0)
@@ -139,6 +140,7 @@ static const MenuNode kInput[] SET_PROGMEM = {
     SET(S_2X, H_2X, adv_i2p, P_SVAV, 0, 0),
     SET(S_2X_SMOOTH, H_2X_SMOOTH, adv_smooth, P_I2P_ON, 0, NF_ADVANCED),
     SET(S_ADAPTIVE_SYNC, H_ADAPTIVE_SYNC, input_adaptive, P_NONE, 0, 0),
+    SETL(S_SYNC_LIMIT, H_SYNC_LIMIT, input_sync_limit, LV_SYNC_LIMIT, P_SYNC_MANUAL, NF_ADVANCED),
     SET(S_SYNC_STRIPPER, H_SYNC_STRIPPER, input_sync_strip, P_RGB_SYNC, 0, NF_REVERT),
     SET(S_DIGITAL_SYNC, H_DIGITAL_SYNC, input_digital_sync, P_RGB_HS, 0, NF_ADVANCED),
     SET(S_SYNC_DEJITTER, H_SYNC_DEJITTER, input_sync_dejitter, P_SYNC_PINS, 0, NF_ADVANCED),

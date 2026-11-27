@@ -27,6 +27,7 @@
     OPT(OPT_ENC_STEP,  "1=1|2=2|4=4")   /* menu steps per detent: the value is the label (a label of digits for another value is misread by the API, the echo and the simulator) */ \
     OPT(OPT_OLED_IDLE, "Screensaver|Off") \
     OPT(OPT_OLED_AFTER, "30s|1min|3min|10min") \
+    OPT(OPT_ADAPTIVE,  "Off=0~off|Auto=1~on|Manual=2#a")   /* input.adaptive_sync; files of the on/off days still read */ \
     OPT(OPT_DEJITTER,  "Auto|On|Off")   /* input.sync_dejitter (pro/input/sync-source.h) */ \
     OPT(OPT_FTL,       "Method 1|Method 2")   /* 0 Vtotal+VSST, 1 Vtotal */ \
     OPT(OPT_HDMI,      "Full=0|Limited=1")   /* Limited: every scaled mode into output.hdmi_black..hdmi_white */ \
@@ -97,7 +98,8 @@
     /* ---- Profile: input ---- */ \
     SETTING(input_auto_gain,   "input.auto_gain",       Bool, enableAutoGain,                0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_sync_strip,  "input.sync_stripper",   Bool, advSyncStripper,               1,      0, 1,      Profile, APPLY_SYNC,        nullptr,     0, CAP_ADV) \
-    SETTING(input_adaptive,    "input.adaptive_sync",   Bool, adaptiveSync,                  1,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
+    SETTING(input_adaptive,    "input.adaptive_sync",   Enum, adaptiveSync,                  1,      0, 2,      Profile, APPLY_NONE,        OPT_ADAPTIVE, 0, CAP_NONE) \
+    SETTING(input_sync_limit,  "input.sync_limit",      U8,   syncLimit,                     0,      0, 143,    Profile, APPLY_NONE,        nullptr,     0, CAP_NONE) \
     SETTING(input_digital_sync, "input.digital_sync",   Bool, digitalSync,                   0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \
     SETTING(input_sync_dejitter, "input.sync_dejitter", Enum, syncDejitter,                  0,      0, 2,      Profile, APPLY_NONE,        OPT_DEJITTER, 0, CAP_NONE) \
     SETTING(input_sync_75,     "input.sync_75ohm",      Bool, sync75Ohm,                     0,      0, 1,      Profile, APPLY_NONE,        nullptr,     0, CAP_ADV) \

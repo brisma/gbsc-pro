@@ -504,6 +504,18 @@ void test_explicit_option_id(void) {
 }
 
 
+// input.adaptive_sync was a switch (files hold on / off) before it got Manual: those files still read
+void test_adaptive_sync_reads_the_on_off_files(void) {
+    SettingDef d = defOf("input.adaptive_sync");
+    uint16_t v = 9;
+    TEST_ASSERT_TRUE(settingsParse(d, "on", v));  TEST_ASSERT_EQUAL_UINT16(1, v);
+    TEST_ASSERT_TRUE(settingsParse(d, "off", v)); TEST_ASSERT_EQUAL_UINT16(0, v);
+    TEST_ASSERT_TRUE(settingsParse(d, "manual", v)); TEST_ASSERT_EQUAL_UINT16(2, v);
+    char b[16];
+    settingsFormatStored(d, 1, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("on", b);
+    settingsFormat(d, 1, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("Auto", b);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_id_from_label);
@@ -519,6 +531,7 @@ int main(int, char**) {
     RUN_TEST(test_converted_choices_are_enums);
     RUN_TEST(test_new_enum_rejects_unlisted_number);
     RUN_TEST(test_frozen_ids);
+    RUN_TEST(test_adaptive_sync_reads_the_on_off_files);
     RUN_TEST(test_explicit_option_id);
     RUN_TEST(test_advanced_mark_stripped_and_long_lists_complete);
     RUN_TEST(test_setting_ids_match_table_order);

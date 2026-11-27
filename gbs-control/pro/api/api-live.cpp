@@ -8,7 +8,7 @@
 static const char* const kLiveNames[] = {
     "none", "adc_gain", "position", "size", "borders", "htotal", "pll_div", "sdram", "osr", "adc_filter",
     "debug_view", "freeze", "if_offset", "sog", "out_rate", "syncwatcher", "osd_always_on", "wifi_rssi", "osd_test",
-    "print_info", "ir_log", "sync_polarity", "ota", "border_pos"};
+    "print_info", "ir_log", "sync_polarity", "ota", "border_pos", "sync_limit"};
 static_assert(sizeof(kLiveNames) / sizeof(kLiveNames[0]) == LV_COUNT, "kLiveNames follows MenuLive");
 static_assert(LV_COUNT <= 32, "validMask holds one bit per MenuLive");
 

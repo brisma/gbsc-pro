@@ -84,7 +84,7 @@ void OledRenderer::centered(int16_t y, const char* text) {
 static const char* shownValue(const MenuViewRow& r) {
     if (r.kind == ROWK_SUB) return ">";
     if (r.kind == ROWK_HEADER || (r.flags & ROWF_BACK)) return "";
-    if ((r.flags & ROWF_DISABLED) && r.value[0]) return "-";
+    if ((r.flags & ROWF_DISABLED) && r.value[0] && r.slider != kRowValueWhenNa) return "-";
     return r.value;
 }
 

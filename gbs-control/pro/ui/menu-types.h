@@ -12,6 +12,8 @@ enum MenuNodeFlags : uint8_t {
     NF_COMMIT = 16,        // Left/Right edit a pending value, OK applies it
     NF_PERCENT = 32,       // the value is shown with a '%' (volume)
     NF_ADVANCED = 64,      // hidden in Easy menu mode
+    NF_LIVE_VALUE = 128,   // a quantity the device also picks by itself: ref2 = the MenuLive value in use, shown while
+                           // the row is n/a or the setting is 0 (never set by hand)
 };
 
 enum MenuPred : uint8_t {
@@ -19,6 +21,7 @@ enum MenuPred : uint8_t {
     P_SCANLINES_OK, P_PROFILE_ACTIVE, P_UPDATE_AVAILABLE, P_ADV_CONTROLLER_UPDATE,
     P_VGA,                    // VGA input only
     P_I2P_ON,                 // S-Video/Composite; n/a while 2X is off
+    P_SYNC_MANUAL,            // n/a unless Adaptive Sync is Manual
     P_DEINT_OK,               // n/a on S-Video/Composite with 2X on
     P_FTL_OK,                 // n/a when Always 60Hz forces a 50 Hz source to 60
     P_FTL_ON,                 // n/a while Smooth scrolling is off
@@ -45,7 +48,9 @@ enum MenuLive : uint8_t {
     LV_NONE, LV_ADC_GAIN, LV_POSITION, LV_SIZE, LV_BORDERS, LV_HTOTAL,
     LV_PLL_DIV, LV_SDRAM, LV_OSR, LV_ADC_FILTER, LV_DEBUG_VIEW, LV_FREEZE, LV_IF_OFFSET, LV_SOG, LV_OUT_RATE,
     LV_SYNCWATCHER, LV_OSD_ALWAYS_ON, LV_WIFI_RSSI, LV_OSD_TEST, LV_PRINT_INFO, LV_IR_LOG, LV_SYNC_POLARITY, LV_OTA,
-    LV_BORDER_POS, LV_COUNT };
+    LV_BORDER_POS,
+    LV_SYNC_LIMIT,        // the short-pulse limit in use (0: not known yet)
+    LV_COUNT };
 
 enum MenuText : uint8_t {
     LT_NONE, LT_WIFI_MODE, LT_WIFI_SSID, LT_WIFI_IP, LT_UPDATE_VERSION, LT_UPDATE_RESULT, LT_FW_GBS, LT_FW_ADV,
@@ -59,7 +64,8 @@ enum MenuKey : uint8_t { K_UP, K_DOWN, K_LEFT, K_RIGHT, K_OK, K_BACK, K_MENU, K_
                          K_VOLDOWN, K_ROT_L, K_ROT_R, K_CLICK, K_LONG };
 
 // One node of the PROGMEM tree. Field use by type:
-//   SETTING  ref = SettingId, opts = option list index (0: registry options) or 100 + numeric step
+//   SETTING  ref = SettingId, opts = option list index (0: registry options) or 100 + numeric step,
+//            ref2 = MenuLive with NF_LIVE_VALUE
 //   ACTION   ref = ActionId (MenuFn with NF_FN), ref2 = MenuLive readback, opts = MenuText row value (0: none)
 //   STEPPER  ref = decrement ActionId, opts = increment ActionId, ref2 = MenuLive readback
 //   TOGGLE_FN ref = MenuFn;  LIVE ref = MenuText;  CHOICE ref = choice index;  ADJUST2D ref = adjust index, ref2 = live

@@ -44,6 +44,7 @@ void writeProgramArrayNew(const uint8_t* programArray, boolean skipMDSection);
 void doPostPresetLoadSteps();
 void freezeVideo();
 bool menuFrameLockReady();   // gbs-control.ino: FrameSync::ready()
+uint16_t syncPulseTrackedLimit();   // gbs-control.ino: the short-pulse limit the tracker holds (0: none yet)
 static const uint8_t kPresetBypassRGBHV = 0x22;   // PresetBypassRGBHV (gbs-control.ino)
 
 void DeviceMenuBackend::refreshSignal() {
@@ -199,6 +200,7 @@ int32_t DeviceMenuBackend::live(uint8_t lv) {
         case LV_FREEZE: return GBS::CAPTURE_ENABLE::read() == 0;
         case LV_IF_OFFSET: return GBS::IF_AUTO_OFST_EN::read() != 0;
         case LV_SOG: return rto->currentLevelSOG;
+        case LV_SYNC_LIMIT: return syncPulseTrackedLimit();
         case LV_OUT_RATE: return sig_.outHzX10;
         case LV_SYNCWATCHER: return rto->syncWatcherEnabled;
         case LV_OSD_ALWAYS_ON: return osdDriver().alwaysOn();

@@ -1495,6 +1495,7 @@ void MenuEngine::rebuild() {
                 else menuFormatValue(r.node, be_, row.value, sizeof(row.value));
                 row.slider = (int8_t)menuSliderHalves(r.node, be_);
                 if (row.slider >= 0) row.flags |= ROWF_SLIDER;
+                else if (r.node.type == N_SETTING && (r.node.flags & NF_LIVE_VALUE)) row.slider = kRowValueWhenNa;
                 if (menuIsChanged(r.node, be_)) row.flags |= ROWF_CHANGED;
             }
             if (sel) {

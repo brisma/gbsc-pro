@@ -29,6 +29,7 @@ inline const char* menuFitLiveMax(uint8_t lv) {
         case LV_SDRAM: return "216MHz";
         case LV_OSR: return "4x";
         case LV_SOG: return "31";
+        case LV_SYNC_LIMIT: return "143";
         case LV_SYNC_POLARITY: return "Inverted";
         case LV_OUT_RATE: return "60Hz";
         default: return "Off";

@@ -179,6 +179,170 @@ void test_a_mixed_read_is_not_confirmed_by_the_next_one(void) {
     TEST_ASSERT_TRUE(syncPulseReadsAgree(229, 226));
 }
 
+// input.sync_limit: a limit set by hand, for a source the automatic one misjudges (measured: a SNES 1CHIP with a
+// SuperFX game counts 311 lines at 90, loses lines at the automatic 100 and counts extra ones under 88)
+void test_manual_limit_is_the_value_plus_the_widening(void) {
+    TEST_ASSERT_EQUAL_UINT16(90, syncPulseManualLimit(90, 189, 189));
+    TEST_ASSERT_EQUAL_UINT16(105, syncPulseManualLimit(90, 189, 204));   // a bright picture widens every pulse
+    TEST_ASSERT_EQUAL_UINT16(90, syncPulseManualLimit(90, 189, 180));    // never under the value
+    TEST_ASSERT_EQUAL_UINT16(kSyncIgnoreMax, syncPulseManualLimit(143, 229, 241));
+    TEST_ASSERT_EQUAL_UINT16(2, syncPulseManualLimit(1, 189, 189));
+}
+
+void test_tracker_uses_the_manual_limit_and_goes_back_to_automatic(void) {
+    SyncPulseTrack t;
+    for (int i = 0; i < 4; i++) t.update(189);
+    TEST_ASSERT_EQUAL_UINT16(100, t.limit());
+    t.setManual(90);
+    TEST_ASSERT_EQUAL_UINT16(90, t.limit());          // at once, no new sample needed
+    t.update(204); 
+    TEST_ASSERT_EQUAL_UINT16(105, t.update(204));     // the brightness is still followed
+    t.setManual(0);
+    TEST_ASSERT_EQUAL_UINT16(115, t.limit());
+}
+
+void test_manual_limit_survives_a_reset_and_waits_for_the_pulse(void) {
+    SyncPulseTrack t;
+    t.setManual(90);
+    TEST_ASSERT_EQUAL_UINT16(0, t.limit());           // no pulse known: upstream's formula for now
+    t.reset();
+    TEST_ASSERT_EQUAL_UINT16(90, t.manual());
+    uint16_t l = 0;
+    for (int i = 0; i < 4; i++) l = t.update(229);
+    TEST_ASSERT_EQUAL_UINT16(90, l);                  // written with the new mode
+    t.lost();
+    TEST_ASSERT_EQUAL_UINT16(90, t.manual());
+}
+
+// ---- the kind of source and the limit it gets ----
+
+static uint32_t gRnd = 12345;
+static uint32_t rnd(uint32_t n) { gRnd = gRnd * 1103515245u + 12345u; return (gRnd >> 16) % n; }
+
+// Width reads as measured on a Mega Drive: 2.4..3 % are equalizing pulses (half, within a count), about 1 % broad pulses
+static uint16_t megaDriveRead(uint16_t pulse) { uint32_t r = rnd(1000); return r < 27 ? pulse / 2 - 2 + rnd(2) : r < 37 ? pulse * 5 : pulse + rnd(2); }
+// A SNES with a SuperFX game: a stray read now and then, none repeating at half
+static uint16_t snesRead(uint16_t pulse) { uint32_t r = rnd(2000); return r < 2 ? pulse * 43 / 100 + rnd(20) : r < 12 ? pulse * 12 : pulse + rnd(2); }
+
+void test_equalizing_pulses_keep_the_limit_every_source_takes(void) {
+    SyncPulseTrack t;
+    for (int i = 0; i < 4; i++) t.update(229);
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_UNKNOWN, t.equalizing());
+    TEST_ASSERT_EQUAL_UINT16(120, t.limit());
+    for (int i = 0; i < 6000; i++) { t.update(megaDriveRead(229)); TEST_ASSERT_NOT_EQUAL(SyncPulseTrack::EQ_NONE, t.equalizing()); }
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_SEEN, t.equalizing());
+    TEST_ASSERT_UINT16_WITHIN(1, 120, t.limit());
+    for (int i = 0; i < 3000; i++) TEST_ASSERT_EQUAL_UINT16(0, t.lineCount(i % 3 ? 259 : 258));   // the line count is not used
+    TEST_ASSERT_UINT16_WITHIN(1, 120, t.limit());
+}
+
+void test_no_equalizing_pulses_start_a_little_under_half(void) {
+    SyncPulseTrack t;
+    for (int i = 0; i < 4; i++) t.update(189);
+    TEST_ASSERT_EQUAL_UINT16(100, t.limit());                       // not decided yet: as before
+    int n = 0;
+    while (t.equalizing() == SyncPulseTrack::EQ_UNKNOWN && n < 2000) { t.update(snesRead(189)); n++; }
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_NONE, t.equalizing());
+    TEST_ASSERT_TRUE(n >= kSyncEqWindow);                           // only after a whole window without them
+    TEST_ASSERT_TRUE(t.takeEqChange());
+    TEST_ASSERT_FALSE(t.takeEqChange());
+    TEST_ASSERT_UINT16_WITHIN(1, 189 / 2 + kSyncNoEqStart, t.limit());  // 91, or 92 while the pulse reads a count wider
+    TEST_ASSERT_EQUAL_UINT16(189 / 2 + kSyncNoEqStart + 15, syncPulseNoEqLimit(189, 204, kSyncNoEqStart));   // the widening
+    TEST_ASSERT_EQUAL_UINT16(189 / 4, syncPulseNoEqLimit(189, 189, -100));     // a floor
+    TEST_ASSERT_EQUAL_UINT16(100, syncPulseNoEqLimit(189, 189, 100));          // never over the usual limit
+    for (int i = 0; i < 40; i++) t.update(189 / 2);                 // equalizing pulses after all: back at once
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_SEEN, t.equalizing());
+    TEST_ASSERT_UINT16_WITHIN(1, 100, t.limit());
+}
+
+// The line count of a field at a given limit when a disturbance splits pulses around `balance`: more lines under it,
+// fewer over it, more often with the distance (the shape measured on a SNES 1CHIP in Yoshi's Island, balance 92)
+static uint16_t splitLines(uint16_t usual, int limit, int balance) {
+    int d = limit - balance;
+    uint32_t pm = d >= -1 ? 0 : d >= -6 ? 80 : d >= -12 ? 150 : 600;      // per mille
+    uint32_t pf = d <= 1 ? 0 : d <= 12 ? 250 : 650;
+    uint32_t r = rnd(1000);
+    return r < pm ? usual + 1 : r < pm + pf ? usual - 1 : usual;
+}
+
+static SyncPulseTrack noEqTracker(uint16_t pulse) {
+    SyncPulseTrack t;
+    for (int i = 0; i < 4; i++) t.update(pulse);
+    for (int i = 0; i < kSyncEqWindow + 10; i++) t.update(pulse);
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_NONE, t.equalizing());
+    return t;
+}
+
+void test_line_count_brings_the_limit_to_the_balance_point_and_holds_it(void) {
+    const int balances[] = {92, 84, 97};                             // this console; another one lower, another higher
+    for (int balance : balances) {
+        SyncPulseTrack t = noEqTracker(189);
+        int limit = t.limit();
+        for (int i = 0; i < 20000; i++) { uint16_t l = t.lineCount(splitLines(311, limit, balance)); if (l) limit = l; }
+        TEST_ASSERT_INT_WITHIN_MESSAGE(1, balance, limit, "settled where the fields count right");
+        for (int i = 0; i < 20000; i++) {                            // and stays there
+            uint16_t l = t.lineCount(splitLines(311, limit, balance)); if (l) limit = l;
+            TEST_ASSERT_INT_WITHIN(2, balance, limit);
+        }
+    }
+}
+
+void test_a_clean_source_keeps_the_start_value(void) {
+    SyncPulseTrack t = noEqTracker(190);
+    for (int i = 0; i < 20000; i++) TEST_ASSERT_EQUAL_UINT16(0, t.lineCount(i % 997 ? 261 : 231));   // a torn read now and then
+    TEST_ASSERT_EQUAL_UINT16(190 / 2 + kSyncNoEqStart, t.limit());
+}
+
+void test_alternating_fields_are_not_an_error(void) {
+    SyncPulseTrack t = noEqTracker(189);                             // an interlaced source: 312, 313, 312, ...
+    for (int i = 0; i < 20000; i++) TEST_ASSERT_EQUAL_UINT16(0, t.lineCount(i % 2 ? 313 : 312));
+    TEST_ASSERT_EQUAL_INT8(kSyncNoEqStart, t.trim());
+}
+
+void test_the_correction_stays_inside_its_bounds(void) {
+    SyncPulseTrack t = noEqTracker(189);
+    int limit = t.limit();
+    for (int i = 0; i < 40000; i++) { uint16_t l = t.lineCount(rnd(5) ? 311 : 312); if (l) limit = l; }   // always "more lines"
+    TEST_ASSERT_EQUAL_INT(100, limit);                               // up to the limit of a source with equalizing pulses
+    for (int i = 0; i < 200000; i++) { uint16_t l = t.lineCount(rnd(5) ? 311 : 310); if (l) limit = l; } // always "fewer"
+    TEST_ASSERT_EQUAL_INT(189 / 4, limit);                           // down to a quarter of the pulse
+}
+
+void test_a_sync_loss_makes_the_kind_unknown_again(void) {
+    SyncPulseTrack t = noEqTracker(189);                             // a SNES, then a Mega Drive on the same cable
+    t.takeEqChange();
+    t.lost();
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_UNKNOWN, t.equalizing());
+    for (int i = 0; i < 4; i++) t.update(189);
+    TEST_ASSERT_UINT16_WITHIN(1, 100, t.limit());                    // the limit every source takes, until the kind shows
+}
+
+void test_stray_half_reads_are_not_equalizing_pulses(void) {
+    SyncPulseTrack t = noEqTracker(189);
+    for (int i = 0; i < 50000; i++) {                                // strays anywhere in the half band, twice the rate measured
+        t.update(rnd(500) ? 189 : (uint16_t)(84 + rnd(44)));
+        TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_NONE, t.equalizing());
+    }
+}
+
+void test_equalizing_pulses_are_seen_on_a_bright_picture(void) {
+    SyncPulseTrack t;
+    for (int i = 0; i < 4; i++) t.update(229);
+    for (int i = 0; i < 6000; i++) {                                 // every pulse 26 counts wider: halves at 61 % of the dark pulse
+        t.update(rnd(1000) < 27 ? 114 + 26 : 229 + 26);
+        TEST_ASSERT_NOT_EQUAL(SyncPulseTrack::EQ_NONE, t.equalizing());
+    }
+    TEST_ASSERT_EQUAL_UINT8(SyncPulseTrack::EQ_SEEN, t.equalizing());
+}
+
+void test_manual_limit_wins_over_the_source_kind(void) {
+    SyncPulseTrack t = noEqTracker(189);
+    t.setManual(110);
+    TEST_ASSERT_EQUAL_UINT16(110, t.limit());
+    for (int i = 0; i < 3000; i++) TEST_ASSERT_EQUAL_UINT16(0, t.lineCount(rnd(3) ? 311 : 310));
+    TEST_ASSERT_EQUAL_UINT16(110, t.limit());
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_limit_sits_inside_the_window_on_dark_and_bright_pictures);
@@ -196,5 +360,18 @@ int main(int, char**) {
     RUN_TEST(test_tracker_forgets_when_reset);
     RUN_TEST(test_other_mode_is_seen_on_the_first_sample);
     RUN_TEST(test_a_mixed_read_is_not_confirmed_by_the_next_one);
+    RUN_TEST(test_manual_limit_is_the_value_plus_the_widening);
+    RUN_TEST(test_tracker_uses_the_manual_limit_and_goes_back_to_automatic);
+    RUN_TEST(test_manual_limit_survives_a_reset_and_waits_for_the_pulse);
+    RUN_TEST(test_equalizing_pulses_keep_the_limit_every_source_takes);
+    RUN_TEST(test_no_equalizing_pulses_start_a_little_under_half);
+    RUN_TEST(test_line_count_brings_the_limit_to_the_balance_point_and_holds_it);
+    RUN_TEST(test_a_clean_source_keeps_the_start_value);
+    RUN_TEST(test_alternating_fields_are_not_an_error);
+    RUN_TEST(test_the_correction_stays_inside_its_bounds);
+    RUN_TEST(test_a_sync_loss_makes_the_kind_unknown_again);
+    RUN_TEST(test_stray_half_reads_are_not_equalizing_pulses);
+    RUN_TEST(test_equalizing_pulses_are_seen_on_a_bright_picture);
+    RUN_TEST(test_manual_limit_wins_over_the_source_kind);
     return UNITY_END();
 }

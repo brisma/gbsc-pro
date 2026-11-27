@@ -495,6 +495,41 @@ void test_rates_retry_starts_over_on_a_signal_change(void) {
     TEST_ASSERT_TRUE(r.due(false, 0, t + MenuRatesRetry::kRetryMs));
 }
 
+// Sync limit (NF_LIVE_VALUE): adjustable in Adaptive Sync Manual only; in Auto the row is n/a and shows the limit in
+// use; a limit never set by hand (0) starts from the one in use
+void test_sync_limit_follows_the_adaptive_sync_mode(void) {
+    FakeBackend be;
+    MenuNode n = menuFind("Input/Sync limit");
+    TEST_ASSERT_TRUE(n.flags & NF_ADVANCED);
+    TEST_ASSERT_EQUAL_STRING("Auto", fmt(menuFind("Input/Adaptive Sync"), be).c_str());
+    TEST_ASSERT_EQUAL_UINT16(S_R_SYNC_MANUAL, reasonOf(n, be));      // Auto: shown, not adjustable
+    TEST_ASSERT_EQUAL_STRING("-", fmt(n, be).c_str());                // no pulse known yet
+    be.lives[LV_SYNC_LIMIT] = 100;
+    TEST_ASSERT_EQUAL_STRING("100", fmt(n, be).c_str());
+    TEST_ASSERT_EQUAL_INT(-1, menuSliderHalves(n, be));               // a plain value row, no bar
+    be.apply(SID_input_sync_limit, 90); be.settle();
+    TEST_ASSERT_EQUAL_STRING("100", fmt(n, be).c_str());              // a stored hand value does not show in Auto
+    be.apply(SID_input_sync_limit, 0); be.apply(SID_input_adaptive, 2); be.settle();
+    TEST_ASSERT_EQUAL_STRING("Manual", fmt(menuFind("Input/Adaptive Sync"), be).c_str());
+    TEST_ASSERT_EQUAL_UINT16(0, reasonOf(n, be));
+    TEST_ASSERT_EQUAL_STRING("100", fmt(n, be).c_str());              // not set yet: the limit in use
+    uint16_t v = 0;
+    TEST_ASSERT_TRUE(menuStepValue(n, be, -1, v)); TEST_ASSERT_EQUAL_UINT16(99, v);    // the first step starts there
+    TEST_ASSERT_TRUE(menuStepValue(n, be, +1, v)); TEST_ASSERT_EQUAL_UINT16(101, v);
+    be.lives[LV_SYNC_LIMIT] = 0;
+    TEST_ASSERT_TRUE(menuStepValue(n, be, -1, v)); TEST_ASSERT_EQUAL_UINT16(99, v);    // unknown: a usual value
+    be.apply(SID_input_sync_limit, 90); be.settle();
+    be.lives[LV_SYNC_LIMIT] = 93;                                     // with the widening: the row shows the setting
+    TEST_ASSERT_EQUAL_STRING("90", fmt(n, be).c_str());
+    TEST_ASSERT_TRUE(menuStepValue(n, be, -1, v)); TEST_ASSERT_EQUAL_UINT16(89, v);
+    be.apply(SID_input_sync_limit, 40); be.settle();
+    TEST_ASSERT_FALSE(menuStepValue(n, be, -1, v));                  // both ends stay: nothing wraps
+    be.apply(SID_input_sync_limit, 143); be.settle();
+    TEST_ASSERT_FALSE(menuStepValue(n, be, +1, v));
+    be.apply(SID_input_adaptive, 0); be.settle();
+    TEST_ASSERT_EQUAL_UINT16(S_R_SYNC_MANUAL, reasonOf(n, be));      // Off
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_rates_retry_while_shown_and_unknown);
@@ -532,5 +567,6 @@ int main() {
     RUN_TEST(test_developer_needs_advanced_and_devmode);
     RUN_TEST(test_easy_skips_advanced_options);
     RUN_TEST(test_easy_keeps_current_advanced_option);
+    RUN_TEST(test_sync_limit_follows_the_adaptive_sync_mode);
     return UNITY_END();
 }

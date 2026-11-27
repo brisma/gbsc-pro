@@ -6,6 +6,9 @@
 enum : uint8_t { UPV_PROGRESS, UPV_VERIFYING, UPV_DONE, UPV_FAILED };
 
 enum : uint8_t { VIEW_CLOSED, VIEW_LIST, VIEW_OVERLAY };
+// MenuViewRow.slider: 0..20 a bar, kRowNoBar none, kRowValueWhenNa none and the value shows on an n/a row too (the OLED
+// prints "-" for the others)
+enum : int8_t { kRowNoBar = -1, kRowValueWhenNa = -2 };
 enum : uint8_t { ROWF_SELECTED = 1, ROWF_DISABLED = 2, ROWF_CHANGED = 4, ROWF_SUB = 8, ROWF_HEADER = 16,
                  ROWF_EDITING = 32, ROWF_SLIDER = 64, ROWF_BACK = 128 };
 // OV_STATUS: status pop-up, 2-3 lines; OV_SAME_SIGNAL: lines 0 title, 1 profile, choice 0..2

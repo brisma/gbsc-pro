@@ -12,7 +12,8 @@ import { stateFromStore, type PredState } from "../../app/model/predicates.ts";
 import { optionsFor, registry, menu } from "../../app/model/menu.ts";
 import { choiceValue, choiceWrites, choiceOptions } from "../../app/model/choices.ts";
 import { scanlineOptions, scanlineValue, scanlineWrites } from "../../app/model/scanlines.ts";
-import { formatSetting } from "../../app/model/format.ts";
+import { formatSetting, isLiveValue, stepLiveValue } from "../../app/model/format.ts";
+import { LIVE_DEFAULTS } from "../../sim/state.ts";
 
 export const EVERY_ROW_PROJECTS = ["phone-pixel8", "desktop-chromium-1280"];
 const SCENARIOS = ["pro-rgbs", "pro-svideo-ntsc", "pro-composite-ntsc", "pro-composite-pal", "pro-vga", "pro-component", "standard-rgbs"];
@@ -23,7 +24,7 @@ const getJson = async (sim: SimHandle, path: string) => (await fetch(sim.url + p
 
 // A row greyed or hidden by another setting: the setting a user turns on first (HDMI black/white: Limited)
 const DEPENDS: Record<string, Record<string, number>> = {
-  ftl_on: { "output.frame_lock": 1 }, ftl_ok: { "output.force_60hz": 0 }, i2p_on: { "adv.i2p": 1 }, deint_ok: { "adv.i2p": 0 },
+  ftl_on: { "output.frame_lock": 1 }, ftl_ok: { "output.force_60hz": 0 }, i2p_on: { "adv.i2p": 1 }, sync_manual: { "input.adaptive_sync": 2 }, deint_ok: { "adv.i2p": 0 },
   ace_on: { "adv.ace": 1 }, sv_wy: { "adv.filter_wy_override": 1 }, hdmi_limited: { "output.hdmi_range": 1 },
 };
 
@@ -121,7 +122,9 @@ for (const it of ITEMS) {
       await el.getByRole("switch").click();
     } else if (r.kind === "stepper") {
       const e = registry.entry(key!)!, step = n?.step ?? 1, v = num(key!);
-      settled = v + step <= (e.max ?? 255) ? v + step : v - step;
+      // a live_value row (Sync limit) never set by hand starts from the value in use: the simulator's live value
+      if (isLiveValue(n)) settled = stepLiveValue(v, 1, LIVE_DEFAULTS[n!.live!], e.max ?? 255);
+      else settled = v + step <= (e.max ?? 255) ? v + step : v - step;
       expected = { path: "/api/settings", body: `${key}=${settled}` };
       await el.getByRole("button", { name: `${settled > v ? "Increase" : "Decrease"} ${label}` }).click();
     } else {   // inline, menu, setting cards

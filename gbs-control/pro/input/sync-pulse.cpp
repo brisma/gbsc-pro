@@ -13,6 +13,22 @@ uint16_t syncPulseLimit(uint16_t dark, uint16_t now, uint16_t keep) {
     return (uint16_t)(limit > top ? top : limit);
 }
 
+uint16_t syncPulseManualLimit(uint16_t manual, uint16_t dark, uint16_t now) {
+    uint32_t limit = (uint32_t)manual + (now > dark ? now - dark : 0);
+    if (limit < 2) limit = 2;
+    return (uint16_t)(limit > kSyncIgnoreMax ? kSyncIgnoreMax : limit);
+}
+
+uint16_t syncPulseNoEqLimit(uint16_t dark, uint16_t now, int8_t trim) {
+    if (now < dark) now = dark;
+    int32_t limit = (int32_t)(dark / 2u) + trim;
+    int32_t low = dark / 4u;
+    if (limit < low) limit = low;
+    limit += now - dark;
+    uint16_t top = syncPulseLimit(dark, now);
+    return (uint16_t)(limit > top ? top : limit);
+}
+
 static bool within(uint16_t a, uint16_t b, uint8_t percent) {
     uint32_t d = a > b ? a - b : b - a;
     return d * 100u <= (uint32_t)b * percent;
@@ -22,8 +38,64 @@ bool syncPulseReadsAgree(uint16_t first, uint16_t second) {
     return first && second && within(first, second, 2);
 }
 
+// Equalizing pulses show as half-width reads of one same width, again and again; a disturbance gives a stray read
+// of some other width now and then. Seen: at once. Not seen: only after a whole window without them.
+void SyncPulseTrack::countRead(uint16_t hsLow) {
+    if (!dark_) return;
+    uint32_t h100 = (uint32_t)hsLow * 100u;
+    // a bright picture widens the equalizing pulses by as many counts as the normal ones: up to two thirds of the dark pulse
+    bool half = h100 >= (uint32_t)dark_ * 44u && h100 <= (uint32_t)dark_ * 68u;
+    bool normal = h100 >= (uint32_t)dark_ * 97u && h100 <= (uint32_t)dark_ * 112u;
+    if (!half && !normal) return;                       // broad pulses, stray and mixed reads say nothing
+    reads_++;
+    if (half) {
+        uint16_t d = hsLow > halfRef_ ? hsLow - halfRef_ : halfRef_ - hsLow;
+        if (halfRef_ && d <= 3) { halves_++; halfRef_ = hsLow; }   // follows a picture that gets brighter
+        else { halfRef_ = hsLow; halves_ = 1; }
+    }
+    if (halves_ >= kSyncEqSeen && eq_ != EQ_SEEN) {
+        if (eq_ == EQ_NONE) last_ = 0;                  // another formula: the next limit is written whatever it is
+        eq_ = EQ_SEEN; eqChanged_ = true;
+    }
+    if (reads_ >= kSyncEqWindow) {
+        if (halves_ < kSyncEqSeen && eq_ != EQ_NONE) { eq_ = EQ_NONE; eqChanged_ = true; last_ = 0; lineReset(); }
+        reads_ = halves_ = halfRef_ = 0;
+    }
+}
+
+uint16_t SyncPulseTrack::lineCount(uint16_t lines) {
+    if (!lines || !wantsLineCount()) return 0;
+    if (!usual_) {                                      // the field's line count: the same value five fields in a row
+        if (lines == lineCand_) { if (++lineRun_ >= 5) usual_ = lines; }
+        else { lineCand_ = lines; lineRun_ = 1; }
+        return 0;
+    }
+    lineReads_++;
+    if (lines > usual_ && lines <= usual_ + 2) more_++;          // a line or two off: a split pulse. Further off: another
+    else if (lines < usual_ && lines + 2 >= usual_) fewer_++;    // mode, a torn read, a lost sync: not this
+    if (lineReads_ < kSyncLineWindow) return 0;
+    int8_t step = 0;
+    // most reads off: an interlaced source's alternating fields or a new mode, not an error to correct
+    if (more_ + fewer_ <= kSyncLineWindow * 2u / 5u) {
+        if (more_ >= kSyncLineErrors && more_ > fewer_ * 2u) step = 1;          // short pulses counted: raise
+        else if (fewer_ >= kSyncLineErrors && fewer_ > more_ * 2u) step = -1;   // real pulses dropped: lower
+    } else {
+        usual_ = 0; lineRun_ = 0;                        // learn the count again
+    }
+    lineReads_ = more_ = fewer_ = 0;
+    if (!step) return 0;
+    int16_t t = (int16_t)trim_ + step;
+    if (t > kSyncNoEqTrimMax || (int32_t)(dark_ / 2u) + t < (int32_t)(dark_ / 4u)) return 0;
+    trim_ = (int8_t)t;
+    uint16_t l = limit();
+    if (l == last_) return 0;
+    last_ = l;
+    return l;
+}
+
 uint16_t SyncPulseTrack::update(uint16_t hsLow) {
     if (!hsLow) return 0;
+    countRead(hsLow);
     uint16_t before = prev_;
     prev_ = hsLow;
     if (cand_ && within(hsLow, cand_, 4)) { if (run_ < 255) run_++; }
@@ -41,6 +113,7 @@ uint16_t SyncPulseTrack::update(uint16_t hsLow) {
     if (newMode) {
         dark_ = now_ = cand_;
         mode_ = true;
+        lineReset();                                    // the trim stays: it is counted from half of the pulse
         // the limit of the mode before stays when it is inside this mode's window, else this mode's own
         uint16_t own = syncPulseLimit(dark_, dark_);
         if (keep_ < own || keep_ > syncPulseLimitTop(dark_)) keep_ = own;

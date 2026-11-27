@@ -71,7 +71,7 @@ void test_registry_enum_labels_use_rom_charset(void) {
 // n/a reasons replace the hint on the help row: one row, and they name the row as it is labelled now
 void test_reasons_fit_the_help_row(void) {
     const uint16_t reasons[] = {S_R_NEEDS_BOB, S_R_2X_FIRST, S_R_2X_ON, S_R_FORCE60, S_R_FTL_OFF, S_R_WY_MANUAL,
-                                S_R_RGBS, S_R_ACE, S_R_SCANLINES, S_R_NO_FP};
+                                S_R_RGBS, S_R_ACE, S_R_SCANLINES, S_R_NO_FP, S_R_SYNC_MANUAL};
     for (uint16_t r : reasons) TEST_ASSERT_TRUE_MESSAGE(str(r).size() <= 28, str(r).c_str());
     TEST_ASSERT_TRUE(str(S_R_WY_MANUAL).find(str(S_Y_FILTER_MODE)) != std::string::npos);
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 import { Icon } from "../art/icon.tsx";
 import { device, mode, pred, desk } from "../store/app.ts";
 import { optionsFor, registry, menu, type MenuNode } from "../model/menu.ts";
-import { formatSetting, formatLive, onOff } from "../model/format.ts";
+import { formatSetting, formatLive, onOff, isLiveValue, stepLiveValue } from "../model/format.ts";
 import { confirm } from "../shell/Confirm.tsx";
 import { openSheet, closeSheet, SheetButtons } from "../shell/Sheet.tsx";
 import { navigate } from "../shell/router.ts";
@@ -101,14 +101,20 @@ function SettingStepper({ row, label, reason }: RowProps) {
   const step = node?.step ?? 1;
   const cur = num(device.values.value[key]);
   const set = (v: number) => { const c = Math.max(e?.min ?? 0, Math.min(e?.max ?? 255, v)); if (c !== num(device.values.value[key])) void write(key, c); };
-  const shown = node ? formatSetting(node, cur) : String(cur);
+  const lv = isLiveValue(node);                         // Sync limit: the value in use until one is set by hand
+  const live = useLive(lv ? node!.live : undefined);
+  const stepBy = (dir: number) => {
+    const now = num(device.values.value[key]);
+    set(lv ? stepLiveValue(now, dir, live, e?.max ?? 255) : now + dir * step);
+  };
+  const shown = node ? formatSetting(node, cur, live, !!reason) : String(cur);
   const def = e?.def ?? 0;
   return (
     <Frame row={row} label={label} reason={reason}>
       <div class="stp" style="position:relative">
-        <StepButton dir={-1} label={label} disabled={!!reason} onStep={() => set(num(device.values.value[key]) - step)} />
-        <button type="button" class="stv" aria-label={`${label} ${shown}`} aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenu(!menuOpen)}><b>{shown}</b></button>
-        <StepButton dir={1} label={label} disabled={!!reason} onStep={() => set(num(device.values.value[key]) + step)} />
+        <StepButton dir={-1} label={label} disabled={!!reason} onStep={() => stepBy(-1)} />
+        <button type="button" class="stv" aria-label={`${label} ${shown}`} aria-haspopup="menu" aria-expanded={menuOpen} disabled={!!reason} onClick={() => setMenu(!menuOpen)}><b>{shown}</b></button>
+        <StepButton dir={1} label={label} disabled={!!reason} onStep={() => stepBy(1)} />
         {menuOpen ? (
           <>
             <div class="scrim" onClick={() => setMenu(false)} />

@@ -36,7 +36,7 @@ void tearDown(void) { platformSetCaps(CAPS_DEFAULT); }
 
 // ---- enum names (a new enum value without a name fails the build) ----
 static const char* const kPredNames[] = {"none", "devmode", "svav", "sv", "av", "sv_wy", "av_ntsc", "av_pal", "rgb_sync",
-    "rgbs", "ace_on", "scanlines_ok", "profile_active", "update_available", "adv_controller_update", "vga", "i2p_on",
+    "rgbs", "ace_on", "scanlines_ok", "profile_active", "update_available", "adv_controller_update", "vga", "i2p_on", "sync_manual",
     "deint_ok", "ftl_ok", "ftl_on", "wifi_ap", "sog", "tv_osd", "rgb_hs", "sync_pins", "hdmi_limited"};
 static_assert(sizeof(kPredNames) / sizeof(kPredNames[0]) == P_COUNT, "a MenuPred has no name");
 static const char* const kFnNames[] = {"none", "open_info", "decoder_reset", "geometry_reset", "wifi_reset", "check_update",
@@ -46,7 +46,7 @@ static const char* const kFnNames[] = {"none", "open_info", "decoder_reset", "ge
 static_assert(sizeof(kFnNames) / sizeof(kFnNames[0]) == FN_COUNT, "a MenuFn has no name");
 static const char* const kLiveNames[] = {"none", "adc_gain", "position", "size", "borders", "htotal", "pll_div", "sdram",
     "osr", "adc_filter", "debug_view", "freeze", "if_offset", "sog", "out_rate", "syncwatcher", "osd_always_on",
-    "wifi_rssi", "osd_test", "print_info", "ir_log", "sync_polarity", "ota", "border_pos"};
+    "wifi_rssi", "osd_test", "print_info", "ir_log", "sync_polarity", "ota", "border_pos", "sync_limit"};
 static_assert(sizeof(kLiveNames) / sizeof(kLiveNames[0]) == LV_COUNT, "a MenuLive has no name");
 static const char* const kTextNames[] = {"none", "wifi_mode", "wifi_ssid", "wifi_ip", "update_version", "update_result",
     "fw_gbs", "fw_adv", "ota_password", "extra_hosts", "profile_active", "wifi_pass", "wifi_host", "source_name",
@@ -54,7 +54,7 @@ static const char* const kTextNames[] = {"none", "wifi_mode", "wifi_ssid", "wifi
 static_assert(sizeof(kTextNames) / sizeof(kTextNames[0]) == LT_COUNT, "a MenuText has no name");
 static const char* const kTypeNames[] = {"sub", "setting", "choice", "stepper", "action", "live", "adjust2d",
                                          "header"};
-static const char* const kFlagNames[] = {"revert", "restart_note", "confirm", "fn", "commit", "percent", "advanced"};
+static const char* const kFlagNames[] = {"revert", "restart_note", "confirm", "fn", "commit", "percent", "advanced", "live_value"};
 static const char* const kChoiceNames[] = {"filter", "scanlines", "resolution"};
 static const char* const kAdjustNames[] = {"move", "size", "borders", "border_move"};
 static const char* const kChoiceFlagNames[] = {"advanced", "original", "alias", "sid1_only"};
@@ -319,6 +319,7 @@ static std::string nodeJson(const MenuNode& n, const std::string& id) {
     switch (n.type) {
         case N_SETTING:
             s += ",\"setting\":" + q(settingKey(n.ref));
+            if (n.flags & NF_LIVE_VALUE) s += ",\"live\":\"" + std::string(kLiveNames[n.ref2]) + "\"";
             if (n.opts >= 100) s += ",\"step\":" + num(n.opts - 100);
             else if (n.opts) {
                 const char* list = menuOptList(n.opts);
@@ -390,7 +391,7 @@ static std::string exportMenu() {
     // menuEnabled reasons by name (the page's predicates port returns these names)
     static const struct { const char* name; uint16_t str; } kReasons[] = {
         {"wy_manual", S_R_WY_MANUAL}, {"rgbs", S_R_RGBS}, {"ace", S_R_ACE}, {"needs_bob", S_R_NEEDS_BOB},
-        {"scanlines", S_R_SCANLINES}, {"2x_first", S_R_2X_FIRST}, {"2x_on", S_R_2X_ON}, {"force60", S_R_FORCE60},
+        {"scanlines", S_R_SCANLINES}, {"2x_first", S_R_2X_FIRST}, {"sync_manual", S_R_SYNC_MANUAL}, {"2x_on", S_R_2X_ON}, {"force60", S_R_FORCE60},
         {"ftl_off", S_R_FTL_OFF}};
     s += "},\"reasons\":{";
     for (size_t i = 0; i < sizeof(kReasons) / sizeof(kReasons[0]); i++)

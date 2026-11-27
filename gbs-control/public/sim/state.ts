@@ -21,7 +21,7 @@ export const LIVE_DEFAULTS: Record<string, number | [number, number]> = {
   // read on a Pro with a PAL Mega Drive on RGB SCART; out_rate 600 here (the scenario's 60 Hz output)
   adc_gain: 132, position: [140, 44], size: [585, 512], borders: [2006, 1064], border_pos: [308, 44], htotal: 2035, pll_div: 2269, sdram: 2, osr: 4,
   adc_filter: 3, debug_view: 0, freeze: 0, if_offset: 0, sog: 13, out_rate: 600, syncwatcher: 1, osd_always_on: 0,
-  wifi_rssi: -58, osd_test: 0, print_info: 0, ir_log: 0, sync_polarity: 0, ota: 0,
+  wifi_rssi: -58, osd_test: 0, print_info: 0, ir_log: 0, sync_polarity: 0, ota: 0, sync_limit: 100,
 };
 
 export class DeviceState {
