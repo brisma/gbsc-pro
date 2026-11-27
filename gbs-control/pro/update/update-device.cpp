@@ -12,6 +12,7 @@
 #include "../api/api-watchdog.h"
 #include "update-device.h"
 #include "../link/adv-link-device.h"
+#include "../link/adv-controller-image.h"
 
 extern userOptions* uopt;
 void settingsBroadcastStatusText(const char* key, const char* value);
@@ -55,7 +56,7 @@ const char* updateLastError() { return g.error; }
 
 // Shared Updater core (web upload and OTA pull)
 bool updateCoreBegin(UpdateSource src, uint32_t total, const uint8_t* expectSha) {
-    if (updateInProgress() || advLinkUpdateActive()) return false;   // busy: the running one keeps its state
+    if (updateInProgress() || advLinkUpdateActive() || advImageUploadActive()) return false;   // busy: the running one keeps its state
     if (Update.isRunning()) { g.error = "busy"; g.state = FAILED; g.source = src; return false; }   // ArduinoOTA (Developer)
     g.error = nullptr;
     // No signature check, so no 6.2 KB RSA stack thunk: only the Updater's 4 KB flash buffer must fit
@@ -135,7 +136,7 @@ int updateUploadJson(char* out, size_t n) {
 void updateUploadChunk(AsyncWebServerRequest* req, size_t index, uint8_t* data, size_t len, bool final) {
     if (index == 0) {
         if (!apiGuardRequest(req)) return;           // runs before the middleware; finish answers 403
-        if (updateInProgress() || advLinkUpdateActive()) return;   // busy (also an ADV Controller update); finish answers 409
+        if (updateInProgress() || advLinkUpdateActive() || advImageUploadActive()) return;   // busy (also an ADV Controller update or image upload); finish answers 409
         g.error = nullptr;
         if (updateImageKind(data, len) == UPDATE_IMAGE_UNKNOWN && !updateKindNeedsMore(data, len)) { g.error = "format"; g.state = FAILED; g.source = US_UPLOAD; return; }
         if (!updateCoreBegin(US_UPLOAD, req->contentLength(), nullptr)) return;   // memory or space: reported by the loop
@@ -150,7 +151,7 @@ void updateUploadChunk(AsyncWebServerRequest* req, size_t index, uint8_t* data, 
 int updateUploadFinish(AsyncWebServerRequest* req) {
     if (req != g.owner) {
         if (!apiGuardRequest(req)) return 403;
-        return (updateInProgress() || advLinkUpdateActive()) ? 409 : 400;
+        return (updateInProgress() || advLinkUpdateActive() || advImageUploadActive()) ? 409 : 400;
     }
     g.owner = nullptr;
     if (g.state == FAILED || (g.state == IDLE && g.error)) return 400;   // loop may already have reported it

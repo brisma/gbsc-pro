@@ -47,6 +47,17 @@ async function scan(chunks: AsyncIterable<Uint8Array> | ReadableStreamDefaultRea
   return null;
 }
 
+// An ADV Controller image (adv-controller/tools/fw-header.py): "ADVC" at 0x400, the version in the 12 bytes after the
+// two u16 fields. Its version, or null for any other file (a GBS-Control image goes to /api/system/update)
+export async function readAdvImageVersion(file: Blob): Promise<string | null> {
+  if (file.size < 0x41c) return null;
+  const h = new Uint8Array(await file.slice(0x400, 0x41c).arrayBuffer());
+  if (h[0] !== 0x41 || h[1] !== 0x44 || h[2] !== 0x56 || h[3] !== 0x43) return null;   // "ADVC"
+  let v = "";
+  for (let i = 8; i < 20 && h[i]; i++) v += String.fromCharCode(h[i]);
+  return /^[0-9A-Za-z.+\-]+$/.test(v) ? v : null;
+}
+
 // GBSCVER=<version>; inside the image (gzip or raw); null when absent or when the browser cannot inflate
 export async function readImageVersion(file: Blob): Promise<string | null> {
   const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());

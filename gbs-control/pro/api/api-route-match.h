@@ -47,6 +47,7 @@ int apiRouteFind(const void* rows, size_t stride, uint8_t n, uint8_t method, con
     R(ROUTE_GET,  ROUTE_EXACT,  "/api/system/backup",     backupGet,           nullptr,             0) \
     R(ROUTE_POST, ROUTE_EXACT,  "/api/system/restore",    restorePost,         restoreUpload,       0) \
     R(ROUTE_POST, ROUTE_EXACT,  "/api/system/update",     updatePost,          updateUpload,        0) \
+    R(ROUTE_POST, ROUTE_EXACT,  "/api/system/adv-image",  advImagePost,        advImageUpload,      0) \
     R(ROUTE_GET,  ROUTE_EXACT,  "/api/wifi",              wifiGet,             nullptr,             0) \
     R(ROUTE_GET,  ROUTE_EXACT,  "/api/wifi/scan",         wifiScanGet,         nullptr,             0) \
     R(ROUTE_POST, ROUTE_EXACT,  "/api/wifi/connect",      wifiConnectPost,     nullptr,             0) \

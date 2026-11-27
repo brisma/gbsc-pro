@@ -4,6 +4,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import zlib from "node:zlib";
 import { startSim, routeHandled, type Sim } from "../../sim/server.ts";
 import { req, fixturePage, publicDir } from "./sim-helpers.ts";
 import { validateRequest } from "../../sim/validate.ts";
@@ -62,7 +63,7 @@ test("no handler without a firmware route", () => {
 test("info has every firmware key", async () => {
   const r = await req(sim.url, "GET", "/api/info");
   for (const k of ["api", "fw", "marker", "build", "board", "caps", "probes", "heap", "max_block", "wifi", "adv_controller",
-                   "net", "clockgen", "input", "signal", "crash", "upload", "update"]) assert.ok(k in r.json, k);
+                   "net", "clockgen", "input", "signal", "crash", "upload", "update", "adv_image"]) assert.ok(k in r.json, k);
   for (const k of ["none", "std", "lines", "src_hz10", "out_hz10", "interlaced", "scanlines_ok", "adv_ntsc", "preset"])
     assert.ok(k in r.json.signal, k);
   assert.equal(r.json.fw, "3.0.0-dev0");
@@ -80,4 +81,38 @@ test("log lines match the firmware format", async () => {
   const r2 = await req(sim.url, "GET", `/api/log?since=${next}&boot=${r.json.boot}`);
   assert.equal(r2.json.lines.length, 1);
   assert.equal(r2.json.lines[0].m, "one more line");
+});
+
+// An ADV Controller image as tools/adv-controller-image.py's self-test builds it, posted as one multipart file
+function advImageForm(version: string, corrupt = false): { body: Buffer; headers: Record<string, string> } {
+  const img = Buffer.alloc(4096, 0x5a);
+  img.fill(0, 0x400, 0x41c);
+  img.write("ADVC", 0x400, "latin1");
+  img.writeUInt16LE(1, 0x404);
+  img.write(version, 0x408, "latin1");
+  img.writeUInt32LE(img.length, 0x414);
+  img.writeUInt32LE(zlib.crc32(img) >>> 0, 0x418);   // computed with the CRC field 0
+  if (corrupt) img[10] ^= 1;
+  const b = "----advimg";
+  const body = Buffer.concat([Buffer.from(`--${b}\r\nContent-Disposition: form-data; name="image"; filename="adv-controller.bin"\r\n` +
+                                          "Content-Type: application/octet-stream\r\n\r\n"), img, Buffer.from(`\r\n--${b}--\r\n`)]);
+  return { body, headers: { "content-type": `multipart/form-data; boundary=${b}` } };
+}
+
+test("an uploaded ADV Controller image is checked, offered, and gone once installed", async () => {
+  const bad = await req(sim.url, "POST", "/api/system/adv-image", advImageForm("3.2.0", true));
+  assert.equal(bad.status, 400);
+  assert.equal(bad.json.error, "crc");
+  const r = await req(sim.url, "POST", "/api/system/adv-image", advImageForm("3.2.0"));
+  assert.equal(r.status, 200);
+  assert.equal(r.json.version, "3.2.0");
+  let info = (await req(sim.url, "GET", "/api/info")).json;
+  assert.deepEqual(info.adv_image, { source: "file", version: "3.2.0", build: r.json.build });
+  assert.equal(info.adv_controller.update_available, true);
+  sim.state.advUpdateState = "idle";
+  await req(sim.url, "POST", "/api/actions/system.update_adv_controller");
+  for (let i = 0; i < 100 && sim.state.advBuild !== r.json.build; i++) await new Promise((res) => setTimeout(res, 50));
+  info = (await req(sim.url, "GET", "/api/info")).json;
+  assert.equal(sim.state.advBuild, r.json.build);
+  assert.equal(info.adv_image.source, "embedded");
 });

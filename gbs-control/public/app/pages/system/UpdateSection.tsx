@@ -14,7 +14,7 @@ import { RowView, isRowVisible } from "../../rows/Row.tsx";
 import { runAction, Seg } from "../../rows/controls.tsx";
 import { REPO } from "../../shell/Footer.tsx";
 import { confirm } from "../../shell/Confirm.tsx";
-import { compareVersions, readImageVersion } from "../../model/version.ts";
+import { compareVersions, readImageVersion, readAdvImageVersion } from "../../model/version.ts";
 import { CHANNELS, channelLabel, reasonWords, lastResultText, checkResultText, busyText } from "../../texts/update.ts";
 import type { Row } from "../../layout/types.ts";
 import { SysGroup, Progress, MsgRow } from "./parts.tsx";
@@ -61,7 +61,51 @@ async function installOffer(version: string, older: boolean, channel: string): P
   if (!(await runAction("system.install_update", older ? "older" : undefined))) job.value = null;
 }
 
+// An ADV Controller image: stored on the device (LittleFS), then offered like the built-in one; removed once installed
+async function uploadAdv(file: File, v: string): Promise<void> {
+  if (board.value !== "pro") { note.value = { text: "This board has no ADV Controller.", tone: "bad" }; return; }
+  if (!(await confirm({ icon: "developer_board", title: `Upload ADV Controller ${v}?`, ok: "Upload",
+    body: `${file.name} is stored on the GBSC PRO and offered as the ADV Controller update. It is removed once installed.` }))) return;
+  note.value = null;
+  const form = new FormData();
+  form.append("image", file, file.name);
+  let res: Response, body: any = {};
+  try {
+    res = await device.client.exclusive("/api/system/adv-image", form);
+    body = await res.json().catch(() => ({}));
+  } catch (e) {
+    log(`adv image: ${String(e)}`);
+    note.value = { text: "The upload stopped: the device did not answer.", tone: "bad" };
+    return;
+  }
+  log(`adv image: HTTP ${res.status} ${JSON.stringify(body)}`);
+  if (!res.ok) {
+    note.value = { text: res.status === 503 ? busyText(res.headers.get("X-GBSC-Busy")) : `The ADV Controller image was refused: ${advImageReason(String(body.error ?? res.status))}.`, tone: "bad" };
+    return;
+  }
+  const running = String(device.info.value?.adv_controller?.build ?? "").toUpperCase();
+  if (running && running === String(body.build).toUpperCase()) {
+    note.value = { text: `The ADV Controller already runs ${body.version}.`, tone: "good" };
+    return;
+  }
+  if (await confirm({ icon: "developer_board", title: `Update the ADV Controller to ${body.version}?`, ok: "Update",
+    body: "The picture may stop for a few seconds. The image stays on the device until it is installed." })) {
+    await runAction("system.update_adv_controller");
+  } else {
+    note.value = { text: `ADV Controller ${body.version} stored: Update is offered below.`, tone: "good" };
+  }
+}
+
+const ADV_IMAGE_REASONS: Record<string, string> = {
+  format: "not an ADV Controller image", size: "the file is incomplete or too big", crc: "the file is damaged",
+  space: "not enough space on the device", busy: "an update is running", no_adv: "this board has no ADV Controller",
+  forbidden: "not allowed from this address", write: "the device could not store it",
+};
+const advImageReason = (code: string) => ADV_IMAGE_REASONS[code] ?? code;
+
 async function upload(file: File): Promise<void> {
+  const adv = await readAdvImageVersion(file);
+  if (adv !== null) { log(`file ${file.name}: ADV Controller ${adv}`); return uploadAdv(file, adv); }
   const v = await readImageVersion(file);
   const older = v !== null && compareVersions(v, fw()) < 0;
   log(`file ${file.name}: version ${v ?? "not found"}${older ? " (older)" : ""}`);
@@ -108,8 +152,10 @@ async function pickChannel(ch: string, cur: string): Promise<void> {
 }
 
 async function updateAdv(): Promise<void> {
+  const img = device.info.value?.adv_image;
+  const from = img?.source === "file" ? `the uploaded image ${img.version}` : `the image built into this firmware${img?.version ? " (" + img.version + ")" : ""}`;
   if (!(await confirm({ icon: "developer_board", title: "Update the ADV Controller?", ok: "Update",
-    body: "The ADV Controller gets the image built into this firmware. The picture may stop for a few seconds." }))) return;
+    body: `The ADV Controller gets ${from}. The picture may stop for a few seconds.` }))) return;
   await runAction("system.update_adv_controller");
 }
 
@@ -208,7 +254,7 @@ export function UpdateSection(_: { desk: boolean }) {
       ) : null}
       <SysGroup title="Channel"><ChannelRow /></SysGroup>
       <SysGroup title="From a file">
-        <Frame row={ROWS.file} label="Upload firmware" sub="A .bin or .bin.gz file. The version is read before installing." reason={null} noHelp>
+        <Frame row={ROWS.file} label="Upload firmware" sub="A GBS-Control .bin or .bin.gz, or an ADV Controller .bin. The version is read before installing." reason={null} noHelp>
           <button type="button" class="btn" disabled={!!j} onClick={() => input.current?.click()}><Icon name="upload_file" />Choose file</button>
         </Frame>
         <input ref={input} type="file" accept=".bin,.gz" hidden
