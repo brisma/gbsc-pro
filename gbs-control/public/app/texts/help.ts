@@ -13,6 +13,7 @@ export const HELP: Record<string, [string, string]> = {
   "screen/position": ["Position", "Moves the picture on the TV. Hold an arrow to keep moving. Reset screen puts it back."],
   "screen/size": ["Size", "Makes the picture wider or taller. Hold an arrow to keep going."],
   "screen/edge-mask": ["Edge mask", "Hides junk at the borders of the picture (lines of noise or colour some consoles draw outside the image)."],
+  "picture/swap-fields": ["Swap fields", "Shows the other interlaced field on top. Turn it on if a 480i/576i picture bounces up and down by one line, as a 60 Hz N64 does when set to PAL 576i. Off is right for most sources."],
   "picture/deinterlace": ["Deinterlace", "How interlaced pictures (480i, 576i) are shown. Adaptive is sharper on still images; Bob avoids combing on fast motion."],
   "quick/profile": ["Profile", "A profile keeps every picture setting for one console or game. With Auto-load on, the right profile loads by itself when its signal comes back."],
   "profiles/auto-load": ["Auto-load", "Loads the profile whose signal matches the one coming in (input, lines and timing). When another profile matches, unsaved changes of the one in use are discarded and a message says so; the profile already in use is never reloaded. With no profile for the signal, Defaults load when the profile in use was saved on another input."],

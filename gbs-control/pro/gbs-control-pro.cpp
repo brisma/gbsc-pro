@@ -141,6 +141,14 @@ void applyPictureColor(void)
     GBS::VDS_V_OFST::write((uint8_t)r.vOff);
 }
 
+// picture.field_flip: swap which input field the deinterlacer shows as the top one. Every preset leaves it off, right
+// for NTSC 480i; a fake-PAL N64 at 576i (65.3 us lines) shows its fields swapped: a one-line bounce at 25 Hz in Bob,
+// streaks on fine detail. Only used in interlace mode (TV5725 data sheet), so harmless on progressive sources.
+void applyFieldFlip(void)
+{
+    GBS::VDS_FIELD_FLIP::write(uopt->fieldFlip ? 1 : 0);
+}
+
 void applyPictureSharpness(void)
 {
     SharpRegs p = pictureSharpness(uopt->picSharpness, rto->presetID);

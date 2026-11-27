@@ -1008,9 +1008,9 @@ void test_position_counter(void) {
     TEST_ASSERT_EQUAL_UINT8(7, r.v().posCount);
     r.enter("Picture");
     TEST_ASSERT_EQUAL_UINT8(1, r.v().posIndex);
-    TEST_ASSERT_EQUAL_UINT8(15, r.v().posCount);
+    TEST_ASSERT_EQUAL_UINT8(16, r.v().posCount);
     r.key(K_UP);
-    TEST_ASSERT_EQUAL_UINT8(15, r.v().posIndex);
+    TEST_ASSERT_EQUAL_UINT8(16, r.v().posIndex);
 }
 
 // ---- Encoder sessions ----

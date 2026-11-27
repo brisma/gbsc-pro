@@ -3768,6 +3768,7 @@ void doPostPresetLoadSteps()
     }
 
     applyPictureSharpness();   // picture.sharpness: bypass and gains
+    applyFieldFlip();          // picture.field_flip (presets leave it off)
 
     GBS::VDS_TAP6_BYPS::write(0);   // 6-tap filter always on (its bypass needed a Y/UV delay fix per preset)
 

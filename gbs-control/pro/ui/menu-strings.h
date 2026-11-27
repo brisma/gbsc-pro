@@ -82,6 +82,7 @@
     S(S_LINE_FILTER, "Line filter") \
     S(S_RGBHV_SCALING, "VGA upscaling") \
     S(S_DEINTERLACE, "Deinterlace") \
+    S(S_SWAP_FIELDS, "Swap fields") \
     S(S_POSITION, "Position") \
     S(S_SIZE, "Size") \
     S(S_BORDER_POS, "Mask position") \
@@ -343,6 +344,7 @@
     S(H_HDMI_RANGE, "Darkest greys merge into black: try Limited and set HDMI black. Grey blacks: use Full.") \
     S(H_SHARPNESS, "Edge sharpening of the scaler. 0 turns it off. The Filter row sets it too.") \
     S(H_DEINTERLACE, "How 480i/576i are shown. Adaptive: sharper still images. Bob: no combing and allows scanlines.") \
+    S(H_SWAP_FIELDS, "Turn on if a 480i/576i picture bounces up and down by one line. A 60 Hz N64 set to PAL can.") \
     S(H_RESET_GEOMETRY, "Undoes Position/Size/Edge mask for this signal mode. The profile in use forgets them too.") \
     S(H_MANAGE, "Rename or delete profiles. Replace one with the current settings or unlink its signal.") \
     S(H_SWITCH_INPUT, "Loading a profile by hand also switches to the input it was saved on.") \

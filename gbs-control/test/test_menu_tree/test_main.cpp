@@ -434,7 +434,7 @@ void test_advanced_main_menu_rows(void) {
     TEST_ASSERT_EQUAL_STRING("Input, Output, Picture, Screen, Profiles, System, Developer, Menu mode", rows(be, "").c_str());
     TEST_ASSERT_EQUAL_STRING("Sync, Clock / ADC, H capture shift, Debug, Serial log, Arduino upload, OTA password",
                              rows(be, "Developer").c_str());
-    TEST_ASSERT_EQUAL_STRING("Filter, Scanlines, Brightness, Contrast, Saturation, Deinterlace, Reset picture, Detail, "
+    TEST_ASSERT_EQUAL_STRING("Filter, Scanlines, Brightness, Contrast, Saturation, Deinterlace, Swap fields, Reset picture, Detail, "
                              "Sharpness, Line filter, Color sharpness, Scanline strength, Color, Red, Green, Blue, "
                              "Reset colors", rows(be, "Picture").c_str());
     TEST_ASSERT_EQUAL_STRING("WiFi, Device, TV and OLED menu, Update, Signal info, Developer menu, Restart, Factory reset",

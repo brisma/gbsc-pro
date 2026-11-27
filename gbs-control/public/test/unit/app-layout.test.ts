@@ -124,6 +124,7 @@ test("Settings follow the signal chain and place every row once", async () => {
   assert.equal(where.get("menu:input/source"), "input");
   assert.equal(where.get("menu:output/smooth-scrolling"), "scaler");
   assert.equal(where.get("menu:picture/deinterlace"), "scaler");
+  assert.equal(where.get("menu:picture/swap-fields"), "scaler");
   assert.equal(where.get("menu:screen/position"), "scaler");
   assert.equal(where.get("menu:output/aspect"), "output");
   assert.equal(where.get("menu:output/integer-scale"), "output");
