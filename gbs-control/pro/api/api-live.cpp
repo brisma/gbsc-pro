@@ -5,11 +5,11 @@
 #include "../ui/menu-types.h"
 
 // Index = MenuLive; must follow the enum (static_assert below)
-static const char* const kLiveNames[] = {
-    "none", "adc_gain", "position", "size", "borders", "htotal", "pll_div", "sdram", "osr", "adc_filter",
-    "debug_view", "freeze", "if_offset", "sog", "out_rate", "syncwatcher", "osd_always_on", "wifi_rssi", "osd_test",
-    "print_info", "ir_log", "sync_polarity", "ota", "border_pos", "sync_limit"};
-static_assert(sizeof(kLiveNames) / sizeof(kLiveNames[0]) == LV_COUNT, "kLiveNames follows MenuLive");
+#define LIVE_NAMES "none\0adc_gain\0position\0size\0borders\0htotal\0pll_div\0sdram\0osr\0adc_filter\0" \
+    "debug_view\0freeze\0if_offset\0sog\0out_rate\0syncwatcher\0osd_always_on\0wifi_rssi\0osd_test\0" \
+    "print_info\0ir_log\0sync_polarity\0ota\0border_pos\0sync_limit"
+static const char kLiveNames[] PROGMEM = LIVE_NAMES;
+static_assert(PGM_LIST_COUNT(LIVE_NAMES) == LV_COUNT, "kLiveNames follows MenuLive");
 static_assert(LV_COUNT <= 32, "validMask holds one bit per MenuLive");
 
 static bool isPair(uint8_t lv) { return lv == LV_POSITION || lv == LV_SIZE || lv == LV_BORDERS || lv == LV_BORDER_POS; }
@@ -24,9 +24,12 @@ size_t liveJson(const int32_t* v, uint32_t validMask, uint32_t ms, char* out, si
         if (!(validMask & (1u << i))) continue;
         const char* sep = first ? "" : ",";
         first = false;
-        if (isPair(i)) put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":[%ld,%ld]"), sep, kLiveNames[i], (long)((uint32_t)v[i] >> 16),
+        char name[16];
+        static_assert(PGM_LIST_MAXLEN(LIVE_NAMES) < sizeof(name), "name holds the longest name");
+        pgmListCopy(name, sizeof(name), kLiveNames, i, LV_COUNT);
+        if (isPair(i)) put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":[%ld,%ld]"), sep, name, (long)((uint32_t)v[i] >> 16),
                                     (long)(v[i] & 0xffff)));
-        else put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":%ld"), sep, kLiveNames[i], (long)v[i]));
+        else put(snprintf_P(out + n, cap - n, PSTR("%s\"%s\":%ld"), sep, name, (long)v[i]));
     }
     if (n < cap) put(snprintf_P(out + n, cap - n, PSTR("}}")));
     if (n >= cap) { out[0] = '\0'; return 0; }

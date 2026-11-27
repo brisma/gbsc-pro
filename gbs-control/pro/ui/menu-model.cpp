@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../settings/settings-pgm.h"
+#include "../util/pgm.h"
 #include "../settings/settings-registry.h"
 #include "../api/api-actions.h"
 #include "menu-model.h"
@@ -132,7 +133,8 @@ bool menuOptAt(const char* list, uint8_t i, char* name, size_t n, uint16_t& valu
 static const char* onOff(bool on) { return on ? "On" : "Off"; }
 
 static void formatLive(uint8_t lv, int32_t v, char* out, size_t n) {
-    static const char* const kSdram[8] = {"108MHz", "81MHz", "FB", "162MHz", "144MHz", "185MHz", "216MHz", "129MHz"};
+    static constexpr char kSdram[] PROGMEM = "108MHz\0" "81MHz\0" "FB\0" "162MHz\0" "144MHz\0" "185MHz\0" "216MHz\0" "129MHz\0-";
+    static_assert(PGM_LIST_COUNT(kSdram) == 9, "kSdram: the count follows the list");
     switch (lv) {
         case LV_ADC_GAIN: case LV_HTOTAL: case LV_PLL_DIV:
             snprintf_P(out, n, PSTR("%ld"), (long)v); break;
@@ -141,7 +143,7 @@ static void formatLive(uint8_t lv, int32_t v, char* out, size_t n) {
             copyStr(out, n, onOff(v != 0)); break;
         case LV_POSITION: case LV_SIZE: case LV_BORDERS: case LV_BORDER_POS:
             snprintf_P(out, n, PSTR("%ld/%ld"), (long)((v >> 16) & 0xFFFF), (long)(v & 0xFFFF)); break;
-        case LV_SDRAM: copyStr(out, n, (v >= 0 && v < 8) ? kSdram[v] : "-"); break;
+        case LV_SDRAM: pgmListCopy(out, n, kSdram, (v >= 0 && v < 8) ? (uint8_t)v : 8, 9); break;
         case LV_OSR: snprintf_P(out, n, PSTR("%ldx"), (long)v); break;
         case LV_ADC_FILTER: copyStr(out, n, onOff(v > 0)); break;
         case LV_SOG: case LV_SYNC_LIMIT: snprintf_P(out, n, PSTR("%ld"), (long)v); break;

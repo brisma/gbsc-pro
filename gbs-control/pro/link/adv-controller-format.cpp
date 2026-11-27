@@ -23,15 +23,21 @@ void advControllerMenuText(const AdvControllerInfo& h, char* out, size_t n) {
     }
 }
 
-static const char* const kStandardNames[8] = {"NTSC_M", "NTSC_443", "PAL_M", "PAL_60", "PAL", "SECAM", "PAL_N",
-                                              "SECAM_525"};   // AD_RESULT order; the API keeps these names
+static constexpr char kStandardNames[] PROGMEM = "NTSC_M\0NTSC_443\0PAL_M\0PAL_60\0PAL\0SECAM\0PAL_N\0"
+                                            "SECAM_525";   // AD_RESULT order; the API keeps these names
+static_assert(PGM_LIST_COUNT(kStandardNames) == 8, "kStandardNames: the count follows the list");
 
 static int signalJson(const AdvSignal& g, char* out, size_t n) {
     char std[16], hz[8], enc[8];
-    if (g.standard < 8) snprintf_P(std, sizeof(std), PSTR("\"%s\""), kStandardNames[g.standard]); else strcpy(std, "null");
+    char name[12];
+    static_assert(PGM_LIST_MAXLEN(kStandardNames) < sizeof(name), "name holds the longest name");
+    if (g.standard < 8) snprintf_P(std, sizeof(std), PSTR("\"%s\""), pgmListCopy(name, sizeof(name), kStandardNames, g.standard, 8));
+    else strcpy(std, "null");
     if (g.hz) snprintf_P(hz, sizeof(hz), PSTR("%u"), (unsigned)g.hz); else strcpy(hz, "null");
-    static const char* const kEncoder[3] = {"null", "\"525p\"", "\"625p\""};
-    strcpy(enc, g.encoder < 3 ? kEncoder[g.encoder] : "null");
+    static constexpr char kEncoder[] PROGMEM = "null\0\"525p\"\0\"625p\"";
+    static_assert(PGM_LIST_COUNT(kEncoder) == 3, "kEncoder: the count follows the list");
+    static_assert(PGM_LIST_MAXLEN(kEncoder) < sizeof(enc), "enc holds the longest name");
+    pgmListCopy(enc, sizeof(enc), kEncoder, g.encoder < 3 ? g.encoder : 0, 3);
 #define B(f) ((g.flags & (f)) ? "true" : "false")
     return snprintf_P(out, n,
                     PSTR("{\"gen\":%u,\"powered\":%s,\"present\":%s,\"lock\":%s,\"fsc\":%s,\"freerun\":%s,"
@@ -49,8 +55,11 @@ int8_t advControllerStandard(const AdvControllerInfo& h, const AdvSignal* sig, b
 
 bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, const char* update, char* out, size_t n,
                     const AdvSignal* sig) {
-    static const char* const kStatus[] = {"checking", "ok", "no_reply", "incompatible"};
-    const char* st = kStatus[h.status <= ADV_CONTROLLER_INCOMPATIBLE ? h.status : 0];
+    static constexpr char kStatus[] PROGMEM = "checking\0ok\0no_reply\0incompatible";
+    static_assert(PGM_LIST_COUNT(kStatus) == ADV_CONTROLLER_INCOMPATIBLE + 1, "kStatus: the count follows the list");
+    char st[16];
+    static_assert(PGM_LIST_MAXLEN(kStatus) < sizeof(st), "st holds the longest name");
+    pgmListCopy(st, sizeof(st), kStatus, h.status <= ADV_CONTROLLER_INCOMPATIBLE ? h.status : 0, 4);
     int w;
     if (!h.haveInfo || h.status == ADV_CONTROLLER_NO_REPLY || h.status == ADV_CONTROLLER_CHECKING) {
         bool idle = !update || strcmp(update, "idle") == 0;
@@ -92,12 +101,15 @@ bool advControllerStatusJson(const AdvControllerInfo& h, bool updateAvailable, c
 }
 
 size_t advRegReadJson(const AdvRegRead& r, uint8_t announcedGen, char* out, size_t n) {
-    static const char* const kState[] = {"idle", "pending", "done", "error", "unsupported"};
+    static constexpr char kState[] PROGMEM = "idle\0pending\0done\0error\0unsupported";
+    static_assert(PGM_LIST_COUNT(kState) == ADV_REG_UNSUPPORTED + 1, "kState: the count follows the list");
+    char state[12];
+    static_assert(PGM_LIST_MAXLEN(kState) < sizeof(state), "state holds the longest name");
     int w;
     if (announcedGen != r.gen) w = snprintf_P(out, n, PSTR("{\"state\":\"pending\",\"gen\":%u}"), (unsigned)announcedGen);
     else {
         w = snprintf_P(out, n, PSTR("{\"state\":\"%s\",\"dev\":%u,\"map\":%u,\"reg\":%u,\"values\":["),
-                     kState[r.state <= ADV_REG_UNSUPPORTED ? r.state : 0], (unsigned)r.dev, (unsigned)r.map, (unsigned)r.reg);
+                     pgmListCopy(state, sizeof(state), kState, r.state <= ADV_REG_UNSUPPORTED ? r.state : 0, 5), (unsigned)r.dev, (unsigned)r.map, (unsigned)r.reg);
         uint8_t k = r.state == ADV_REG_DONE ? r.count : 0;
         for (uint8_t i = 0; i < k && w >= 0 && (size_t)w < n; i++)
             w += snprintf(out + w, n - w, i ? ",%u" : "%u", (unsigned)r.v[i]);

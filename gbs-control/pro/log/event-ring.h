@@ -26,7 +26,7 @@ private:
     uint16_t next_ = 1;
 };
 
-const char* eventTypeName(uint8_t type);   // "input_found", ...; "unknown" out of range
+const char* eventTypeName(uint8_t type);   // "input_found", ...; "unknown" out of range. In flash (PSTR): print with %S
 // {"seq":7,"ms":123456,"type":"input_found","a":1,"b":0}; 0 when it does not fit
 size_t eventJson(const Event& e, char* out, size_t cap);
 
