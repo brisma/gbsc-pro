@@ -31,6 +31,7 @@ refer to brisma/gbsc-pro.
   and, for the first kind, finds the short-pulse limit by itself from the line count: a SNES 1CHIP with a SuperFX game
   no longer moves up and down. Manual sets the limit by hand (Input > Sync limit, Advanced; the row shows the limit in
   use in Auto). Profiles and backups with Adaptive Sync on or off still read. (#86)
+- Memory: name tables and reason texts moved to flash, about 2 KB more free heap. (#84)
 - Web app: the source is named as on the TV menu and the OLED (1080i, 720p, 480p, 240p...) instead of the
   scaler's line count, so a 1080i source no longer reads "1124i" and a 640x480 VGA source reads 480p. (#89)
 
