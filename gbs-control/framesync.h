@@ -108,6 +108,14 @@ private:
     /// Reset with syncLastCorrection.
     static float maybeFreqExt_per_videoFps;
 
+    // Longest wait for two debug-pin edges: two periods at 47 Hz (the lowest rate getSourceFieldRate() accepts)
+    // = 42.6 ms, plus margin.
+    static constexpr uint32_t SAMPLE_TIMEOUT_MS = 60;
+    static uint32_t sampleTimeoutCycles()
+    {
+        return (uint32_t)ESP.getCpuFreqMHz() * 1000U * SAMPLE_TIMEOUT_MS;
+    }
+
     // Sample vsync start and stop times from debug pin.
     static bool vsyncOutputSample(uint32_t *start, uint32_t *stop)
     {
@@ -115,8 +123,11 @@ private:
         ESP.wdtDisable();
         MeasurePeriod::start();
 
-        // typical: 300000 at 80MHz, 600000 at 160MHz
-        for (uint32_t i = 0; i < 3000000; i++) {
+        // Two rising edges = one period. Bounded in time, not in loop passes: with no edges on the debug pin (a broken
+        // or unwired DEBUG_IN_PIN) the old 3,000,000 passes kept the ESP away from WiFi for about a second per call.
+        const uint32_t t0 = ESP.getCycleCount();
+        const uint32_t limit = sampleTimeoutCycles();
+        while (ESP.getCycleCount() - t0 < limit) {
             if (MeasurePeriod::armed) {
                 MeasurePeriod::armed = 0;
                 delay(7);
@@ -370,8 +381,11 @@ public:
         ESP.wdtDisable();
         MeasurePeriod::start();
 
-        // typical: 300000 at 80MHz, 600000 at 160MHz
-        for (uint32_t i = 0; i < 3000000; i++) {
+        // Two rising edges = one period. Bounded in time, not in loop passes: with no edges on the debug pin (a broken
+        // or unwired DEBUG_IN_PIN) the old 3,000,000 passes kept the ESP away from WiFi for about a second per call.
+        const uint32_t t0 = ESP.getCycleCount();
+        const uint32_t limit = sampleTimeoutCycles();
+        while (ESP.getCycleCount() - t0 < limit) {
             if (MeasurePeriod::armed) {
                 MeasurePeriod::armed = 0;
                 delay(7);
